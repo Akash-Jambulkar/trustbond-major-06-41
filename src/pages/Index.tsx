@@ -1,8 +1,7 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, Check, Shield, LineChart, Bank, FileText, Database } from "lucide-react";
+import { ChevronDown, Check, Shield, LineChart, Building, FileText, Database } from "lucide-react";
 
 const Index = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -172,7 +171,7 @@ const Index = () => {
             </div>
             <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
               <div className="h-12 w-12 bg-trustbond-accent/10 rounded-md flex items-center justify-center mb-4">
-                <Bank className="h-6 w-6 text-trustbond-accent" />
+                <Building className="h-6 w-6 text-trustbond-accent" />
               </div>
               <h3 className="text-xl font-semibold text-trustbond-dark mb-3">
                 Decentralized Loans
