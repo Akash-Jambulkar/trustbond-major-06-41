@@ -5,138 +5,26 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; 
-import { useMode } from "@/contexts/ModeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { NetworkStatus } from "@/components/NetworkStatus";
 import { Shield, CreditCard, LineChart, User, Plus, Calendar, Activity } from "lucide-react";
+import { BlockchainActions } from "@/components/blockchain/BlockchainActions";
 
-// Dashboard Pages (the Home page is defined inline because we're modifying it)
+// Dashboard Pages
 import UserProfile from "./user/ProfilePage";
-
-// KYC Documents Page (simplified, non-blockchain version)
-const KYCDocuments = () => (
-  <div>
-    <h2 className="text-3xl font-bold tracking-tight mb-6">KYC Documents</h2>
-    <Card>
-      <CardHeader>
-        <CardTitle>Identity Verification</CardTitle>
-        <CardDescription>Upload and manage your KYC documents</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-md p-4 mb-4">
-          <h3 className="text-sm font-semibold flex items-center">
-            <Shield className="h-4 w-4 mr-2" />
-            KYC Verification in Production Mode
-          </h3>
-          <p className="text-xs mt-1">
-            The KYC verification feature is currently disabled in production mode.
-            Please contact customer support for assistance with your verification.
-          </p>
-        </div>
-        
-        <Card className="border border-dashed border-gray-300 bg-gray-50">
-          <CardContent className="p-6 text-center">
-            <Shield className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <h3 className="font-medium text-gray-700 mb-1">Upload Verification Documents</h3>
-            <p className="text-sm text-gray-500 mb-4">
-              This feature is currently disabled in production mode
-            </p>
-            <Button variant="outline" disabled className="mx-auto">
-              Upload Documents
-            </Button>
-          </CardContent>
-        </Card>
-      </CardContent>
-    </Card>
-  </div>
-);
-
-// Loans Page (simplified, non-blockchain version)
-const Loans = () => (
-  <div>
-    <h2 className="text-3xl font-bold tracking-tight mb-6">Loans</h2>
-    <Card>
-      <CardHeader>
-        <CardTitle>Your Loans</CardTitle>
-        <CardDescription>Manage your loan applications and payments</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-md p-4 mb-4">
-          <h3 className="text-sm font-semibold flex items-center">
-            <CreditCard className="h-4 w-4 mr-2" />
-            Loans in Production Mode
-          </h3>
-          <p className="text-xs mt-1">
-            The loan management feature is currently disabled in production mode.
-            Please contact customer support for assistance with your loans.
-          </p>
-        </div>
-        
-        <Card className="border border-dashed border-gray-300 bg-gray-50">
-          <CardContent className="p-6 text-center">
-            <CreditCard className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <h3 className="font-medium text-gray-700 mb-1">No Active Loans</h3>
-            <p className="text-sm text-gray-500 mb-4">
-              You don't have any active loans at the moment
-            </p>
-            <Button variant="outline" disabled className="mx-auto">
-              Apply for Loan
-            </Button>
-          </CardContent>
-        </Card>
-      </CardContent>
-    </Card>
-  </div>
-);
-
-// Trust Score Page (simplified, non-blockchain version)
-const TrustScore = () => (
-  <div>
-    <h2 className="text-3xl font-bold tracking-tight mb-6">Trust Score</h2>
-    <Card>
-      <CardHeader>
-        <CardTitle>Your Trust Score</CardTitle>
-        <CardDescription>View and improve your decentralized credit score</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-md p-4 mb-4">
-          <h3 className="text-sm font-semibold flex items-center">
-            <LineChart className="h-4 w-4 mr-2" />
-            Trust Score in Production Mode
-          </h3>
-          <p className="text-xs mt-1">
-            The trust score feature is currently disabled in production mode.
-            Please contact customer support for assistance with your trust score.
-          </p>
-        </div>
-        
-        <Card className="border border-dashed border-gray-300 bg-gray-50">
-          <CardContent className="p-6 text-center">
-            <LineChart className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <h3 className="font-medium text-gray-700 mb-1">Trust Score Unavailable</h3>
-            <p className="text-sm text-gray-500 mb-4">
-              Your trust score information is not available in production mode
-            </p>
-            <Button variant="outline" disabled className="mx-auto">
-              View Details
-            </Button>
-          </CardContent>
-        </Card>
-      </CardContent>
-    </Card>
-  </div>
-);
+import KYCPage from "./user/KYCPage";
+import LoansPage from "./user/LoansPage";
+import TrustScorePage from "./user/TrustScorePage";
 
 // Production-ready Dashboard Home component
 const DashboardHome = () => {
   const { user } = useAuth();
-  const { isProductionMode } = useMode();
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-        {!isProductionMode && <NetworkStatus />}
+        <NetworkStatus />
       </div>
       
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -160,7 +48,7 @@ const DashboardHome = () => {
           <CardContent>
             <div className="text-2xl font-bold capitalize">{user?.role || "Standard"}</div>
             <p className="text-xs text-muted-foreground">
-              {isProductionMode ? "Production Account" : "Demo Account"}
+              Blockchain Enabled
             </p>
           </CardContent>
         </Card>
@@ -194,6 +82,7 @@ const DashboardHome = () => {
         <TabsList>
           <TabsTrigger value="activity">Recent Activity</TabsTrigger>
           <TabsTrigger value="actions">Quick Actions</TabsTrigger>
+          <TabsTrigger value="blockchain">Blockchain</TabsTrigger>
         </TabsList>
         <TabsContent value="activity" className="space-y-4">
           <Card>
@@ -252,6 +141,9 @@ const DashboardHome = () => {
             </CardContent>
           </Card>
         </TabsContent>
+        <TabsContent value="blockchain" className="space-y-4">
+          <BlockchainActions />
+        </TabsContent>
       </Tabs>
     </div>
   );
@@ -274,9 +166,9 @@ const UserDashboard = () => {
       <Routes>
         <Route path="home" element={<DashboardHome />} />
         <Route path="profile" element={<UserProfile />} />
-        <Route path="kyc" element={<KYCDocuments />} />
-        <Route path="loans" element={<Loans />} />
-        <Route path="trust-score" element={<TrustScore />} />
+        <Route path="kyc" element={<KYCPage />} />
+        <Route path="loans" element={<LoansPage />} />
+        <Route path="trust-score" element={<TrustScorePage />} />
       </Routes>
     </DashboardLayout>
   );

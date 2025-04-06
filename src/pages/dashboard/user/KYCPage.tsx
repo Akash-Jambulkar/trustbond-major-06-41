@@ -8,14 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { FilePenLine, Upload, ShieldCheck, AlertCircle } from "lucide-react";
-import { ethers } from "ethers";
 
 const KYCPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [kycStatus, setKycStatus] = useState<boolean | null>(null);
   const [isChecking, setIsChecking] = useState(false);
   const [documentHash, setDocumentHash] = useState("");
-  const { kycContract, account, isConnected } = useBlockchain();
+  const { kycContract, account, isConnected, submitKYC, getKYCStatus } = useBlockchain();
 
   // Generate a simple hash for demo purposes
   const generateHash = (file: File): Promise<string> => {
@@ -45,19 +44,16 @@ const KYCPage = () => {
     }
   };
 
-  const submitKYC = async () => {
-    if (!documentHash || !kycContract || !isConnected) {
+  const handleSubmitKYC = async () => {
+    if (!documentHash || !isConnected) {
       toast.error("Please connect wallet and select a document first");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const tx = await kycContract.submitKYC(documentHash);
-      toast.success("KYC submission sent to blockchain!");
-      
-      // Wait for transaction confirmation
-      await tx.wait();
+      await submitKYC(documentHash);
+      setDocumentHash("");
       toast.success("KYC document successfully submitted!");
     } catch (error) {
       console.error("KYC submission error:", error);
@@ -68,14 +64,14 @@ const KYCPage = () => {
   };
 
   const checkKYCStatus = async () => {
-    if (!kycContract || !account) {
+    if (!account) {
       toast.error("Please connect your wallet first");
       return;
     }
 
     setIsChecking(true);
     try {
-      const status = await kycContract.getKYCStatus(account);
+      const status = await getKYCStatus(account);
       setKycStatus(status);
       toast.success("Successfully retrieved KYC status");
     } catch (error) {
@@ -130,7 +126,7 @@ const KYCPage = () => {
           <CardFooter>
             <Button 
               className="w-full" 
-              onClick={submitKYC}
+              onClick={handleSubmitKYC}
               disabled={!documentHash || isSubmitting || !isConnected}
             >
               {isSubmitting ? "Submitting..." : "Submit Documents"}

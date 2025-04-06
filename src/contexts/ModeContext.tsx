@@ -9,6 +9,7 @@ interface ModeContextType {
   toggleMode: () => void;
   isDemoMode: boolean;
   isProductionMode: boolean;
+  enableBlockchain: boolean;
 }
 
 const ModeContext = createContext<ModeContextType | undefined>(undefined);
@@ -16,6 +17,8 @@ const ModeContext = createContext<ModeContextType | undefined>(undefined);
 export const ModeProvider = ({ children }: { children: ReactNode }) => {
   // Default to production mode
   const [mode, setMode] = useState<ModeType>("production");
+  // Enable blockchain features in both modes
+  const [enableBlockchain, setEnableBlockchain] = useState<boolean>(true);
   
   // Load saved mode preference
   useEffect(() => {
@@ -25,6 +28,15 @@ export const ModeProvider = ({ children }: { children: ReactNode }) => {
     } else {
       // If no saved preference, set to production by default
       localStorage.setItem("trustbond_mode", "production");
+    }
+
+    // Load blockchain preference
+    const savedBlockchainPref = localStorage.getItem("trustbond_blockchain");
+    if (savedBlockchainPref) {
+      setEnableBlockchain(savedBlockchainPref === "true");
+    } else {
+      // Default to enabled
+      localStorage.setItem("trustbond_blockchain", "true");
     }
   }, []);
 
@@ -41,6 +53,19 @@ export const ModeProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  // Toggle blockchain features
+  const toggleBlockchain = () => {
+    const newValue = !enableBlockchain;
+    setEnableBlockchain(newValue);
+    localStorage.setItem("trustbond_blockchain", newValue.toString());
+    
+    toast.success(`Blockchain features ${newValue ? 'enabled' : 'disabled'}`, {
+      description: newValue 
+        ? "Smart contract interactions enabled" 
+        : "Smart contract interactions disabled",
+    });
+  };
+
   return (
     <ModeContext.Provider
       value={{
@@ -48,6 +73,7 @@ export const ModeProvider = ({ children }: { children: ReactNode }) => {
         toggleMode,
         isDemoMode: mode === "demo",
         isProductionMode: mode === "production",
+        enableBlockchain,
       }}
     >
       {children}

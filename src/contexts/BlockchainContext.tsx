@@ -3,6 +3,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import Web3 from "web3";
 import { toast } from "sonner";
 import { Contract } from "web3-eth-contract";
+import { AbiItem } from 'web3-utils';
 import TrustScoreABI from "../contracts/TrustScore.json";
 import KYCVerifierABI from "../contracts/KYCVerifier.json";
 import LoanManagerABI from "../contracts/LoanManager.json";
@@ -17,7 +18,7 @@ const CONTRACT_ADDRESSES = {
     : "0x5FbDB2315678afecb367f032d93F642f64180aa4", // Production address (update when deployed)
   LOAN_MANAGER: process.env.NODE_ENV === 'development'
     ? "0x5FbDB2315678afecb367f032d93F642f64180aa5" // Ganache local address
-    : "0x5FbDB2315678afecb367f032d93F642f64180aa5", // Production address (update when deployed)
+    : "0x5FbDB2315678afecb367f032d93F642f64180aa5", // Production address (update when deployed),
 };
 
 interface BlockchainContextType {
@@ -99,30 +100,29 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
   const networkName = getNetworkName(networkId);
   const isGanache = networkId === NETWORK_IDS.GANACHE || networkId === NETWORK_IDS.LOCALHOST;
   
-  // For production, we would want to use a specific network like Ethereum mainnet
-  // For development, we're okay with Ganache/localhost
+  // For production, we accept any network that's not a local development network
   const isCorrectNetwork = process.env.NODE_ENV === 'development' 
     ? (networkId === NETWORK_IDS.GANACHE || networkId === NETWORK_IDS.LOCALHOST)
-    : (networkId === NETWORK_IDS.MAINNET); // Change this for production
+    : (networkId !== null && networkId !== NETWORK_IDS.GANACHE && networkId !== NETWORK_IDS.LOCALHOST);
 
   // Initialize contracts when web3 and account are available
   useEffect(() => {
-    if (web3 && account && isCorrectNetwork) {
+    if (web3 && account) {
       try {
         const kyc = new web3.eth.Contract(
-          KYCVerifierABI.abi,
+          KYCVerifierABI.abi as AbiItem[],
           CONTRACT_ADDRESSES.KYC_VERIFIER
         );
         setKycContract(kyc);
 
         const trustScore = new web3.eth.Contract(
-          TrustScoreABI.abi,
+          TrustScoreABI.abi as AbiItem[],
           CONTRACT_ADDRESSES.TRUST_SCORE
         );
         setTrustScoreContract(trustScore);
 
         const loan = new web3.eth.Contract(
-          LoanManagerABI.abi,
+          LoanManagerABI.abi as AbiItem[],
           CONTRACT_ADDRESSES.LOAN_MANAGER
         );
         setLoanContract(loan);
@@ -133,7 +133,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         toast.error("Failed to initialize smart contracts");
       }
     }
-  }, [web3, account, networkId, isCorrectNetwork]);
+  }, [web3, account, networkId]);
 
   // Check if MetaMask is already connected on page load
   useEffect(() => {
