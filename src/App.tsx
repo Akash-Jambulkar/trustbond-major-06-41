@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -21,16 +22,23 @@ import UserDashboard from "./pages/dashboard/UserDashboard";
 import BankDashboard from "./pages/dashboard/BankDashboard";
 import AdminDashboard from "./pages/dashboard/AdminDashboard";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <AuthProvider>
-        <BlockchainProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
+      <BlockchainProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <Toaster />
+            <Sonner />
             <Routes>
               {/* Public Pages */}
               <Route path="/" element={<Index />} />
@@ -63,9 +71,9 @@ const App = () => (
               {/* 404 Route */}
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </BrowserRouter>
-        </BlockchainProvider>
-      </AuthProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </BlockchainProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

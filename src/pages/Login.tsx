@@ -14,7 +14,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { login, loginWithWallet } = useAuth();
-  const { connectWallet } = useBlockchain();
+  const { connectWallet, isBlockchainLoading } = useBlockchain();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,7 +39,7 @@ const Login = () => {
       // Navigation is handled in the loginWithWallet function
     } catch (error) {
       console.error("Wallet login error:", error);
-      toast.error("Failed to login with wallet");
+      toast.error("Failed to login with wallet: " + (error instanceof Error ? error.message : "Unknown error"));
     } finally {
       setIsLoading(false);
     }
@@ -79,10 +79,10 @@ const Login = () => {
               onClick={handleWalletLogin}
               variant="outline"
               className="w-full flex items-center justify-center gap-2 border-2 border-trustbond-primary/20 hover:border-trustbond-primary hover:bg-trustbond-primary/5"
-              disabled={isLoading}
+              disabled={isLoading || isBlockchainLoading}
             >
               <Wallet size={20} />
-              <span>Connect with MetaMask</span>
+              <span>{isBlockchainLoading ? "Connecting to MetaMask..." : "Connect with MetaMask"}</span>
             </Button>
             <div className="relative flex items-center justify-center mt-6 mb-6">
               <div className="border-t border-gray-300 flex-grow"></div>

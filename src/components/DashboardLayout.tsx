@@ -2,7 +2,7 @@
 import { ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useBlockchain } from "@/contexts/BlockchainContext";
+import { WalletStatus } from "@/components/WalletStatus";
 import { Button } from "@/components/ui/button";
 import { 
   Home, 
@@ -12,7 +12,6 @@ import {
   PieChart, 
   Settings, 
   LogOut, 
-  Wallet,
   Building2,
   ShieldCheck,
   Users
@@ -24,7 +23,6 @@ interface DashboardLayoutProps {
 
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const { user, logout } = useAuth();
-  const { account, isConnected, connectWallet, disconnectWallet } = useBlockchain();
   const navigate = useNavigate();
 
   // Get navigation items based on user role
@@ -106,27 +104,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             Welcome, {user?.name}
           </h2>
           <div className="flex items-center gap-4">
-            {isConnected ? (
-              <Button 
-                onClick={() => disconnectWallet()}
-                variant="outline" 
-                className="flex items-center gap-2"
-              >
-                <Wallet size={20} />
-                <span className="hidden md:inline">
-                  {account?.substring(0, 6)}...{account?.substring(account.length - 4)}
-                </span>
-              </Button>
-            ) : (
-              <Button 
-                onClick={() => connectWallet()}
-                variant="outline" 
-                className="flex items-center gap-2"
-              >
-                <Wallet size={20} />
-                <span className="hidden md:inline">Connect Wallet</span>
-              </Button>
-            )}
+            <WalletStatus />
           </div>
         </header>
 
