@@ -14,14 +14,17 @@ interface ModeContextType {
 const ModeContext = createContext<ModeContextType | undefined>(undefined);
 
 export const ModeProvider = ({ children }: { children: ReactNode }) => {
-  // Default to demo mode
-  const [mode, setMode] = useState<ModeType>("demo");
+  // Default to production mode instead of demo mode
+  const [mode, setMode] = useState<ModeType>("production");
   
   // Load saved mode preference
   useEffect(() => {
     const savedMode = localStorage.getItem("trustbond_mode");
     if (savedMode === "production" || savedMode === "demo") {
       setMode(savedMode);
+    } else {
+      // If no saved preference, set to production by default
+      localStorage.setItem("trustbond_mode", "production");
     }
   }, []);
 

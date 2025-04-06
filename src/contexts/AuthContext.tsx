@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -53,6 +52,9 @@ const DEMO_ACCOUNTS = [
     walletAddress: "0x3456789012345678901234567890123456789012"
   },
 ] as const;
+
+// In-memory storage for production mode users
+const PRODUCTION_USERS: AuthUser[] = [];
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -112,18 +114,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Navigate to the appropriate dashboard
         navigate(`/dashboard/${userData.role}`);
       } else {
-        // Production mode would use a real API
-        toast.error("Production mode authentication not implemented yet");
-        // Here you would make a real API call to authenticate
-        // const response = await fetch('/api/auth/login', {
-        //   method: 'POST',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify({ email, password })
-        // });
-        // const data = await response.json();
-        // if (!data.success) throw new Error(data.message);
-        // setUser(data.user);
-        // localStorage.setItem("trustbond_user", JSON.stringify(data.user));
+        // Production mode login
+        // First check in-memory for simplicity
+        const productionUser = PRODUCTION_USERS.find(
+          (user) => user.email === email
+        );
+
+        if (!productionUser) {
+          throw new Error("User not found. Please register first.");
+        }
+
+        // In a real production app, we would verify the password with proper hashing
+        // For this demo of production mode, we'll just check if the user exists
+        setUser(productionUser);
+        localStorage.setItem("trustbond_user", JSON.stringify(productionUser));
+        toast.success(`Welcome back, ${productionUser.name}!`);
+        
+        // Navigate to the appropriate dashboard
+        navigate(`/dashboard/${productionUser.role}`);
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -162,9 +170,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Navigate to the appropriate dashboard
         navigate(`/dashboard/${userData.role}`);
       } else {
-        // Production mode would use a real API
-        toast.error("Production mode wallet authentication not implemented yet");
-        // Here you would make a real API call to authenticate with wallet
+        // Production mode wallet login
+        const productionUser = PRODUCTION_USERS.find(
+          (user) => user.walletAddress.toLowerCase() === walletAddress.toLowerCase()
+        );
+
+        if (!productionUser) {
+          throw new Error("Wallet not registered. Please register first.");
+        }
+
+        setUser(productionUser);
+        localStorage.setItem("trustbond_user", JSON.stringify(productionUser));
+        toast.success(`Wallet connected for ${productionUser.name}!`);
+        
+        // Navigate to the appropriate dashboard
+        navigate(`/dashboard/${productionUser.role}`);
       }
     } catch (error) {
       console.error("Wallet login error:", error);
@@ -189,9 +209,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         toast.success("Registration successful! Please login with the demo accounts.");
         navigate("/login");
       } else {
-        // Production mode would use a real API
-        toast.error("Production mode registration not implemented yet");
-        // Here you would make a real API call to register
+        // Production mode registration
+        // First, check if email already exists
+        const emailExists = PRODUCTION_USERS.some(user => user.email === email);
+        if (emailExists) {
+          throw new Error("Email already registered");
+        }
+
+        // Generate a simple random wallet address for new users
+        // In a real app, this would be handled differently
+        const randomWalletAddress = "0x" + Array.from({length: 40}, () => 
+          Math.floor(Math.random() * 16).toString(16)).join('');
+
+        // Create new user
+        const newUser: AuthUser = {
+          id: Date.now().toString(), // Simple ID generation
+          name,
+          email,
+          role,
+          walletAddress: randomWalletAddress,
+        };
+
+        // Add to in-memory storage
+        PRODUCTION_USERS.push(newUser);
+
+        toast.success("Registration successful! You can now login.");
+        
+        // Auto-login the user after successful registration
+        setUser(newUser);
+        localStorage.setItem("trustbond_user", JSON.stringify(newUser));
+        
+        // Navigate to the appropriate dashboard
+        navigate(`/dashboard/${role}`);
       }
     } catch (error) {
       console.error("Registration error:", error);

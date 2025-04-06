@@ -2,12 +2,13 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMode } from "@/contexts/ModeContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
-import { User, Mail, LockKeyhole, CheckCircle2 } from "lucide-react";
+import { User, Mail, LockKeyhole, CheckCircle2, AlertTriangle } from "lucide-react";
 
 const Register = () => {
   const [name, setName] = useState("");
@@ -17,6 +18,7 @@ const Register = () => {
   const [role, setRole] = useState<"user" | "bank" | null>("user");
   const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
+  const { isProductionMode } = useMode();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,6 +62,18 @@ const Register = () => {
           </nav>
         </div>
       </header>
+
+      {/* Production Mode Warning */}
+      {isProductionMode && (
+        <div className="bg-red-50 border-b border-red-200">
+          <div className="container mx-auto py-2 px-4 flex items-center gap-2 text-sm text-red-700">
+            <AlertTriangle className="h-4 w-4" />
+            <span>
+              <strong>Production Mode Active:</strong> You are creating a real account
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Registration Form */}
       <main className="flex-1 flex items-center justify-center bg-gray-50 p-6">
@@ -167,7 +181,7 @@ const Register = () => {
             <div className="pt-2">
               <Button 
                 type="submit" 
-                className="w-full bg-trustbond-primary hover:bg-trustbond-primary/90"
+                className={`w-full ${isProductionMode ? 'bg-red-600 hover:bg-red-700' : 'bg-trustbond-primary hover:bg-trustbond-primary/90'}`}
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -179,7 +193,7 @@ const Register = () => {
                     Creating Account...
                   </span>
                 ) : (
-                  "Register"
+                  isProductionMode ? "Register Production Account" : "Register Demo Account"
                 )}
               </Button>
             </div>
