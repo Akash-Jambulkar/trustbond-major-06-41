@@ -1,6 +1,6 @@
 
 import { ReactNode } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { WalletStatus } from "@/components/WalletStatus";
 import { ModeToggle } from "@/components/ModeToggle";
@@ -15,7 +15,8 @@ import {
   LogOut, 
   Building2,
   ShieldCheck,
-  Users
+  Users,
+  Server
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -25,6 +26,7 @@ interface DashboardLayoutProps {
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Get navigation items based on user role
   const getNavItems = () => {
@@ -53,6 +55,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         ...baseItems,
         { label: "Banks", icon: <Building2 size={20} />, href: "/dashboard/admin/banks" },
         { label: "Users", icon: <Users size={20} />, href: "/dashboard/admin/users" },
+        { label: "Blockchain Setup", icon: <Server size={20} />, href: "/dashboard/admin/blockchain-setup" },
         { label: "Settings", icon: <Settings size={20} />, href: "/dashboard/admin/settings" },
       ];
     }
@@ -61,6 +64,13 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   };
 
   const navItems = getNavItems();
+
+  // Check if a nav item is active
+  const isActive = (href: string) => {
+    if (location.pathname === href) return true;
+    if (href.endsWith('home') && location.pathname === href.replace('/home', '')) return true;
+    return location.pathname.startsWith(href) && href !== `/dashboard/${user?.role}`;
+  };
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -76,7 +86,11 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               <li key={index}>
                 <Link
                   to={item.href}
-                  className="flex items-center gap-3 p-2 rounded hover:bg-trustbond-primary/80 transition-colors"
+                  className={`flex items-center gap-3 p-2 rounded transition-colors ${
+                    isActive(item.href) 
+                      ? 'bg-white/20 text-white' 
+                      : 'hover:bg-trustbond-primary/80 text-white/80 hover:text-white'
+                  }`}
                 >
                   {item.icon}
                   <span>{item.label}</span>

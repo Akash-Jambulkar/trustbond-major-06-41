@@ -1,7 +1,6 @@
 
-import { type Config } from "tailwindcss";
-
-export default {
+/** @type {import('tailwindcss').Config} */
+module.exports = {
   darkMode: ["class"],
   content: [
     './pages/**/*.{ts,tsx}',
@@ -9,7 +8,6 @@ export default {
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
   ],
-  prefix: "",
   theme: {
     container: {
       center: true,
@@ -53,11 +51,15 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // TrustBond specific colors
-        "trustbond-primary": "#3B82F6", // Blue
-        "trustbond-secondary": "#10B981", // Green
-        "trustbond-accent": "#8B5CF6", // Purple
-        "trustbond-dark": "#1E293B", // Dark blue/slate
+        trustbond: {
+          primary: "#1e40af",    // Deep blue
+          secondary: "#3b82f6",  // Lighter blue
+          accent: "#10b981",     // Green for accents
+          dark: "#1e293b",       // Dark slate for text
+          light: "#f8fafc",      // Light background
+          ethereum: "#3c3c3d",   // Ethereum color
+          ganache: "#5e464d",    // Ganache color
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -66,29 +68,19 @@ export default {
       },
       keyframes: {
         "accordion-down": {
-          from: { height: "0" },
+          from: { height: 0 },
           to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
           from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
-        },
-        fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
-        },
-        slideIn: {
-          '0%': { transform: 'translateX(-100%)' },
-          '100%': { transform: 'translateX(0)' },
+          to: { height: 0 },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "fade-in": "fadeIn 0.5s ease-out forwards",
-        "bounce": "bounce 1s infinite",
       },
     },
   },
   plugins: [require("tailwindcss-animate")],
-} satisfies Config
+}
