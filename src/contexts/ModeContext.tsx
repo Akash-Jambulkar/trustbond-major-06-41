@@ -14,7 +14,7 @@ interface ModeContextType {
 const ModeContext = createContext<ModeContextType | undefined>(undefined);
 
 export const ModeProvider = ({ children }: { children: ReactNode }) => {
-  // Default to production mode instead of demo mode
+  // Default to production mode
   const [mode, setMode] = useState<ModeType>("production");
   
   // Load saved mode preference
