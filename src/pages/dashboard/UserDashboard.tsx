@@ -4,6 +4,9 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import KYCPage from "./user/KYCPage";
+import TrustScorePage from "./user/TrustScorePage";
+import LoansPage from "./user/LoansPage";
+import ProfilePage from "./user/ProfilePage";
 
 const UserDashboardHome = () => {
   const { user } = useAuth();
@@ -58,9 +61,9 @@ const UserDashboard = () => {
     <Routes>
       <Route path="/" element={<UserDashboardHome />} />
       <Route path="/kyc" element={<KYCPage />} />
-      <Route path="/loans" element={<div>Loans Page Coming Soon</div>} />
-      <Route path="/trust-score" element={<div>Trust Score Page Coming Soon</div>} />
-      <Route path="/profile" element={<div>Profile Page Coming Soon</div>} />
+      <Route path="/loans" element={<LoansPage />} />
+      <Route path="/trust-score" element={<TrustScorePage />} />
+      <Route path="/profile" element={<ProfilePage />} />
       <Route path="*" element={<Navigate to="/dashboard/user" replace />} />
     </Routes>
   );
