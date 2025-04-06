@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -157,7 +156,10 @@ const TrustScorePage = () => {
       let categoryLabel = "Poor"; // Default
       
       for (const [lower, upper, label] of thresholds) {
-        if (lower <= numValue && numValue <= upper) {
+        const lowerValue = Number(lower);
+        const upperValue = Number(upper);
+        
+        if (lowerValue <= numValue && numValue <= upperValue) {
           categoryLabel = label as string;
           break;
         }
