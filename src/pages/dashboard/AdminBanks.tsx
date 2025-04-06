@@ -22,7 +22,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Search, Building2, PlusCircle, CheckCircle, XCircle } from "lucide-react";
+import { Search, Building2, PlusCircle, CheckCircle, XCircle, Info } from "lucide-react";
 import { toast } from "sonner";
 
 // Demo data
