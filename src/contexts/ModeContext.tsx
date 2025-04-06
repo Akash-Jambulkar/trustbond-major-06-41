@@ -8,6 +8,7 @@ interface ModeContextType {
   mode: ModeType;
   toggleMode: () => void;
   isDemoMode: boolean;
+  isProductionMode: boolean;
 }
 
 const ModeContext = createContext<ModeContextType | undefined>(undefined);
@@ -43,6 +44,7 @@ export const ModeProvider = ({ children }: { children: ReactNode }) => {
         mode,
         toggleMode,
         isDemoMode: mode === "demo",
+        isProductionMode: mode === "production",
       }}
     >
       {children}

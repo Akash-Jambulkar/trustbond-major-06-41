@@ -9,6 +9,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { BlockchainProvider } from "./contexts/BlockchainContext";
 import { ModeProvider } from "./contexts/ModeContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { useMode } from "./contexts/ModeContext";
 
 // Pages
 import Index from "./pages/Index";
@@ -32,6 +33,19 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// Production mode banner component
+const ProductionModeBanner = () => {
+  const { isProductionMode } = useMode();
+  
+  if (!isProductionMode) return null;
+  
+  return (
+    <div className="bg-red-600 text-white py-1 px-4 text-center text-sm font-medium">
+      Production Mode Active - All actions affect real data and accounts
+    </div>
+  );
+};
 
 // Error boundary component to catch rendering errors
 interface ErrorBoundaryProps {
@@ -99,6 +113,7 @@ const App = () => {
             <ModeProvider>
               <BlockchainProvider>
                 <AuthProvider>
+                  <ProductionModeBanner />
                   <Toaster />
                   <Sonner />
                   <Routes>

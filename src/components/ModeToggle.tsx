@@ -10,19 +10,33 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Info, ToggleLeft, ToggleRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Info, ToggleLeft, ToggleRight, AlertTriangle } from "lucide-react";
 
 export const ModeToggle = () => {
-  const { mode, toggleMode, isDemoMode } = useMode();
+  const { mode, toggleMode, isDemoMode, isProductionMode } = useMode();
   const [open, setOpen] = useState(false);
 
   return (
     <div className="flex items-center gap-2">
+      {isProductionMode && (
+        <Badge variant="destructive" className="mr-1 hidden md:flex">Production</Badge>
+      )}
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm" className="flex items-center gap-1">
-            {isDemoMode ? <ToggleLeft className="h-5 w-5 text-trustbond-primary" /> : <ToggleRight className="h-5 w-5 text-green-600" />}
-            <span className="hidden md:inline">{isDemoMode ? "Demo Mode" : "Production Mode"}</span>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className={`flex items-center gap-1 ${isProductionMode ? 'border-red-500 text-red-600 hover:bg-red-50' : ''}`}
+          >
+            {isDemoMode ? (
+              <ToggleLeft className="h-5 w-5 text-trustbond-primary" />
+            ) : (
+              <ToggleRight className="h-5 w-5 text-red-600" />
+            )}
+            <span className="hidden md:inline">
+              {isDemoMode ? "Demo Mode" : "Production Mode"}
+            </span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-64 p-4">
@@ -47,6 +61,18 @@ export const ModeToggle = () => {
                 }} 
               />
             </div>
+            
+            {isProductionMode && (
+              <div className="bg-red-50 p-2 rounded-md flex gap-2 text-xs">
+                <AlertTriangle className="h-4 w-4 text-red-500 flex-shrink-0 mt-0.5" />
+                <div className="text-red-700">
+                  <strong>Production Mode Active</strong>
+                  <p className="mt-1">
+                    You are using real data and production services. All actions will affect real accounts.
+                  </p>
+                </div>
+              </div>
+            )}
             
             {isDemoMode && (
               <div className="bg-blue-50 p-2 rounded-md flex gap-2 text-xs">
