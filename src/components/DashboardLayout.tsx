@@ -3,6 +3,7 @@ import { ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { WalletStatus } from "@/components/WalletStatus";
+import { ModeToggle } from "@/components/ModeToggle";
 import { Button } from "@/components/ui/button";
 import { 
   Home, 
@@ -104,6 +105,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             Welcome, {user?.name}
           </h2>
           <div className="flex items-center gap-4">
+            <ModeToggle />
             <WalletStatus />
           </div>
         </header>

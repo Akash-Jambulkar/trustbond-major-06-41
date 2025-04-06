@@ -2,12 +2,13 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMode } from "@/contexts/ModeContext";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Wallet, User, LockKeyhole } from "lucide-react";
+import { Wallet, User, LockKeyhole, Info, ToggleLeft, ToggleRight } from "lucide-react";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -15,6 +16,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { login, loginWithWallet } = useAuth();
   const { connectWallet, isBlockchainLoading } = useBlockchain();
+  const { isDemoMode, toggleMode } = useMode();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,13 +55,25 @@ const Login = () => {
           <Link to="/" className="text-2xl font-bold text-trustbond-primary">
             TrustBond
           </Link>
-          <nav className="flex gap-4">
+          <nav className="flex items-center gap-4">
             <Link to="/" className="text-trustbond-dark hover:text-trustbond-primary transition-colors">
               Home
             </Link>
             <Link to="/register" className="text-trustbond-primary font-medium">
               Register
             </Link>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={toggleMode}
+              className="flex items-center gap-1"
+            >
+              {isDemoMode 
+                ? <ToggleLeft className="h-4 w-4 text-trustbond-primary" /> 
+                : <ToggleRight className="h-4 w-4 text-green-600" />
+              }
+              <span className="text-xs">{isDemoMode ? "Demo" : "Production"}</span>
+            </Button>
           </nav>
         </div>
       </header>
@@ -72,6 +86,12 @@ const Login = () => {
             <p className="text-gray-600 mt-2">
               Log in to access your TrustBond account
             </p>
+            {isDemoMode && (
+              <div className="mt-2 text-xs text-blue-600 flex items-center justify-center gap-1">
+                <Info size={12} />
+                <span>Using demo mode with sample accounts</span>
+              </div>
+            )}
           </div>
 
           <div className="mb-6">
@@ -161,15 +181,17 @@ const Login = () => {
             </p>
           </div>
 
-          {/* Demo Accounts Info */}
-          <div className="mt-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <h3 className="text-sm font-semibold text-gray-700 mb-2">Demo Accounts:</h3>
-            <ul className="text-xs text-gray-600 space-y-1">
-              <li><strong>Admin:</strong> admin@trustbond.com / admin123</li>
-              <li><strong>Bank:</strong> bank@trustbond.com / bank123</li>
-              <li><strong>User:</strong> user@trustbond.com / user123</li>
-            </ul>
-          </div>
+          {/* Demo Accounts Info - Only shown in demo mode */}
+          {isDemoMode && (
+            <div className="mt-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <h3 className="text-sm font-semibold text-gray-700 mb-2">Demo Accounts:</h3>
+              <ul className="text-xs text-gray-600 space-y-1">
+                <li><strong>Admin:</strong> admin@trustbond.com / admin123</li>
+                <li><strong>Bank:</strong> bank@trustbond.com / bank123</li>
+                <li><strong>User:</strong> user@trustbond.com / user123</li>
+              </ul>
+            </div>
+          )}
         </div>
       </main>
 
