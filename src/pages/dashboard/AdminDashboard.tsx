@@ -23,18 +23,57 @@ const AdminDashboard = () => {
     }
   }, [location, navigate]);
 
+  // Check for exact path to avoid nested layout issue
+  const isExactPath = location.pathname.split("/").filter(Boolean).length === 2;
+
   return (
-    <DashboardLayout>
-      <Routes>
-        <Route path="/" element={<AdminHome />} />
-        <Route path="home" element={<AdminHome />} />
-        <Route path="profile" element={<AdminProfile />} />
-        <Route path="blockchain-setup" element={<BlockchainSetup />} />
-        <Route path="settings" element={<AdminSettings />} />
-        <Route path="banks" element={<AdminBanks />} />
-        <Route path="users" element={<AdminUsers />} />
-      </Routes>
-    </DashboardLayout>
+    <>
+      {isExactPath ? (
+        <DashboardLayout>
+          <Routes>
+            <Route path="/*" element={<AdminHome />} />
+          </Routes>
+        </DashboardLayout>
+      ) : (
+        <Routes>
+          <Route path="/" element={
+            <DashboardLayout>
+              <AdminHome />
+            </DashboardLayout>
+          } />
+          <Route path="home" element={
+            <DashboardLayout>
+              <AdminHome />
+            </DashboardLayout>
+          } />
+          <Route path="profile" element={
+            <DashboardLayout>
+              <AdminProfile />
+            </DashboardLayout>
+          } />
+          <Route path="blockchain-setup" element={
+            <DashboardLayout>
+              <BlockchainSetup />
+            </DashboardLayout>
+          } />
+          <Route path="settings" element={
+            <DashboardLayout>
+              <AdminSettings />
+            </DashboardLayout>
+          } />
+          <Route path="banks" element={
+            <DashboardLayout>
+              <AdminBanks />
+            </DashboardLayout>
+          } />
+          <Route path="users" element={
+            <DashboardLayout>
+              <AdminUsers />
+            </DashboardLayout>
+          } />
+        </Routes>
+      )}
+    </>
   );
 };
 

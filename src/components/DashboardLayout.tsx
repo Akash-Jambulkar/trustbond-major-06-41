@@ -21,22 +21,12 @@ import {
 
 interface DashboardLayoutProps {
   children: ReactNode;
-  // Add a prop to check if this is a nested layout
-  isNested?: boolean;
 }
 
-export const DashboardLayout = ({ children, isNested = false }: DashboardLayoutProps) => {
+export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-
-  // Check for nested route - if the URL contains multiple dashboard segments
-  const dashboardSegments = location.pathname.split('/').filter(seg => seg === 'dashboard').length;
-  
-  // If this is a nested route or explicitly marked as nested, only render the children
-  if (isNested || dashboardSegments > 1) {
-    return <>{children}</>;
-  }
 
   // Get navigation items based on user role
   const getNavItems = () => {

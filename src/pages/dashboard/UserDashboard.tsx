@@ -22,17 +22,52 @@ const UserDashboard = () => {
     }
   }, [location, navigate]);
 
+  // Check for exact path to avoid nested layout issue
+  const isExactPath = location.pathname.split("/").filter(Boolean).length === 2;
+
   return (
-    <DashboardLayout>
-      <Routes>
-        <Route path="/" element={<UserHome />} />
-        <Route path="home" element={<UserHome />} />
-        <Route path="profile" element={<UserProfile />} />
-        <Route path="kyc" element={<KYCPage />} />
-        <Route path="loans" element={<LoansPage />} />
-        <Route path="trust-score" element={<TrustScorePage />} />
-      </Routes>
-    </DashboardLayout>
+    <>
+      {isExactPath ? (
+        <DashboardLayout>
+          <Routes>
+            <Route path="/*" element={<UserHome />} />
+          </Routes>
+        </DashboardLayout>
+      ) : (
+        <Routes>
+          <Route path="/" element={
+            <DashboardLayout>
+              <UserHome />
+            </DashboardLayout>
+          } />
+          <Route path="home" element={
+            <DashboardLayout>
+              <UserHome />
+            </DashboardLayout>
+          } />
+          <Route path="profile" element={
+            <DashboardLayout>
+              <UserProfile />
+            </DashboardLayout>
+          } />
+          <Route path="kyc" element={
+            <DashboardLayout>
+              <KYCPage />
+            </DashboardLayout>
+          } />
+          <Route path="loans" element={
+            <DashboardLayout>
+              <LoansPage />
+            </DashboardLayout>
+          } />
+          <Route path="trust-score" element={
+            <DashboardLayout>
+              <TrustScorePage />
+            </DashboardLayout>
+          } />
+        </Routes>
+      )}
+    </>
   );
 };
 
