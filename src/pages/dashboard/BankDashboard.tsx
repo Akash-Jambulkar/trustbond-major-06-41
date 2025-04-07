@@ -23,14 +23,16 @@ const BankDashboard = () => {
   }, [location, navigate]);
 
   return (
-    <Routes>
-      <Route path="/" element={<DashboardLayout><BankHome /></DashboardLayout>} />
-      <Route path="home" element={<DashboardLayout><BankHome /></DashboardLayout>} />
-      <Route path="profile" element={<DashboardLayout><BankProfile /></DashboardLayout>} />
-      <Route path="verify-kyc" element={<DashboardLayout><VerifyKYC /></DashboardLayout>} />
-      <Route path="loans" element={<DashboardLayout><BankLoans /></DashboardLayout>} />
-      <Route path="trust-scores" element={<DashboardLayout><BankTrustScores /></DashboardLayout>} />
-    </Routes>
+    <DashboardLayout>
+      <Routes>
+        <Route path="/" element={<BankHome />} />
+        <Route path="home" element={<BankHome />} />
+        <Route path="profile" element={<BankProfile />} />
+        <Route path="verify-kyc" element={<VerifyKYC />} />
+        <Route path="loans" element={<BankLoans />} />
+        <Route path="trust-scores" element={<BankTrustScores />} />
+      </Routes>
+    </DashboardLayout>
   );
 };
 

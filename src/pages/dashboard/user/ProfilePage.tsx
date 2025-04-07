@@ -1,6 +1,4 @@
-
 import { useState } from "react";
-import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,26 +51,25 @@ const ProfilePage = () => {
   };
   
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Profile</h1>
-          {!isEditing ? (
-            <Button onClick={() => setIsEditing(true)}>
-              Edit Profile
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Profile</h1>
+        {!isEditing ? (
+          <Button onClick={() => setIsEditing(true)}>
+            Edit Profile
+          </Button>
+        ) : (
+          <div className="space-x-2">
+            <Button variant="outline" onClick={() => setIsEditing(false)}>
+              Cancel
             </Button>
-          ) : (
-            <div className="space-x-2">
-              <Button variant="outline" onClick={() => setIsEditing(false)}>
-                Cancel
-              </Button>
-              <Button onClick={saveProfile} className="bg-trustbond-primary">
-                Save Changes
-              </Button>
-            </div>
-          )}
-        </div>
-        
+            <Button onClick={saveProfile} className="bg-trustbond-primary">
+              Save Changes
+            </Button>
+          </div>
+        )}
+      </div>
+      
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <Card className="lg:col-span-1">
             <CardHeader className="pb-2">
@@ -409,8 +406,7 @@ const ProfilePage = () => {
             </Tabs>
           </div>
         </div>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 };
 

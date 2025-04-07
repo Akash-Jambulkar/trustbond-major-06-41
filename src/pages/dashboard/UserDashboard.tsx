@@ -23,14 +23,16 @@ const UserDashboard = () => {
   }, [location, navigate]);
 
   return (
-    <Routes>
-      <Route path="/" element={<DashboardLayout><UserHome /></DashboardLayout>} />
-      <Route path="home" element={<DashboardLayout><UserHome /></DashboardLayout>} />
-      <Route path="profile" element={<DashboardLayout><UserProfile /></DashboardLayout>} />
-      <Route path="kyc" element={<DashboardLayout><KYCPage /></DashboardLayout>} />
-      <Route path="loans" element={<DashboardLayout><LoansPage /></DashboardLayout>} />
-      <Route path="trust-score" element={<DashboardLayout><TrustScorePage /></DashboardLayout>} />
-    </Routes>
+    <DashboardLayout>
+      <Routes>
+        <Route path="/" element={<UserHome />} />
+        <Route path="home" element={<UserHome />} />
+        <Route path="profile" element={<UserProfile />} />
+        <Route path="kyc" element={<KYCPage />} />
+        <Route path="loans" element={<LoansPage />} />
+        <Route path="trust-score" element={<TrustScorePage />} />
+      </Routes>
+    </DashboardLayout>
   );
 };
 
