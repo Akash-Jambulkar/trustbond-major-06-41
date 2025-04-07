@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
-import { Building2, Landmark, MapPin, User } from "lucide-react";
+import { Building2, Landmark, MapPin, User, Shield, CreditCard } from "lucide-react";
 
 const BankProfile = () => {
   const { user } = useAuth();

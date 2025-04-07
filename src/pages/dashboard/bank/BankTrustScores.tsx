@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -190,6 +189,13 @@ const BankTrustScores = () => {
     ];
   };
 
+  // Create chart configuration for both charts
+  const chartConfig = {
+    score: { label: "Score", color: "#3b82f6" },
+    count: { label: "Users", color: "#3b82f6" },
+    value: { label: "Value", color: "#3b82f6" }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -212,7 +218,7 @@ const BankTrustScores = () => {
           </CardHeader>
           <CardContent>
             <div className="h-72">
-              <ChartContainer>
+              <ChartContainer config={chartConfig}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={scoreDistribution}
@@ -438,7 +444,7 @@ const BankTrustScores = () => {
               </div>
               
               <div className="h-72">
-                <ChartContainer>
+                <ChartContainer config={chartConfig}>
                   {chartType === "history" ? (
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart
