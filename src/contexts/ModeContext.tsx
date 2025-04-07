@@ -10,6 +10,7 @@ interface ModeContextType {
   isDemoMode: boolean;
   isProductionMode: boolean;
   enableBlockchain: boolean;
+  toggleBlockchain: () => void;  // Add the missing toggleBlockchain function
 }
 
 const ModeContext = createContext<ModeContextType | undefined>(undefined);
@@ -74,6 +75,7 @@ export const ModeProvider = ({ children }: { children: ReactNode }) => {
         isDemoMode: mode === "demo",
         isProductionMode: mode === "production",
         enableBlockchain,
+        toggleBlockchain,  // Export the missing toggleBlockchain function
       }}
     >
       {children}
