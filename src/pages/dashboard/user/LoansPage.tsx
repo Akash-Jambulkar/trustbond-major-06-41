@@ -1,6 +1,4 @@
-
 import { useState } from "react";
-import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -147,19 +145,18 @@ const LoansPage = () => {
   const rejectedLoans = loans.filter(loan => loan.status === 'rejected');
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-3xl font-bold">Loans</h1>
-          <Button 
-            onClick={() => setActiveTab("apply")} 
-            className="mt-2 sm:mt-0 bg-trustbond-primary"
-          >
-            Apply for a New Loan
-          </Button>
-        </div>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-3xl font-bold">Loans</h1>
+        <Button 
+          onClick={() => setActiveTab("apply")} 
+          className="mt-2 sm:mt-0 bg-trustbond-primary"
+        >
+          Apply for a New Loan
+        </Button>
+      </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="active">
               Active ({activeLoans.length})
@@ -495,8 +492,7 @@ const LoansPage = () => {
             </Card>
           </TabsContent>
         </Tabs>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 };
 

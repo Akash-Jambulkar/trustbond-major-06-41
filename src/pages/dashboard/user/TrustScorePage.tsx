@@ -204,303 +204,301 @@ const TrustScorePage = () => {
   };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Trust Score Calculator</h1>
-          <Button onClick={calculateScore} className="bg-trustbond-primary">
-            Calculate Score
-          </Button>
-        </div>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Trust Score Calculator</h1>
+        <Button onClick={calculateScore} className="bg-trustbond-primary">
+          Calculate Score
+        </Button>
+      </div>
 
-        {scoreResult && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <Card className="col-span-1">
-              <CardHeader className="pb-2">
-                <CardTitle>Your Trust Score</CardTitle>
-                <CardDescription>Based on your financial profile</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center">
-                  <div className="text-5xl font-bold text-trustbond-primary">{scoreResult.score}</div>
-                  <div className="ml-2">
-                    {scoreResult.score > 780 ? (
-                      <ArrowUp className="text-green-500" />
-                    ) : scoreResult.score < 650 ? (
-                      <ArrowDown className="text-red-500" />
-                    ) : (
-                      <TrendingUp className="text-amber-500" />
-                    )}
-                  </div>
-                </div>
-                <div className="mt-2 text-sm">
-                  {scoreResult.score > 780 
-                    ? "Excellent credit profile" 
-                    : scoreResult.score > 700 
-                    ? "Good credit standing" 
-                    : scoreResult.score > 650 
-                    ? "Fair credit score" 
-                    : "Needs improvement"}
-                </div>
-                <div className="mt-4 p-3 rounded-md bg-gray-50">
-                  <div className="text-sm font-semibold">Loan Eligibility:</div>
-                  <div className={`text-lg font-bold ${
-                    scoreResult.eligibility === "HIGH" 
-                      ? "text-green-600" 
-                      : scoreResult.eligibility === "MODERATE" 
-                      ? "text-amber-600" 
-                      : "text-red-600"
-                  }`}>
-                    {scoreResult.eligibility}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="col-span-1 md:col-span-2">
-              <CardHeader className="pb-2">
-                <CardTitle>Score History</CardTitle>
-                <CardDescription>Last 12 months</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-64">
-                  <ChartContainer 
-                    config={{
-                      score: {
-                        theme: {
-                          light: "#9b87f5",
-                          dark: "#9b87f5",
-                        },
-                      },
-                    }}
-                  >
-                    <AreaChart
-                      data={historicalData}
-                      margin={{
-                        top: 10,
-                        right: 30,
-                        left: 0,
-                        bottom: 0,
-                      }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis domain={[600, 850]} />
-                      <ChartTooltip
-                        content={<ChartTooltipContent labelClassName="font-normal" />}
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="score"
-                        fill="var(--color-score)"
-                        stroke="var(--color-score)"
-                        fillOpacity={0.2}
-                      />
-                    </AreaChart>
-                  </ChartContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Loan Type & Basic Information</CardTitle>
-              <CardDescription>Choose loan type and enter your details</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-2">
-                <Label htmlFor="loanType">Loan Type</Label>
-                <Select 
-                  value={inputs.loanType} 
-                  onValueChange={(value) => handleInputChange('loanType', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select loan type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="home">Home Loan</SelectItem>
-                    <SelectItem value="personal">Personal Loan</SelectItem>
-                    <SelectItem value="education">Education Loan</SelectItem>
-                    <SelectItem value="vehicle">Vehicle Loan</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="cibil_score">CIBIL Score (300-900)</Label>
-                <Input 
-                  id="cibil_score" 
-                  type="number" 
-                  min="300" 
-                  max="900"
-                  value={inputs.cibil_score} 
-                  onChange={(e) => handleInputChange('cibil_score', parseInt(e.target.value))} 
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="education_level">Education Level (1-5)</Label>
-                <Select 
-                  value={inputs.education_level.toString()} 
-                  onValueChange={(value) => handleInputChange('education_level', parseInt(value))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select education level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="5">PhD (5)</SelectItem>
-                    <SelectItem value="4">Post Graduate (4)</SelectItem>
-                    <SelectItem value="3">Graduate (3)</SelectItem>
-                    <SelectItem value="2">High School (2)</SelectItem>
-                    <SelectItem value="1">Primary (1)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="employment_stability">Employment Stability (years)</Label>
-                <Input 
-                  id="employment_stability" 
-                  type="number" 
-                  min="0" 
-                  max="30"
-                  value={inputs.employment_stability} 
-                  onChange={(e) => handleInputChange('employment_stability', parseInt(e.target.value))} 
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="family_dependents">Number of Dependents</Label>
-                <Input 
-                  id="family_dependents" 
-                  type="number" 
-                  min="0" 
-                  max="10"
-                  value={inputs.family_dependents} 
-                  onChange={(e) => handleInputChange('family_dependents', parseInt(e.target.value))} 
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Financial Information</CardTitle>
-              <CardDescription>Enter your financial details</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-2">
-                <Label htmlFor="current_family_income">Annual Family Income (₹)</Label>
-                <Input 
-                  id="current_family_income" 
-                  type="number"
-                  min="100000"
-                  value={inputs.current_family_income} 
-                  onChange={(e) => handleInputChange('current_family_income', parseInt(e.target.value))} 
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="itr_paid">Annual ITR Paid (₹)</Label>
-                <Input 
-                  id="itr_paid" 
-                  type="number"
-                  min="10000"
-                  value={inputs.itr_paid} 
-                  onChange={(e) => handleInputChange('itr_paid', parseInt(e.target.value))} 
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="pending_loans">Pending Loans Amount (₹)</Label>
-                <Input 
-                  id="pending_loans" 
-                  type="number"
-                  min="0"
-                  value={inputs.pending_loans} 
-                  onChange={(e) => handleInputChange('pending_loans', parseInt(e.target.value))} 
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="savings_fixed_deposits">Savings & Fixed Deposits (₹)</Label>
-                <Input 
-                  id="savings_fixed_deposits" 
-                  type="number"
-                  min="10000"
-                  value={inputs.savings_fixed_deposits} 
-                  onChange={(e) => handleInputChange('savings_fixed_deposits', parseInt(e.target.value))} 
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="debt_to_income_ratio">Debt to Income Ratio (0-1)</Label>
-                <Input 
-                  id="debt_to_income_ratio" 
-                  type="number"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  value={inputs.debt_to_income_ratio} 
-                  onChange={(e) => handleInputChange('debt_to_income_ratio', parseFloat(e.target.value))} 
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="credit_utilization">Credit Utilization (0-1)</Label>
-                <Input 
-                  id="credit_utilization" 
-                  type="number"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  value={inputs.credit_utilization} 
-                  onChange={(e) => handleInputChange('credit_utilization', parseFloat(e.target.value))} 
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {scoreResult && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Score Breakdown</CardTitle>
-              <CardDescription>Detailed analysis of your trust score calculation</CardDescription>
+      {scoreResult && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card className="col-span-1">
+            <CardHeader className="pb-2">
+              <CardTitle>Your Trust Score</CardTitle>
+              <CardDescription>Based on your financial profile</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {scoreResult.details.map((detail, index) => (
-                  <div key={index} className="border rounded-md p-3">
-                    <div className="text-sm font-medium">{detail.parameter}</div>
-                    <div className="text-xs text-gray-500">Value: {detail.value}</div>
-                    <div className={`text-xs font-semibold ${
-                      detail.category === "Excellent" 
-                        ? "text-green-600" 
-                        : detail.category === "Good" 
-                        ? "text-blue-600" 
-                        : detail.category === "Moderate" 
-                        ? "text-amber-600" 
-                        : detail.category === "Low" 
-                        ? "text-orange-600" 
-                        : "text-red-600"
-                    }`}>
-                      {detail.category}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      Weight: {detail.weight}% | Contribution: {detail.contribution.toFixed(1)}
-                    </div>
-                  </div>
-                ))}
+              <div className="flex items-center">
+                <div className="text-5xl font-bold text-trustbond-primary">{scoreResult.score}</div>
+                <div className="ml-2">
+                  {scoreResult.score > 780 ? (
+                    <ArrowUp className="text-green-500" />
+                  ) : scoreResult.score < 650 ? (
+                    <ArrowDown className="text-red-500" />
+                  ) : (
+                    <TrendingUp className="text-amber-500" />
+                  )}
+                </div>
+              </div>
+              <div className="mt-2 text-sm">
+                {scoreResult.score > 780 
+                  ? "Excellent credit profile" 
+                  : scoreResult.score > 700 
+                  ? "Good credit standing" 
+                  : scoreResult.score > 650 
+                  ? "Fair credit score" 
+                  : "Needs improvement"}
+              </div>
+              <div className="mt-4 p-3 rounded-md bg-gray-50">
+                <div className="text-sm font-semibold">Loan Eligibility:</div>
+                <div className={`text-lg font-bold ${
+                  scoreResult.eligibility === "HIGH" 
+                    ? "text-green-600" 
+                    : scoreResult.eligibility === "MODERATE" 
+                    ? "text-amber-600" 
+                    : "text-red-600"
+                }`}>
+                  {scoreResult.eligibility}
+                </div>
               </div>
             </CardContent>
           </Card>
-        )}
+
+          <Card className="col-span-1 md:col-span-2">
+            <CardHeader className="pb-2">
+              <CardTitle>Score History</CardTitle>
+              <CardDescription>Last 12 months</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-64">
+                <ChartContainer 
+                  config={{
+                    score: {
+                      theme: {
+                        light: "#9b87f5",
+                        dark: "#9b87f5",
+                      },
+                    },
+                  }}
+                >
+                  <AreaChart
+                    data={historicalData}
+                    margin={{
+                      top: 10,
+                      right: 30,
+                      left: 0,
+                      bottom: 0,
+                    }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis domain={[600, 850]} />
+                    <ChartTooltip
+                      content={<ChartTooltipContent labelClassName="font-normal" />}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="score"
+                      fill="var(--color-score)"
+                      stroke="var(--color-score)"
+                      fillOpacity={0.2}
+                    />
+                  </AreaChart>
+                </ChartContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Loan Type & Basic Information</CardTitle>
+            <CardDescription>Choose loan type and enter your details</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-2">
+              <Label htmlFor="loanType">Loan Type</Label>
+              <Select 
+                value={inputs.loanType} 
+                onValueChange={(value) => handleInputChange('loanType', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select loan type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="home">Home Loan</SelectItem>
+                  <SelectItem value="personal">Personal Loan</SelectItem>
+                  <SelectItem value="education">Education Loan</SelectItem>
+                  <SelectItem value="vehicle">Vehicle Loan</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="cibil_score">CIBIL Score (300-900)</Label>
+              <Input 
+                id="cibil_score" 
+                type="number" 
+                min="300" 
+                max="900"
+                value={inputs.cibil_score} 
+                onChange={(e) => handleInputChange('cibil_score', parseInt(e.target.value))} 
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="education_level">Education Level (1-5)</Label>
+              <Select 
+                value={inputs.education_level.toString()} 
+                onValueChange={(value) => handleInputChange('education_level', parseInt(value))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select education level" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">PhD (5)</SelectItem>
+                  <SelectItem value="4">Post Graduate (4)</SelectItem>
+                  <SelectItem value="3">Graduate (3)</SelectItem>
+                  <SelectItem value="2">High School (2)</SelectItem>
+                  <SelectItem value="1">Primary (1)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="employment_stability">Employment Stability (years)</Label>
+              <Input 
+                id="employment_stability" 
+                type="number" 
+                min="0" 
+                max="30"
+                value={inputs.employment_stability} 
+                onChange={(e) => handleInputChange('employment_stability', parseInt(e.target.value))} 
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="family_dependents">Number of Dependents</Label>
+              <Input 
+                id="family_dependents" 
+                type="number" 
+                min="0" 
+                max="10"
+                value={inputs.family_dependents} 
+                onChange={(e) => handleInputChange('family_dependents', parseInt(e.target.value))} 
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Financial Information</CardTitle>
+            <CardDescription>Enter your financial details</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-2">
+              <Label htmlFor="current_family_income">Annual Family Income (₹)</Label>
+              <Input 
+                id="current_family_income" 
+                type="number"
+                min="100000"
+                value={inputs.current_family_income} 
+                onChange={(e) => handleInputChange('current_family_income', parseInt(e.target.value))} 
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="itr_paid">Annual ITR Paid (₹)</Label>
+              <Input 
+                id="itr_paid" 
+                type="number"
+                min="10000"
+                value={inputs.itr_paid} 
+                onChange={(e) => handleInputChange('itr_paid', parseInt(e.target.value))} 
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="pending_loans">Pending Loans Amount (₹)</Label>
+              <Input 
+                id="pending_loans" 
+                type="number"
+                min="0"
+                value={inputs.pending_loans} 
+                onChange={(e) => handleInputChange('pending_loans', parseInt(e.target.value))} 
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="savings_fixed_deposits">Savings & Fixed Deposits (₹)</Label>
+              <Input 
+                id="savings_fixed_deposits" 
+                type="number"
+                min="10000"
+                value={inputs.savings_fixed_deposits} 
+                onChange={(e) => handleInputChange('savings_fixed_deposits', parseInt(e.target.value))} 
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="debt_to_income_ratio">Debt to Income Ratio (0-1)</Label>
+              <Input 
+                id="debt_to_income_ratio" 
+                type="number"
+                min="0"
+                max="1"
+                step="0.01"
+                value={inputs.debt_to_income_ratio} 
+                onChange={(e) => handleInputChange('debt_to_income_ratio', parseFloat(e.target.value))} 
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="credit_utilization">Credit Utilization (0-1)</Label>
+              <Input 
+                id="credit_utilization" 
+                type="number"
+                min="0"
+                max="1"
+                step="0.01"
+                value={inputs.credit_utilization} 
+                onChange={(e) => handleInputChange('credit_utilization', parseFloat(e.target.value))} 
+              />
+            </div>
+          </CardContent>
+        </Card>
       </div>
-    </DashboardLayout>
+
+      {scoreResult && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Score Breakdown</CardTitle>
+            <CardDescription>Detailed analysis of your trust score calculation</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {scoreResult.details.map((detail, index) => (
+                <div key={index} className="border rounded-md p-3">
+                  <div className="text-sm font-medium">{detail.parameter}</div>
+                  <div className="text-xs text-gray-500">Value: {detail.value}</div>
+                  <div className={`text-xs font-semibold ${
+                    detail.category === "Excellent" 
+                      ? "text-green-600" 
+                      : detail.category === "Good" 
+                      ? "text-blue-600" 
+                      : detail.category === "Moderate" 
+                      ? "text-amber-600" 
+                      : detail.category === "Low" 
+                      ? "text-orange-600" 
+                      : "text-red-600"
+                  }`}>
+                    {detail.category}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    Weight: {detail.weight}% | Contribution: {detail.contribution.toFixed(1)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 };
 
