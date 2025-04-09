@@ -1,5 +1,6 @@
 
 import { useBlockchain } from "@/contexts/BlockchainContext";
+import { useMode } from "@/contexts/ModeContext";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,7 +11,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { Wallet, AlertTriangle, ExternalLink } from "lucide-react";
+import { Wallet, AlertTriangle, ExternalLink, AlertCircle } from "lucide-react";
+import { useState } from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export const WalletStatus = () => {
   const { 
@@ -22,8 +30,12 @@ export const WalletStatus = () => {
     networkName,
     isCorrectNetwork,
     isGanache,
-    switchNetwork 
+    switchNetwork,
+    connectionError
   } = useBlockchain();
+  
+  const { enableBlockchain, isDemoMode } = useMode();
+  const [showError, setShowError] = useState<boolean>(false);
 
   // Networks to display in the dropdown
   const networks = [
@@ -31,6 +43,35 @@ export const WalletStatus = () => {
     { name: "Ethereum Mainnet", id: 1 },
     { name: "Goerli Testnet", id: 5 }
   ];
+
+  if (!enableBlockchain) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div>
+              <Button variant="outline" className="flex items-center gap-2" disabled>
+                <Wallet size={20} />
+                <span className="hidden md:inline">Blockchain Disabled</span>
+              </Button>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Blockchain features are currently disabled. Enable them in settings.</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
+  const handleConnect = async () => {
+    try {
+      await connectWallet();
+      setShowError(false);
+    } catch (error) {
+      setShowError(true);
+    }
+  };
 
   return (
     <div>
@@ -85,17 +126,25 @@ export const WalletStatus = () => {
           </DropdownMenuContent>
         </DropdownMenu>
       ) : (
-        <Button 
-          onClick={() => connectWallet()}
-          variant="outline" 
-          className="flex items-center gap-2"
-          disabled={isBlockchainLoading}
-        >
-          <Wallet size={20} />
-          <span className="hidden md:inline">
-            {isBlockchainLoading ? "Connecting..." : "Connect MetaMask"}
-          </span>
-        </Button>
+        <div className="flex flex-col">
+          <Button 
+            onClick={handleConnect}
+            variant="outline" 
+            className="flex items-center gap-2"
+            disabled={isBlockchainLoading || isDemoMode}
+          >
+            <Wallet size={20} />
+            <span className="hidden md:inline">
+              {isBlockchainLoading ? "Connecting..." : "Connect MetaMask"}
+            </span>
+          </Button>
+          {showError && connectionError && (
+            <div className="text-xs text-red-500 mt-1 flex items-center gap-1">
+              <AlertCircle size={12} />
+              <span>Connection error. Make sure MetaMask is installed and unlocked.</span>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

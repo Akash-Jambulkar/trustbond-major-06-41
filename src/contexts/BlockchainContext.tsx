@@ -1,5 +1,6 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { useMode } from "@/contexts/ModeContext";
 import Web3 from "web3";
 import { toast } from "sonner";
 import { Contract } from "web3-eth-contract";
@@ -36,6 +37,7 @@ interface BlockchainContextType {
   trustScoreContract: Contract | null;
   loanContract: Contract | null;
   isBlockchainLoading: boolean;
+  connectionError: string | null;
   submitKYC: (documentHash: string) => Promise<void>;
   verifyKYC: (userAddress: string, status: boolean) => Promise<void>;
   getKYCStatus: (userAddress: string) => Promise<boolean>;
@@ -86,10 +88,12 @@ const getNetworkName = (networkId: number | null): string => {
 };
 
 export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
+  const { enableBlockchain, isDemoMode } = useMode();
   const [web3, setWeb3] = useState<Web3 | null>(null);
   const [account, setAccount] = useState<string | null>(null);
   const [networkId, setNetworkId] = useState<number | null>(null);
   const [isBlockchainLoading, setIsBlockchainLoading] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   
   // Contract instances
   const [kycContract, setKycContract] = useState<Contract | null>(null);
@@ -137,6 +141,10 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
 
   // Check if MetaMask is already connected on page load
   useEffect(() => {
+    if (!enableBlockchain || isDemoMode) {
+      return;
+    }
+    
     const checkConnection = async () => {
       if (window.ethereum) {
         try {
@@ -155,16 +163,17 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
           }
         } catch (error) {
           console.error("Error checking existing connection:", error);
+          setConnectionError("Error checking existing connection");
         }
       }
     };
     
     checkConnection();
-  }, []);
+  }, [enableBlockchain, isDemoMode]);
 
   // Listen for account and network changes
   useEffect(() => {
-    if (window.ethereum) {
+    if (window.ethereum && enableBlockchain && !isDemoMode) {
       // Handle account changes
       window.ethereum.on("accountsChanged", (accounts: string[]) => {
         if (accounts.length > 0) {
@@ -196,31 +205,43 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         window.ethereum.removeListener("chainChanged", () => {});
       }
     };
-  }, [web3, account]);
+  }, [web3, account, enableBlockchain, isDemoMode]);
 
   // Connect to MetaMask wallet
   const connectWallet = async (): Promise<string> => {
     setIsBlockchainLoading(true);
+    setConnectionError(null);
     try {
       if (!window.ethereum) {
-        throw new Error("MetaMask not detected. Please install MetaMask.");
+        const error = "MetaMask not detected. Please install MetaMask.";
+        setConnectionError(error);
+        throw new Error(error);
       }
 
       // Request account access
       const web3Instance = new Web3(window.ethereum);
       const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-      const networkId = await web3Instance.eth.net.getId();
+      
+      try {
+        const networkId = await web3Instance.eth.net.getId();
+        setNetworkId(networkId);
+      } catch (netError) {
+        console.error("Failed to get network ID:", netError);
+        setConnectionError("Failed to get network ID. Make sure MetaMask is connected to a network.");
+        // Continue with connection despite network error
+      }
       
       setWeb3(web3Instance);
       setAccount(accounts[0]);
-      setNetworkId(networkId);
       
       toast.success("Wallet connected: " + accounts[0].substring(0, 6) + "..." + accounts[0].substring(accounts[0].length - 4));
       
       return accounts[0];
     } catch (error) {
       console.error("Failed to connect wallet:", error);
-      toast.error("Failed to connect wallet: " + (error as Error).message);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      setConnectionError(errorMessage);
+      toast.error("Failed to connect wallet: " + errorMessage);
       throw error;
     } finally {
       setIsBlockchainLoading(false);
@@ -230,7 +251,9 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
   // Switch to a different network
   const switchNetwork = async (targetNetworkId: number): Promise<void> => {
     if (!window.ethereum) {
-      throw new Error("MetaMask not detected");
+      const error = "MetaMask not detected";
+      setConnectionError(error);
+      throw new Error(error);
     }
 
     try {
@@ -280,6 +303,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     setKycContract(null);
     setTrustScoreContract(null);
     setLoanContract(null);
+    setConnectionError(null);
     
     toast.info("Wallet disconnected");
   };
@@ -451,6 +475,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         trustScoreContract,
         loanContract,
         isBlockchainLoading,
+        connectionError,
         submitKYC,
         verifyKYC,
         getKYCStatus,

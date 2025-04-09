@@ -1,13 +1,14 @@
 
 import { useState } from "react";
 import { useBlockchain } from "@/contexts/BlockchainContext";
+import { useMode } from "@/contexts/ModeContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Shield, LineChart, CreditCard } from "lucide-react";
+import { Shield, LineChart, CreditCard, AlertCircle } from "lucide-react";
 
 export const BlockchainActions = () => {
   const { 
@@ -17,8 +18,11 @@ export const BlockchainActions = () => {
     getKYCStatus, 
     getTrustScore,
     requestLoan,
-    getUserLoans
+    getUserLoans,
+    connectionError
   } = useBlockchain();
+  
+  const { enableBlockchain, isDemoMode } = useMode();
 
   const [documentHash, setDocumentHash] = useState("");
   const [kycStatus, setKycStatus] = useState<boolean | null>(null);
@@ -28,6 +32,7 @@ export const BlockchainActions = () => {
   const [userLoans, setUserLoans] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  // In demo mode or when blockchain is disabled, generate mock data
   const handleSubmitKYC = async () => {
     if (!documentHash) {
       toast.error("Please enter a document hash");
@@ -36,6 +41,17 @@ export const BlockchainActions = () => {
 
     setIsLoading(true);
     try {
+      if (isDemoMode || !enableBlockchain) {
+        // Mock behavior for demo mode
+        setTimeout(() => {
+          toast.success("KYC documentation submitted successfully (Demo)");
+          setDocumentHash("");
+          setIsLoading(false);
+        }, 1000);
+        return;
+      }
+      
+      // Real blockchain interaction
       await submitKYC(documentHash);
       setDocumentHash("");
     } catch (error) {
@@ -46,11 +62,23 @@ export const BlockchainActions = () => {
   };
 
   const handleCheckKYCStatus = async () => {
-    if (!account) return;
+    if (!account && !isDemoMode) return;
 
     setIsLoading(true);
     try {
-      const status = await getKYCStatus(account);
+      if (isDemoMode || !enableBlockchain) {
+        // Mock behavior for demo mode
+        setTimeout(() => {
+          const mockStatus = Math.random() > 0.3;
+          setKycStatus(mockStatus);
+          toast.info(`KYC Status: ${mockStatus ? "Verified" : "Not Verified"} (Demo)`);
+          setIsLoading(false);
+        }, 1000);
+        return;
+      }
+      
+      // Real blockchain interaction
+      const status = await getKYCStatus(account!);
       setKycStatus(status);
       toast.info(`KYC Status: ${status ? "Verified" : "Not Verified"}`);
     } catch (error) {
@@ -62,11 +90,23 @@ export const BlockchainActions = () => {
   };
 
   const handleCheckTrustScore = async () => {
-    if (!account) return;
+    if (!account && !isDemoMode) return;
 
     setIsLoading(true);
     try {
-      const score = await getTrustScore(account);
+      if (isDemoMode || !enableBlockchain) {
+        // Mock behavior for demo mode
+        setTimeout(() => {
+          const mockScore = Math.floor(Math.random() * 100);
+          setTrustScore(mockScore);
+          toast.info(`Trust Score: ${mockScore} (Demo)`);
+          setIsLoading(false);
+        }, 1000);
+        return;
+      }
+      
+      // Real blockchain interaction
+      const score = await getTrustScore(account!);
       setTrustScore(score);
       toast.info(`Trust Score: ${score}`);
     } catch (error) {
@@ -92,6 +132,18 @@ export const BlockchainActions = () => {
         throw new Error("Invalid loan parameters");
       }
 
+      if (isDemoMode || !enableBlockchain) {
+        // Mock behavior for demo mode
+        setTimeout(() => {
+          toast.success(`Loan request for ${amount} ETH submitted successfully (Demo)`);
+          setLoanAmount("");
+          setLoanDuration("");
+          setIsLoading(false);
+        }, 1000);
+        return;
+      }
+      
+      // Real blockchain interaction
       await requestLoan(amount, duration);
       setLoanAmount("");
       setLoanDuration("");
@@ -103,11 +155,31 @@ export const BlockchainActions = () => {
   };
 
   const handleGetUserLoans = async () => {
-    if (!account) return;
+    if (!account && !isDemoMode) return;
 
     setIsLoading(true);
     try {
-      const loans = await getUserLoans(account);
+      if (isDemoMode || !enableBlockchain) {
+        // Mock behavior for demo mode
+        setTimeout(() => {
+          const mockLoans = Math.random() > 0.5 
+            ? [Math.floor(Math.random() * 1000), Math.floor(Math.random() * 1000)]
+            : [];
+            
+          setUserLoans(mockLoans);
+          
+          if (mockLoans.length === 0) {
+            toast.info("No loans found for this account (Demo)");
+          } else {
+            toast.info(`Found ${mockLoans.length} loans (Demo)`);
+          }
+          setIsLoading(false);
+        }, 1000);
+        return;
+      }
+      
+      // Real blockchain interaction
+      const loans = await getUserLoans(account!);
       setUserLoans(loans);
       
       if (loans.length === 0) {
@@ -123,7 +195,29 @@ export const BlockchainActions = () => {
     }
   };
 
-  if (!isConnected) {
+  if (!enableBlockchain) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Blockchain Actions</CardTitle>
+          <CardDescription>Blockchain features are currently disabled</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center p-6 text-muted-foreground flex-col gap-2">
+            <AlertCircle className="h-10 w-10 text-muted-foreground/50 mb-2" />
+            <p className="text-center">
+              Blockchain features are currently disabled in the app settings
+            </p>
+            <p className="text-xs text-center">
+              Enable blockchain features in the mode toggle settings to interact with smart contracts
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!isConnected && !isDemoMode) {
     return (
       <Card>
         <CardHeader>
@@ -134,6 +228,19 @@ export const BlockchainActions = () => {
           <p className="text-center p-6 text-muted-foreground">
             Please connect your MetaMask wallet to access blockchain features
           </p>
+          {connectionError && (
+            <div className="mt-2 p-3 bg-red-50 rounded-md text-sm text-red-600 flex items-start gap-2">
+              <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium">Connection Error</p>
+                <p className="text-xs mt-1">{connectionError}</p>
+                <p className="text-xs mt-2">
+                  Ensure MetaMask is installed and unlocked. You can still use the app in demo mode
+                  if MetaMask is not available.
+                </p>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     );
@@ -143,7 +250,9 @@ export const BlockchainActions = () => {
     <Card>
       <CardHeader>
         <CardTitle>Blockchain Actions</CardTitle>
-        <CardDescription>Interact with TrustBond smart contracts</CardDescription>
+        <CardDescription>
+          {isDemoMode ? "Demo Mode: Using simulated blockchain interactions" : "Interact with TrustBond smart contracts"}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="kyc">
@@ -278,7 +387,7 @@ export const BlockchainActions = () => {
         </Tabs>
       </CardContent>
       <CardFooter className="bg-muted/50 text-xs text-muted-foreground">
-        Connected to: {account}
+        {isDemoMode ? "Demo Mode: No real wallet connected" : `Connected to: ${account}`}
       </CardFooter>
     </Card>
   );

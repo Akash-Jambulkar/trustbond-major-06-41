@@ -11,10 +11,10 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Info, ToggleLeft, ToggleRight, AlertTriangle } from "lucide-react";
+import { Info, ToggleLeft, ToggleRight, AlertTriangle, Wallet } from "lucide-react";
 
 export const ModeToggle = () => {
-  const { mode, toggleMode, isDemoMode, isProductionMode } = useMode();
+  const { mode, toggleMode, isDemoMode, isProductionMode, enableBlockchain, toggleBlockchain } = useMode();
   const [open, setOpen] = useState(false);
 
   return (
@@ -58,6 +58,26 @@ export const ModeToggle = () => {
                 onCheckedChange={() => {
                   toggleMode();
                   setOpen(false);
+                }} 
+              />
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="blockchain-toggle" className="text-sm font-medium">
+                  Blockchain Features
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  {enableBlockchain 
+                    ? "Smart contract interactions enabled" 
+                    : "Smart contract interactions disabled"}
+                </p>
+              </div>
+              <Switch 
+                id="blockchain-toggle" 
+                checked={enableBlockchain} 
+                onCheckedChange={() => {
+                  toggleBlockchain();
                 }} 
               />
             </div>
