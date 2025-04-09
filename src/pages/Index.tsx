@@ -1,404 +1,349 @@
-import { useState } from "react";
+
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, Check, Shield, LineChart, Building, FileText, Database } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { ChevronRight, Shield, BarChart3, Bank, CreditCard, Lock, RefreshCw, Users } from "lucide-react";
 
 const Index = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Navigation */}
-      <nav className="bg-white border-b border-gray-200 px-6 py-4">
+    <div className="min-h-screen flex flex-col">
+      {/* Header/Navigation */}
+      <header className="bg-white border-b border-gray-200 py-4 px-6">
         <div className="container mx-auto flex justify-between items-center">
           <Link to="/" className="text-2xl font-bold text-trustbond-primary">
             TrustBond
           </Link>
-          
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-6">
-            <Link to="/about" className="text-trustbond-dark hover:text-trustbond-primary transition-colors">
+          <nav className="hidden md:flex gap-6">
+            <Link to="/about" className="text-gray-700 hover:text-trustbond-primary transition-colors">
               About
             </Link>
-            <Link to="/whitepaper" className="text-trustbond-dark hover:text-trustbond-primary transition-colors">
+            <Link to="/whitepaper" className="text-gray-700 hover:text-trustbond-primary transition-colors">
               Whitepaper
             </Link>
-            <Link to="/contact" className="text-trustbond-dark hover:text-trustbond-primary transition-colors">
+            <Link to="/contact" className="text-gray-700 hover:text-trustbond-primary transition-colors">
               Contact
             </Link>
-            <div className="flex items-center gap-2">
-              <Link to="/login">
-                <Button variant="outline" className="text-trustbond-dark border-trustbond-primary hover:bg-trustbond-primary hover:text-white">
-                  Login
-                </Button>
-              </Link>
-              <Link to="/register">
-                <Button className="bg-trustbond-primary hover:bg-trustbond-primary/90 text-white">
-                  Register
-                </Button>
-              </Link>
-            </div>
+          </nav>
+          <div className="flex gap-4">
+            <Button variant="outline" asChild>
+              <Link to="/login">Log In</Link>
+            </Button>
+            <Button asChild>
+              <Link to="/register">Register</Link>
+            </Button>
           </div>
-          
-          {/* Mobile Nav Button */}
-          <button 
-            className="md:hidden text-trustbond-dark"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor" 
-              className="h-6 w-6"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
         </div>
-        
-        {/* Mobile Nav Menu */}
-        {isMenuOpen && (
-          <div className="md:hidden pt-2 pb-4">
-            <div className="flex flex-col gap-2 px-4">
-              <Link 
-                to="/about" 
-                className="px-3 py-2 text-trustbond-dark hover:bg-gray-100 rounded-md"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                About
-              </Link>
-              <Link 
-                to="/whitepaper" 
-                className="px-3 py-2 text-trustbond-dark hover:bg-gray-100 rounded-md"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Whitepaper
-              </Link>
-              <Link 
-                to="/contact" 
-                className="px-3 py-2 text-trustbond-dark hover:bg-gray-100 rounded-md"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Contact
-              </Link>
-              <div className="flex flex-col gap-2 pt-2">
-                <Link to="/login" onClick={() => setIsMenuOpen(false)}>
-                  <Button variant="outline" className="w-full text-trustbond-dark border-trustbond-primary hover:bg-trustbond-primary hover:text-white">
-                    Login
-                  </Button>
-                </Link>
-                <Link to="/register" onClick={() => setIsMenuOpen(false)}>
-                  <Button className="w-full bg-trustbond-primary hover:bg-trustbond-primary/90 text-white">
-                    Register
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
-      </nav>
+      </header>
 
       {/* Hero Section */}
-      <section className="py-20 px-6">
-        <div className="container mx-auto">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6 animate-fade-in">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-trustbond-dark leading-tight">
-                Blockchain-powered <span className="text-trustbond-primary">KYC</span> and <span className="text-trustbond-accent">loan</span> platform
+      <section className="bg-gradient-to-r from-trustbond-primary to-trustbond-secondary text-white py-20 px-6">
+        <div className="container mx-auto max-w-5xl">
+          <div className="md:flex items-center justify-between gap-10">
+            <div className="md:w-1/2 mb-10 md:mb-0">
+              <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-6">
+                Secure KYC Verification on the Blockchain
               </h1>
-              <p className="text-lg text-gray-600">
-                Securely verify identity, build trust scores, and access loans with our decentralized platform.
+              <p className="text-lg md:text-xl opacity-90 leading-relaxed mb-8">
+                TrustBond combines blockchain technology with traditional financial services to create a secure, efficient identity verification and lending platform.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                <Link to="/register">
-                  <Button className="bg-trustbond-primary hover:bg-trustbond-primary/90 text-white w-full sm:w-auto">
-                    Get Started
-                  </Button>
-                </Link>
-                <Link to="/whitepaper">
-                  <Button variant="outline" className="w-full sm:w-auto border-trustbond-primary text-trustbond-dark hover:bg-trustbond-primary/5 flex items-center gap-2">
-                    <FileText size={18} />
-                    Read Whitepaper
-                  </Button>
-                </Link>
+              <div className="flex flex-wrap gap-4">
+                <Button 
+                  size="lg" 
+                  className="bg-white text-trustbond-primary hover:bg-gray-100"
+                  onClick={() => navigate("/register")}
+                >
+                  Get Started
+                  <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="border-white text-white hover:bg-white/10"
+                  onClick={() => navigate("/whitepaper")}
+                >
+                  Learn More
+                </Button>
               </div>
             </div>
-            <div className="h-96 bg-gradient-to-br from-trustbond-primary via-trustbond-secondary to-trustbond-accent rounded-xl shadow-lg flex items-center justify-center animate-fade-in">
-              <div className="text-white text-center">
-                <Shield className="h-24 w-24 mx-auto mb-4" />
-                <p className="text-2xl font-semibold">Secure and Transparent</p>
-                <p className="text-lg px-6">Built on blockchain technology</p>
+            <div className="md:w-1/2">
+              <div className="bg-white/10 p-6 rounded-lg backdrop-blur-sm border border-white/20">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white/10 p-4 rounded-lg">
+                    <Shield className="h-10 w-10 mb-4 text-white" />
+                    <h3 className="text-xl font-semibold mb-2">Secure KYC</h3>
+                    <p className="text-white/80 text-sm">Upload identity documents securely and get verified once, use everywhere.</p>
+                  </div>
+                  <div className="bg-white/10 p-4 rounded-lg">
+                    <BarChart3 className="h-10 w-10 mb-4 text-white" />
+                    <h3 className="text-xl font-semibold mb-2">Trust Score</h3>
+                    <p className="text-white/80 text-sm">Build your digital reputation through a blockchain-verified trust score.</p>
+                  </div>
+                  <div className="bg-white/10 p-4 rounded-lg">
+                    <Bank className="h-10 w-10 mb-4 text-white" />
+                    <h3 className="text-xl font-semibold mb-2">Bank Connect</h3>
+                    <p className="text-white/80 text-sm">Connect directly with trusted financial institutions.</p>
+                  </div>
+                  <div className="bg-white/10 p-4 rounded-lg">
+                    <CreditCard className="h-10 w-10 mb-4 text-white" />
+                    <h3 className="text-xl font-semibold mb-2">Smart Loans</h3>
+                    <p className="text-white/80 text-sm">Access transparent loans with terms enforced by smart contracts.</p>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-          <div className="flex justify-center mt-12">
-            <a href="#features" className="text-trustbond-primary hover:text-trustbond-primary/80 animate-bounce">
-              <ChevronDown size={36} />
-            </a>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section id="features" className="py-16 px-6 bg-gray-50">
-        <div className="container mx-auto">
-          <h2 className="text-3xl font-bold text-center text-trustbond-dark mb-12">
-            Our Platform Features
-          </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-              <div className="h-12 w-12 bg-trustbond-primary/10 rounded-md flex items-center justify-center mb-4">
+      {/* KYC Documents Section */}
+      <section className="py-16 px-6 bg-gray-50">
+        <div className="container mx-auto max-w-5xl">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-trustbond-dark mb-4">
+              Supported KYC Documents
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              TrustBond supports various official identity documents for KYC verification. All documents are securely hashed and verified on the blockchain.
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="w-14 h-14 bg-trustbond-primary/10 rounded-lg flex items-center justify-center mb-4">
                 <Shield className="h-6 w-6 text-trustbond-primary" />
               </div>
-              <h3 className="text-xl font-semibold text-trustbond-dark mb-3">
-                Secure KYC Verification
-              </h3>
-              <p className="text-gray-600">
-                Upload and verify your identity documents securely on the blockchain, ensuring privacy and security.
+              <h3 className="text-xl font-semibold text-trustbond-dark mb-3">Aadhaar Card</h3>
+              <p className="text-gray-600 mb-4">
+                India's universal ID with biometric data, issued by UIDAI. A comprehensive identity document.
+              </p>
+              <p className="text-sm text-trustbond-primary font-medium">
+                12-digit Unique Identification Number
               </p>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-              <div className="h-12 w-12 bg-trustbond-secondary/10 rounded-md flex items-center justify-center mb-4">
-                <LineChart className="h-6 w-6 text-trustbond-secondary" />
+            
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="w-14 h-14 bg-trustbond-primary/10 rounded-lg flex items-center justify-center mb-4">
+                <CreditCard className="h-6 w-6 text-trustbond-primary" />
               </div>
-              <h3 className="text-xl font-semibold text-trustbond-dark mb-3">
-                Trust Score System
-              </h3>
-              <p className="text-gray-600">
-                Build your financial reputation with our transparent trust score system based on verified credentials.
+              <h3 className="text-xl font-semibold text-trustbond-dark mb-3">PAN Card</h3>
+              <p className="text-gray-600 mb-4">
+                Permanent Account Number issued by the Income Tax Department. Essential for financial transactions.
+              </p>
+              <p className="text-sm text-trustbond-primary font-medium">
+                10-character alphanumeric ID
               </p>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-              <div className="h-12 w-12 bg-trustbond-accent/10 rounded-md flex items-center justify-center mb-4">
-                <Building className="h-6 w-6 text-trustbond-accent" />
+            
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="w-14 h-14 bg-trustbond-primary/10 rounded-lg flex items-center justify-center mb-4">
+                <Users className="h-6 w-6 text-trustbond-primary" />
               </div>
-              <h3 className="text-xl font-semibold text-trustbond-dark mb-3">
-                Decentralized Loans
-              </h3>
-              <p className="text-gray-600">
-                Access and repay loans through smart contracts, with no hidden fees and transparent terms.
+              <h3 className="text-xl font-semibold text-trustbond-dark mb-3">Voter ID Card</h3>
+              <p className="text-gray-600 mb-4">
+                Electoral Photo Identity Card issued by the Election Commission. Official identity proof for voting.
+              </p>
+              <p className="text-sm text-trustbond-primary font-medium">
+                10-character alphanumeric ID
+              </p>
+            </div>
+            
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="w-14 h-14 bg-trustbond-primary/10 rounded-lg flex items-center justify-center mb-4">
+                <CreditCard className="h-6 w-6 text-trustbond-primary" />
+              </div>
+              <h3 className="text-xl font-semibold text-trustbond-dark mb-3">Driving License</h3>
+              <p className="text-gray-600 mb-4">
+                Official driving permit issued by Regional Transport Office (RTO). Contains identity and address details.
+              </p>
+              <p className="text-sm text-trustbond-primary font-medium">
+                Varies by state, alphanumeric format
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* How It Works Section */}
+      {/* How It Works */}
       <section className="py-16 px-6">
-        <div className="container mx-auto">
-          <h2 className="text-3xl font-bold text-center text-trustbond-dark mb-12">
-            How TrustBond Works
-          </h2>
-          <div className="grid md:grid-cols-4 gap-6">
-            <div className="text-center">
-              <div className="h-16 w-16 bg-trustbond-primary rounded-full flex items-center justify-center mx-auto mb-4 text-white text-xl font-bold">
-                1
+        <div className="container mx-auto max-w-5xl">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-trustbond-dark mb-4">
+              How TrustBond Works
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Our blockchain-powered platform securely handles KYC verification and creates trust between users and financial institutions.
+            </p>
+          </div>
+          
+          <div className="relative">
+            {/* Connection line */}
+            <div className="hidden md:block absolute left-1/2 top-12 bottom-12 w-0.5 bg-gray-200 -translate-x-1/2 z-0"></div>
+            
+            <div className="space-y-12 relative z-10">
+              {/* Step 1 */}
+              <div className="md:flex items-center">
+                <div className="md:w-1/2 md:pr-12 mb-6 md:mb-0 md:text-right">
+                  <h3 className="text-xl font-semibold text-trustbond-dark mb-3">Document Submission</h3>
+                  <p className="text-gray-600">
+                    Upload your identity documents (Aadhaar, PAN, Voter ID, or Driving License) through our secure interface. The document data is encrypted and hashed.
+                  </p>
+                </div>
+                <div className="md:w-24 mx-auto md:mx-0 h-12 w-12 rounded-full bg-trustbond-primary flex items-center justify-center text-white font-semibold">
+                  1
+                </div>
+                <div className="md:w-1/2 md:pl-12 hidden md:block"></div>
               </div>
-              <h3 className="text-lg font-semibold text-trustbond-dark mb-2">
-                Create Account
-              </h3>
-              <p className="text-gray-600">
-                Register and connect your digital wallet to get started.
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="h-16 w-16 bg-trustbond-primary rounded-full flex items-center justify-center mx-auto mb-4 text-white text-xl font-bold">
-                2
+              
+              {/* Step 2 */}
+              <div className="md:flex items-center">
+                <div className="md:w-1/2 md:pr-12 hidden md:block"></div>
+                <div className="md:w-24 mx-auto md:mx-0 h-12 w-12 rounded-full bg-trustbond-primary flex items-center justify-center text-white font-semibold">
+                  2
+                </div>
+                <div className="md:w-1/2 md:pl-12 mb-6 md:mb-0">
+                  <h3 className="text-xl font-semibold text-trustbond-dark mb-3">Blockchain Verification</h3>
+                  <p className="text-gray-600">
+                    The document hash is submitted to the blockchain. Banks and authorized entities verify your documents and update your KYC status on the blockchain.
+                  </p>
+                </div>
               </div>
-              <h3 className="text-lg font-semibold text-trustbond-dark mb-2">
-                Submit KYC
-              </h3>
-              <p className="text-gray-600">
-                Upload identity documents for verification by trusted banks.
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="h-16 w-16 bg-trustbond-primary rounded-full flex items-center justify-center mx-auto mb-4 text-white text-xl font-bold">
-                3
+              
+              {/* Step 3 */}
+              <div className="md:flex items-center">
+                <div className="md:w-1/2 md:pr-12 mb-6 md:mb-0 md:text-right">
+                  <h3 className="text-xl font-semibold text-trustbond-dark mb-3">Trust Score Generation</h3>
+                  <p className="text-gray-600">
+                    Once verified, a trust score is calculated based on your verified identity, financial history, and other relevant factors, all securely stored on the blockchain.
+                  </p>
+                </div>
+                <div className="md:w-24 mx-auto md:mx-0 h-12 w-12 rounded-full bg-trustbond-primary flex items-center justify-center text-white font-semibold">
+                  3
+                </div>
+                <div className="md:w-1/2 md:pl-12 hidden md:block"></div>
               </div>
-              <h3 className="text-lg font-semibold text-trustbond-dark mb-2">
-                Build Trust Score
-              </h3>
-              <p className="text-gray-600">
-                As your credentials get verified, your trust score increases.
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="h-16 w-16 bg-trustbond-primary rounded-full flex items-center justify-center mx-auto mb-4 text-white text-xl font-bold">
-                4
+              
+              {/* Step 4 */}
+              <div className="md:flex items-center">
+                <div className="md:w-1/2 md:pr-12 hidden md:block"></div>
+                <div className="md:w-24 mx-auto md:mx-0 h-12 w-12 rounded-full bg-trustbond-primary flex items-center justify-center text-white font-semibold">
+                  4
+                </div>
+                <div className="md:w-1/2 md:pl-12">
+                  <h3 className="text-xl font-semibold text-trustbond-dark mb-3">Access Financial Services</h3>
+                  <p className="text-gray-600">
+                    Use your verified identity and trust score to access financial services like loans and credit facilities through partnered banks and financial institutions.
+                  </p>
+                </div>
               </div>
-              <h3 className="text-lg font-semibold text-trustbond-dark mb-2">
-                Access Loans
-              </h3>
-              <p className="text-gray-600">
-                Apply for and receive loans based on your trust score.
-              </p>
             </div>
           </div>
         </div>
       </section>
-
-      {/* Benefits Section */}
-      <section className="py-16 px-6 bg-trustbond-primary text-white">
-        <div className="container mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            Why Choose TrustBond?
-          </h2>
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="space-y-6">
-              <div className="flex items-start gap-4">
-                <div className="h-8 w-8 bg-white rounded-full flex items-center justify-center shrink-0">
-                  <Check className="h-5 w-5 text-trustbond-primary" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold mb-2">Secure and Private</h3>
-                  <p className="text-white/80">
-                    Your data is encrypted and stored securely on the blockchain, giving you full control.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <div className="h-8 w-8 bg-white rounded-full flex items-center justify-center shrink-0">
-                  <Check className="h-5 w-5 text-trustbond-primary" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold mb-2">Transparent Process</h3>
-                  <p className="text-white/80">
-                    All transactions and verifications are recorded on the blockchain for complete transparency.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <div className="h-8 w-8 bg-white rounded-full flex items-center justify-center shrink-0">
-                  <Check className="h-5 w-5 text-trustbond-primary" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold mb-2">Fast Verification</h3>
-                  <p className="text-white/80">
-                    Our partnership with verified banks ensures quick KYC processing and approval.
-                  </p>
-                </div>
-              </div>
+      
+      {/* Security Features */}
+      <section className="py-16 px-6 bg-trustbond-dark text-white">
+        <div className="container mx-auto max-w-5xl">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">
+              Bank-Grade Security Features
+            </h2>
+            <p className="text-white/80 max-w-2xl mx-auto">
+              TrustBond implements the highest security standards to protect your sensitive identity information and financial data.
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="p-6 bg-white/5 rounded-lg border border-white/10 backdrop-blur-sm">
+              <Lock className="h-10 w-10 mb-4 text-trustbond-primary" />
+              <h3 className="text-xl font-semibold mb-3">Encrypted Documents</h3>
+              <p className="text-white/80">
+                All your identity documents are encrypted before they're processed, ensuring that only you and authorized verifiers can access them.
+              </p>
             </div>
-            <div className="space-y-6">
-              <div className="flex items-start gap-4">
-                <div className="h-8 w-8 bg-white rounded-full flex items-center justify-center shrink-0">
-                  <Check className="h-5 w-5 text-trustbond-primary" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold mb-2">Portable Trust Score</h3>
-                  <p className="text-white/80">
-                    Your trust score moves with you and can be used across different financial services.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <div className="h-8 w-8 bg-white rounded-full flex items-center justify-center shrink-0">
-                  <Check className="h-5 w-5 text-trustbond-primary" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold mb-2">No Hidden Fees</h3>
-                  <p className="text-white/80">
-                    All loan terms and fees are transparent and encoded in smart contracts.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <div className="h-8 w-8 bg-white rounded-full flex items-center justify-center shrink-0">
-                  <Check className="h-5 w-5 text-trustbond-primary" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold mb-2">Enhanced Security</h3>
-                  <p className="text-white/80">
-                    Cryptographic security ensures your data can't be tampered with or misused.
-                  </p>
-                </div>
-              </div>
+            
+            <div className="p-6 bg-white/5 rounded-lg border border-white/10 backdrop-blur-sm">
+              <RefreshCw className="h-10 w-10 mb-4 text-trustbond-primary" />
+              <h3 className="text-xl font-semibold mb-3">Secure Hashing</h3>
+              <p className="text-white/80">
+                Document information is hashed using SHA-256 cryptographic algorithms before being stored on the blockchain, making it practically impossible to reverse-engineer.
+              </p>
+            </div>
+            
+            <div className="p-6 bg-white/5 rounded-lg border border-white/10 backdrop-blur-sm">
+              <Shield className="h-10 w-10 mb-4 text-trustbond-primary" />
+              <h3 className="text-xl font-semibold mb-3">Blockchain Immutability</h3>
+              <p className="text-white/80">
+                Once your verification status is recorded on the blockchain, it cannot be altered or tampered with, ensuring the highest level of trust and security.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-6">
-        <div className="container mx-auto text-center">
-          <h2 className="text-3xl font-bold text-trustbond-dark mb-6">
-            Ready to Get Started?
+      <section className="py-16 px-6 bg-gray-50">
+        <div className="container mx-auto max-w-5xl text-center">
+          <h2 className="text-3xl font-bold text-trustbond-dark mb-4">
+            Ready to Secure Your Identity on the Blockchain?
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
-            Join TrustBond today and experience the future of secure identity verification and decentralized finance.
+          <p className="text-gray-600 max-w-2xl mx-auto mb-8">
+            Join thousands of users who have streamlined their KYC verification process and accessed better financial services through TrustBond.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/register">
-              <Button className="bg-trustbond-primary hover:bg-trustbond-primary/90 text-white">
-                Create an Account
-              </Button>
-            </Link>
-            <Link to="/login">
-              <Button variant="outline" className="border-trustbond-primary text-trustbond-dark hover:bg-trustbond-primary/5">
-                Login
-              </Button>
-            </Link>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Button 
+              size="lg" 
+              className="bg-trustbond-primary hover:bg-trustbond-primary/90"
+              onClick={() => navigate("/register")}
+            >
+              Create Free Account
+            </Button>
+            <Button 
+              size="lg" 
+              variant="outline"
+              onClick={() => navigate("/whitepaper")}
+            >
+              Read Whitepaper
+            </Button>
           </div>
         </div>
       </section>
 
       {/* Footer */}
       <footer className="bg-trustbond-dark text-white py-12 px-6">
-        <div className="container mx-auto">
+        <div className="container mx-auto max-w-5xl">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <h3 className="text-xl font-bold mb-4">TrustBond</h3>
-              <p className="text-gray-300">
-                A blockchain-powered platform for secure KYC verification and decentralized loans.
+              <p className="text-white/70">
+                Blockchain-powered identity verification and financial services platform.
               </p>
             </div>
             <div>
-              <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
+              <h4 className="text-lg font-semibold mb-3">Quick Links</h4>
               <ul className="space-y-2">
-                <li>
-                  <Link to="/" className="text-gray-300 hover:text-white transition-colors">Home</Link>
-                </li>
-                <li>
-                  <Link to="/about" className="text-gray-300 hover:text-white transition-colors">About Us</Link>
-                </li>
-                <li>
-                  <Link to="/whitepaper" className="text-gray-300 hover:text-white transition-colors">Whitepaper</Link>
-                </li>
-                <li>
-                  <Link to="/contact" className="text-gray-300 hover:text-white transition-colors">Contact</Link>
-                </li>
+                <li><Link to="/" className="text-white/70 hover:text-white transition-colors">Home</Link></li>
+                <li><Link to="/about" className="text-white/70 hover:text-white transition-colors">About</Link></li>
+                <li><Link to="/whitepaper" className="text-white/70 hover:text-white transition-colors">Whitepaper</Link></li>
+                <li><Link to="/contact" className="text-white/70 hover:text-white transition-colors">Contact</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="text-lg font-semibold mb-4">Resources</h4>
+              <h4 className="text-lg font-semibold mb-3">Legal</h4>
               <ul className="space-y-2">
-                <li>
-                  <Link to="/whitepaper" className="text-gray-300 hover:text-white transition-colors">Whitepaper</Link>
-                </li>
-                <li>
-                  <a href="#" className="text-gray-300 hover:text-white transition-colors">Documentation</a>
-                </li>
-                <li>
-                  <a href="#" className="text-gray-300 hover:text-white transition-colors">FAQs</a>
-                </li>
-                <li>
-                  <a href="#" className="text-gray-300 hover:text-white transition-colors">Privacy Policy</a>
-                </li>
+                <li><Link to="/privacy" className="text-white/70 hover:text-white transition-colors">Privacy Policy</Link></li>
+                <li><Link to="/terms" className="text-white/70 hover:text-white transition-colors">Terms of Service</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="text-lg font-semibold mb-4">Contact Us</h4>
-              <ul className="space-y-2">
-                <li className="text-gray-300">Email: info@trustbond.com</li>
-                <li className="text-gray-300">Phone: +1 (123) 456-7890</li>
-                <li className="text-gray-300">Address: 123 Blockchain Street, Digital City</li>
-              </ul>
+              <h4 className="text-lg font-semibold mb-3">Contact</h4>
+              <p className="text-white/70 mb-2">info@trustbond.com</p>
+              <p className="text-white/70">+1 (555) 123-4567</p>
             </div>
           </div>
-          <div className="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
-            <p>© 2025 TrustBond. All rights reserved.</p>
+          <div className="mt-8 pt-8 border-t border-white/10 text-center text-white/60 text-sm">
+            &copy; {new Date().getFullYear()} TrustBond. All rights reserved.
           </div>
         </div>
       </footer>
