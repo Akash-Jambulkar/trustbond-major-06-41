@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,13 +6,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Search, CheckCircle, XCircle, Eye, AlertTriangle, Download, Upload } from "lucide-react";
+import { FileText, Search, CheckCircle, XCircle, Eye, AlertTriangle, Download, Upload, Shield, Lock, Check, AlertOctagon } from "lucide-react";
 import { toast } from "sonner";
 import { useMode } from "@/contexts/ModeContext";
+import { verifyHashInDatabase, verifyDocumentUniqueness, DOCUMENT_TYPES } from "@/utils/documentHash";
+import { supabase } from "@/integrations/supabase/client";
+import { useBlockchain } from "@/contexts/BlockchainContext";
+import { useAuth } from "@/contexts/AuthContext";
 
-// KYC document type definition
 type KYCDocument = {
-  id: number;
+  id: number | string;
   userId: string;
   userName: string;
   documentType: string;
@@ -25,95 +27,181 @@ type KYCDocument = {
   documentFiles: string[];
 };
 
-// Mock KYC document data
-const mockKYCDocuments: KYCDocument[] = [
-  {
-    id: 1,
-    userId: "USR-001",
-    userName: "John Doe",
-    documentType: "Aadhar Card",
-    documentId: "XXXX-XXXX-1234",
-    status: "pending",
-    submissionDate: "2025-03-25",
-    documentHash: "0x2a55c7ede6f599d1f7c62efd9b5f6d52c42a979fc26a0355fac6b539b1225539",
-    documentFiles: ["aadhar_front.jpg", "aadhar_back.jpg"]
-  },
-  {
-    id: 2,
-    userId: "USR-002",
-    userName: "Jane Smith",
-    documentType: "PAN Card",
-    documentId: "ABCDE1234F",
-    status: "verified",
-    submissionDate: "2025-03-20",
-    verificationDate: "2025-03-22",
-    documentHash: "0x3b66c7ede6f599d1f7c62efd9b5f6d52c42a979fc26a0355fac6b539b1225539",
-    documentFiles: ["pan_card.jpg"]
-  },
-  {
-    id: 3,
-    userId: "USR-003",
-    userName: "Robert Johnson",
-    documentType: "Passport",
-    documentId: "J1234567",
-    status: "pending",
-    submissionDate: "2025-03-15",
-    documentHash: "0x4c77c7ede6f599d1f7c62efd9b5f6d52c42a979fc26a0355fac6b539b1225539",
-    documentFiles: ["passport_front.jpg", "passport_back.jpg"]
-  },
-  {
-    id: 4,
-    userId: "USR-004",
-    userName: "Sarah Wilson",
-    documentType: "Voter ID",
-    documentId: "TN/12/345/678901",
-    status: "rejected",
-    submissionDate: "2025-03-10",
-    verificationDate: "2025-03-12",
-    documentFiles: ["voter_id.jpg"]
-  },
-  {
-    id: 5,
-    userId: "USR-005",
-    userName: "Michael Brown",
-    documentType: "Driving License",
-    documentId: "MH-0123456789",
-    status: "pending",
-    submissionDate: "2025-03-05",
-    documentHash: "0x5d88c7ede6f599d1f7c62efd9b5f6d52c42a979fc26a0355fac6b539b1225539",
-    documentFiles: ["driving_license.jpg"]
-  }
-];
-
 const VerifyKYC = () => {
-  const [documents, setDocuments] = useState<KYCDocument[]>(mockKYCDocuments);
+  const [documents, setDocuments] = useState<KYCDocument[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDocument, setSelectedDocument] = useState<KYCDocument | null>(null);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [isHashVerificationDialogOpen, setIsHashVerificationDialogOpen] = useState(false);
+  const [hashToVerify, setHashToVerify] = useState("");
+  const [hashVerificationResult, setHashVerificationResult] = useState<{
+    exists: boolean;
+    documentDetails?: any;
+    isVerifying: boolean;
+  }>({ exists: false, isVerifying: false });
+  const [isLoading, setIsLoading] = useState(true);
+  
   const { enableBlockchain } = useMode();
+  const { isConnected, account } = useBlockchain();
+  const { user } = useAuth();
 
-  // Filter documents based on search
+  useEffect(() => {
+    fetchKYCDocuments();
+  }, []);
+
+  const fetchKYCDocuments = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('kyc_document_submissions')
+        .select(`
+          id, 
+          user_id,
+          document_type, 
+          document_number, 
+          document_hash, 
+          submitted_at, 
+          verified_at,
+          verification_status
+        `)
+        .order('submitted_at', { ascending: false });
+
+      if (error) {
+        console.error("Error fetching KYC documents:", error);
+        toast.error("Failed to load KYC documents");
+        setDocuments([]);
+      } else {
+        if (data && data.length > 0) {
+          const formattedDocuments = await Promise.all(
+            data.map(async (doc) => {
+              const { data: userData, error: userError } = await supabase
+                .from('users_metadata')
+                .select('id')
+                .eq('id', doc.user_id)
+                .single();
+
+              let userName = "Unknown User";
+              if (!userError && userData) {
+                userName = `User ${doc.user_id.substring(0, 8)}`;
+              }
+
+              return {
+                id: doc.id,
+                userId: doc.user_id,
+                userName: userName,
+                documentType: getDocumentTypeName(doc.document_type),
+                documentId: doc.document_number,
+                status: doc.verification_status as "pending" | "verified" | "rejected",
+                submissionDate: new Date(doc.submitted_at).toLocaleDateString(),
+                verificationDate: doc.verified_at ? new Date(doc.verified_at).toLocaleDateString() : undefined,
+                documentHash: doc.document_hash,
+                documentFiles: ["document.jpg"]
+              };
+            })
+          );
+
+          setDocuments(formattedDocuments);
+        } else {
+          setDocuments([]);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching KYC documents:", error);
+      toast.error("Failed to load KYC documents");
+      setDocuments([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const filteredDocuments = documents.filter(doc => 
     doc.userName.toLowerCase().includes(searchTerm.toLowerCase()) || 
     doc.documentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
     doc.documentType.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleStatusChange = (docId: number, newStatus: "verified" | "rejected") => {
-    setDocuments(documents.map(doc => 
-      doc.id === docId ? { 
-        ...doc, 
-        status: newStatus,
-        verificationDate: new Date().toISOString().split('T')[0]
-      } : doc
-    ));
+  const handleStatusChange = async (docId: number | string, newStatus: "verified" | "rejected") => {
+    if (!selectedDocument) return;
+    
+    try {
+      const now = new Date().toISOString();
+      
+      const { error } = await supabase
+        .from('kyc_document_submissions')
+        .update({ 
+          verification_status: newStatus,
+          verified_at: now,
+          verified_by: user?.id
+        })
+        .eq('id', docId);
+      
+      if (error) {
+        console.error("Error updating document status:", error);
+        toast.error("Failed to update document status");
+        return;
+      }
+      
+      setDocuments(documents.map(doc => 
+        doc.id === docId ? { 
+          ...doc, 
+          status: newStatus,
+          verificationDate: new Date().toLocaleDateString()
+        } : doc
+      ));
 
-    toast.success(`Document #${docId} has been ${newStatus}`);
+      toast.success(`Document #${docId} has been ${newStatus}`);
+      setIsDetailsDialogOpen(false);
+      
+      if (enableBlockchain && isConnected) {
+        toast.success("Updated verification status on the blockchain");
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+      toast.error("Failed to update document status");
+    }
   };
 
   const handleViewDetails = (document: KYCDocument) => {
     setSelectedDocument(document);
     setIsDetailsDialogOpen(true);
+  };
+
+  const handleVerifyHash = async () => {
+    if (!hashToVerify) {
+      toast.error("Please enter a document hash to verify");
+      return;
+    }
+    
+    setHashVerificationResult({ exists: false, isVerifying: true });
+    
+    try {
+      const result = await verifyHashInDatabase(hashToVerify, supabase);
+      
+      setHashVerificationResult({
+        ...result,
+        isVerifying: false
+      });
+      
+      if (result.exists) {
+        toast.success("Document hash verification successful");
+      } else {
+        toast.error("Document hash not found in the system");
+      }
+    } catch (error) {
+      console.error("Error verifying hash:", error);
+      toast.error("Failed to verify document hash");
+      setHashVerificationResult({ exists: false, isVerifying: false });
+    }
+  };
+
+  const getDocumentTypeName = (type: string) => {
+    switch (type) {
+      case 'aadhaar': return 'Aadhaar Card';
+      case 'pan': return 'PAN Card';
+      case 'voter_id': return 'Voter ID';
+      case 'driving_license': return 'Driving License';
+      default: return type;
+    }
   };
 
   const renderBlockchainVerification = () => {
@@ -146,6 +234,13 @@ const VerifyKYC = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">KYC Verification</h1>
         <div className="flex gap-2">
+          <Button
+            onClick={() => setIsHashVerificationDialogOpen(true)}
+            className="bg-trustbond-primary"
+          >
+            <Shield className="mr-2 h-4 w-4" />
+            Verify Document Hash
+          </Button>
           {enableBlockchain && (
             <Button variant="outline">
               <Upload className="mr-2 h-4 w-4" />
@@ -193,7 +288,16 @@ const VerifyKYC = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredDocuments.length === 0 ? (
+                    {isLoading ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="h-24 text-center">
+                          <div className="flex justify-center items-center">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-800"></div>
+                            <span className="ml-2">Loading documents...</span>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ) : filteredDocuments.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={7} className="h-24 text-center">
                           No documents found.
@@ -202,7 +306,7 @@ const VerifyKYC = () => {
                     ) : (
                       filteredDocuments.map((doc) => (
                         <TableRow key={doc.id}>
-                          <TableCell className="font-medium">#{doc.id}</TableCell>
+                          <TableCell className="font-medium">#{typeof doc.id === 'number' ? doc.id : doc.id.substring(0, 8)}</TableCell>
                           <TableCell>{doc.userName}</TableCell>
                           <TableCell>{doc.documentType}</TableCell>
                           <TableCell className="font-mono text-xs">{doc.documentId}</TableCell>
@@ -378,7 +482,6 @@ const VerifyKYC = () => {
         </TabsContent>
       </Tabs>
       
-      {/* Document Details Dialog */}
       <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
@@ -399,7 +502,7 @@ const VerifyKYC = () => {
                   </div>
                   <div className="grid grid-cols-2">
                     <div className="text-sm font-medium">User ID:</div>
-                    <div className="text-sm">{selectedDocument.userId}</div>
+                    <div className="text-sm">{selectedDocument.userId.substring(0, 8)}...</div>
                   </div>
                 </div>
               </div>
@@ -447,6 +550,22 @@ const VerifyKYC = () => {
                 </div>
               </div>
               
+              <div className="space-y-2 sm:col-span-2">
+                <h3 className="text-sm font-medium">Document Hash Verification</h3>
+                <div className="rounded-md border p-3 space-y-2 bg-gray-50">
+                  <div className="grid grid-cols-4">
+                    <div className="text-sm font-medium">Hash:</div>
+                    <div className="text-xs font-mono col-span-3 truncate">
+                      {selectedDocument.documentHash}
+                    </div>
+                  </div>
+                  <div className="flex items-center text-sm text-gray-500">
+                    <Lock className="h-4 w-4 mr-1" />
+                    <span>This document hash is unique and tamper-proof</span>
+                  </div>
+                </div>
+              </div>
+              
               {renderBlockchainVerification()}
             </div>
           )}
@@ -459,7 +578,6 @@ const VerifyKYC = () => {
                     variant="destructive"
                     onClick={() => {
                       handleStatusChange(selectedDocument.id, "rejected");
-                      setIsDetailsDialogOpen(false);
                     }}
                   >
                     <XCircle className="mr-2 h-4 w-4" />
@@ -468,7 +586,6 @@ const VerifyKYC = () => {
                   <Button 
                     onClick={() => {
                       handleStatusChange(selectedDocument.id, "verified");
-                      setIsDetailsDialogOpen(false);
                     }}
                     className="bg-green-600 hover:bg-green-700"
                   >
@@ -483,7 +600,6 @@ const VerifyKYC = () => {
                   className="gap-2"
                   onClick={() => {
                     handleStatusChange(selectedDocument.id, "verified");
-                    setIsDetailsDialogOpen(false);
                   }}
                 >
                   <AlertTriangle className="h-4 w-4" />
@@ -492,6 +608,117 @@ const VerifyKYC = () => {
               )}
             </div>
             <Button variant="outline" onClick={() => setIsDetailsDialogOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isHashVerificationDialogOpen} onOpenChange={setIsHashVerificationDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-trustbond-primary" />
+              Document Hash Verification
+            </DialogTitle>
+            <DialogDescription>
+              Verify the authenticity of a document by its hash
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="documentHash" className="text-sm font-medium">
+                Document Hash
+              </label>
+              <Input
+                id="documentHash"
+                placeholder="Enter document hash to verify"
+                value={hashToVerify}
+                onChange={(e) => setHashToVerify(e.target.value)}
+                className="font-mono text-sm"
+              />
+            </div>
+            
+            <Button 
+              onClick={handleVerifyHash} 
+              className="w-full"
+              disabled={!hashToVerify || hashVerificationResult.isVerifying}
+            >
+              {hashVerificationResult.isVerifying ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Verifying...
+                </>
+              ) : (
+                <>
+                  <Lock className="mr-2 h-4 w-4" />
+                  Verify Hash
+                </>
+              )}
+            </Button>
+            
+            {hashVerificationResult.exists && hashVerificationResult.documentDetails && (
+              <div className="rounded-md border p-3 mt-4 bg-green-50 border-green-200">
+                <div className="flex items-center text-green-700 mb-2">
+                  <Check className="h-5 w-5 mr-2" />
+                  <h3 className="font-medium">Document Verified</h3>
+                </div>
+                <div className="space-y-2 text-sm">
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="font-medium">Document Type:</div>
+                    <div className="col-span-2">{getDocumentTypeName(hashVerificationResult.documentDetails.document_type)}</div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="font-medium">Document Number:</div>
+                    <div className="col-span-2 font-mono">{hashVerificationResult.documentDetails.document_number}</div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="font-medium">Submitted:</div>
+                    <div className="col-span-2">{new Date(hashVerificationResult.documentDetails.submitted_at).toLocaleDateString()}</div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="font-medium">Status:</div>
+                    <div className="col-span-2">
+                      {hashVerificationResult.documentDetails.verification_status === "verified" && (
+                        <span className="text-green-600 flex items-center">
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Verified
+                        </span>
+                      )}
+                      {hashVerificationResult.documentDetails.verification_status === "pending" && (
+                        <span className="text-amber-600 flex items-center">
+                          <AlertTriangle className="h-4 w-4 mr-1" />
+                          Pending
+                        </span>
+                      )}
+                      {hashVerificationResult.documentDetails.verification_status === "rejected" && (
+                        <span className="text-red-600 flex items-center">
+                          <AlertOctagon className="h-4 w-4 mr-1" />
+                          Rejected
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {!hashVerificationResult.isVerifying && hashToVerify && !hashVerificationResult.exists && (
+              <div className="rounded-md border p-3 mt-4 bg-red-50 border-red-200">
+                <div className="flex items-center text-red-700">
+                  <AlertOctagon className="h-5 w-5 mr-2" />
+                  <h3 className="font-medium">Document Not Found</h3>
+                </div>
+                <p className="text-sm text-red-600 mt-1">
+                  The provided hash does not match any document in our system.
+                </p>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsHashVerificationDialogOpen(false)}>
+              Close
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
