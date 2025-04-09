@@ -1,8 +1,7 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { ChevronRight, Shield, BarChart3, Bank, CreditCard, Lock, RefreshCw, Users } from "lucide-react";
+import { ChevronRight, Shield, BarChart3, Building2, CreditCard, Lock, RefreshCw, Users } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -81,7 +80,7 @@ const Index = () => {
                     <p className="text-white/80 text-sm">Build your digital reputation through a blockchain-verified trust score.</p>
                   </div>
                   <div className="bg-white/10 p-4 rounded-lg">
-                    <Bank className="h-10 w-10 mb-4 text-white" />
+                    <Building2 className="h-10 w-10 mb-4 text-white" />
                     <h3 className="text-xl font-semibold mb-2">Bank Connect</h3>
                     <p className="text-white/80 text-sm">Connect directly with trusted financial institutions.</p>
                   </div>
