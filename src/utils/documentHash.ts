@@ -1,3 +1,4 @@
+
 /**
  * Utilities for document hashing and validation
  */
@@ -16,7 +17,7 @@ export const hashDocument = async (documentData: string): Promise<string> => {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 };
 
-// Document type definition - expanded
+// Document type as string literal type
 export type DocumentType = 'aadhaar' | 'pan' | 'voter_id' | 'driving_license';
 
 // Document validation functions
@@ -61,13 +62,13 @@ export const validateDocument = (type: DocumentType, value: string): boolean => 
   }
 };
 
-// Document type definition
-export enum OldDocumentType {
-  AADHAAR = "aadhaar",
-  PAN = "pan",
-  VOTER_ID = "voter_id",
-  DRIVING_LICENSE = "driving_license"
-}
+// Document type constants to use in code
+export const DOCUMENT_TYPES = {
+  AADHAAR: 'aadhaar' as DocumentType,
+  PAN: 'pan' as DocumentType,
+  VOTER_ID: 'voter_id' as DocumentType,
+  DRIVING_LICENSE: 'driving_license' as DocumentType
+};
 
 // Create a document hash that combines document type, number, and uploaded file hash
 export const createDocumentHash = async (

@@ -33,24 +33,25 @@ import * as z from "zod";
 import { Loader2, Upload, FileText, CheckCircle2, AlertCircle, Info, Shield } from "lucide-react";
 import { 
   hashDocument, 
-  DocumentType, 
+  type DocumentType, 
   validateDocument, 
-  createDocumentHash 
+  createDocumentHash,
+  DOCUMENT_TYPES
 } from "@/utils/documentHash";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 
 // Create a schema for form validation
 const documentSchema = z.object({
-  aadhaarNumber: z.string().refine(val => val === "" || validateDocument(DocumentType.AADHAAR, val), {
+  aadhaarNumber: z.string().refine(val => val === "" || validateDocument(DOCUMENT_TYPES.AADHAAR, val), {
     message: "Invalid Aadhaar number. Must be 12 digits."
   }),
-  panNumber: z.string().refine(val => val === "" || validateDocument(DocumentType.PAN, val), {
+  panNumber: z.string().refine(val => val === "" || validateDocument(DOCUMENT_TYPES.PAN, val), {
     message: "Invalid PAN number. Must be in format ABCDE1234F."
   }),
-  voterIdNumber: z.string().refine(val => val === "" || validateDocument(DocumentType.VOTER_ID, val), {
+  voterIdNumber: z.string().refine(val => val === "" || validateDocument(DOCUMENT_TYPES.VOTER_ID, val), {
     message: "Invalid Voter ID. Must be in format ABC1234567."
   }),
-  drivingLicenseNumber: z.string().refine(val => val === "" || validateDocument(DocumentType.DRIVING_LICENSE, val), {
+  drivingLicenseNumber: z.string().refine(val => val === "" || validateDocument(DOCUMENT_TYPES.DRIVING_LICENSE, val), {
     message: "Invalid Driving License. Must be 8-16 alphanumeric characters."
   })
 });
@@ -60,7 +61,7 @@ type DocumentFormValues = z.infer<typeof documentSchema>;
 export const KYCDocumentUpload = () => {
   const { toast } = useToast();
   const { submitKYC, isConnected } = useBlockchain();
-  const [activeTab, setActiveTab] = useState<DocumentType>(DocumentType.AADHAAR);
+  const [activeTab, setActiveTab] = useState<DocumentType>(DOCUMENT_TYPES.AADHAAR);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [fileHash, setFileHash] = useState<string | null>(null);
@@ -136,16 +137,16 @@ export const KYCDocumentUpload = () => {
 
     let documentNumber = "";
     switch (activeTab) {
-      case DocumentType.AADHAAR:
+      case DOCUMENT_TYPES.AADHAAR:
         documentNumber = values.aadhaarNumber;
         break;
-      case DocumentType.PAN:
+      case DOCUMENT_TYPES.PAN:
         documentNumber = values.panNumber;
         break;
-      case DocumentType.VOTER_ID:
+      case DOCUMENT_TYPES.VOTER_ID:
         documentNumber = values.voterIdNumber;
         break;
-      case DocumentType.DRIVING_LICENSE:
+      case DOCUMENT_TYPES.DRIVING_LICENSE:
         documentNumber = values.drivingLicenseNumber;
         break;
     }
@@ -196,13 +197,13 @@ export const KYCDocumentUpload = () => {
   const getCurrentDocumentNumber = (): string => {
     const values = form.getValues();
     switch (activeTab) {
-      case DocumentType.AADHAAR:
+      case DOCUMENT_TYPES.AADHAAR:
         return values.aadhaarNumber;
-      case DocumentType.PAN:
+      case DOCUMENT_TYPES.PAN:
         return values.panNumber;
-      case DocumentType.VOTER_ID:
+      case DOCUMENT_TYPES.VOTER_ID:
         return values.voterIdNumber;
-      case DocumentType.DRIVING_LICENSE:
+      case DOCUMENT_TYPES.DRIVING_LICENSE:
         return values.drivingLicenseNumber;
       default:
         return "";
@@ -227,15 +228,15 @@ export const KYCDocumentUpload = () => {
           className="w-full"
         >
           <TabsList className="grid grid-cols-4 mb-4">
-            <TabsTrigger value={DocumentType.AADHAAR}>Aadhaar</TabsTrigger>
-            <TabsTrigger value={DocumentType.PAN}>PAN</TabsTrigger>
-            <TabsTrigger value={DocumentType.VOTER_ID}>Voter ID</TabsTrigger>
-            <TabsTrigger value={DocumentType.DRIVING_LICENSE}>Driving License</TabsTrigger>
+            <TabsTrigger value={DOCUMENT_TYPES.AADHAAR}>Aadhaar</TabsTrigger>
+            <TabsTrigger value={DOCUMENT_TYPES.PAN}>PAN</TabsTrigger>
+            <TabsTrigger value={DOCUMENT_TYPES.VOTER_ID}>Voter ID</TabsTrigger>
+            <TabsTrigger value={DOCUMENT_TYPES.DRIVING_LICENSE}>Driving License</TabsTrigger>
           </TabsList>
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-              <TabsContent value={DocumentType.AADHAAR}>
+              <TabsContent value={DOCUMENT_TYPES.AADHAAR}>
                 <FormField
                   control={form.control}
                   name="aadhaarNumber"
@@ -258,7 +259,7 @@ export const KYCDocumentUpload = () => {
                 />
               </TabsContent>
 
-              <TabsContent value={DocumentType.PAN}>
+              <TabsContent value={DOCUMENT_TYPES.PAN}>
                 <FormField
                   control={form.control}
                   name="panNumber"
@@ -285,7 +286,7 @@ export const KYCDocumentUpload = () => {
                 />
               </TabsContent>
 
-              <TabsContent value={DocumentType.VOTER_ID}>
+              <TabsContent value={DOCUMENT_TYPES.VOTER_ID}>
                 <FormField
                   control={form.control}
                   name="voterIdNumber"
@@ -312,7 +313,7 @@ export const KYCDocumentUpload = () => {
                 />
               </TabsContent>
 
-              <TabsContent value={DocumentType.DRIVING_LICENSE}>
+              <TabsContent value={DOCUMENT_TYPES.DRIVING_LICENSE}>
                 <FormField
                   control={form.control}
                   name="drivingLicenseNumber"
