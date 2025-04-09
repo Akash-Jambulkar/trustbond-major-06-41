@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -126,6 +127,9 @@ const VerifyKYC = () => {
     try {
       const now = new Date().toISOString();
       
+      // Convert docId to string for Supabase query if it's a number
+      const documentIdString = String(docId);
+      
       const { error } = await supabase
         .from('kyc_document_submissions')
         .update({ 
@@ -133,7 +137,7 @@ const VerifyKYC = () => {
           verified_at: now,
           verified_by: user?.id
         })
-        .eq('id', docId);
+        .eq('id', documentIdString);
       
       if (error) {
         console.error("Error updating document status:", error);
