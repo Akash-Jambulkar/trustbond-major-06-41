@@ -110,6 +110,60 @@ export type Database = {
           },
         ]
       }
+      kyc_document_submissions: {
+        Row: {
+          blockchain_tx_hash: string | null
+          document_hash: string
+          document_number: string
+          document_type: string
+          id: string
+          submitted_at: string
+          user_id: string
+          verification_status: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          blockchain_tx_hash?: string | null
+          document_hash: string
+          document_number: string
+          document_type: string
+          id?: string
+          submitted_at?: string
+          user_id: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          blockchain_tx_hash?: string | null
+          document_hash?: string
+          document_number?: string
+          document_type?: string
+          id?: string
+          submitted_at?: string
+          user_id?: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kyc_document_submissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "bank_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kyc_document_submissions_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "bank_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kyc_documents: {
         Row: {
           document_type: string
