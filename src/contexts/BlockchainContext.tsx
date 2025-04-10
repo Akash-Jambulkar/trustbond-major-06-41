@@ -8,6 +8,12 @@ import { AbiItem } from 'web3-utils';
 import TrustScoreABI from "../contracts/TrustScore.json";
 import KYCVerifierABI from "../contracts/KYCVerifier.json";
 import LoanManagerABI from "../contracts/LoanManager.json";
+import { 
+  trackTransaction, 
+  watchTransaction, 
+  getTransactions, 
+  Transaction 
+} from "@/utils/transactionTracker";
 
 // Contract addresses - these would be updated after deployment
 const CONTRACT_ADDRESSES = {
@@ -48,6 +54,8 @@ interface BlockchainContextType {
   rejectLoan: (loanId: number) => Promise<void>;
   repayLoan: (loanId: number, amount: number) => Promise<void>;
   getUserLoans: (userAddress: string) => Promise<number[]>;
+  transactions: Transaction[];
+  refreshTransactions: () => void;
 }
 
 const BlockchainContext = createContext<BlockchainContextType | undefined>(undefined);
@@ -94,6 +102,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
   const [networkId, setNetworkId] = useState<number | null>(null);
   const [isBlockchainLoading, setIsBlockchainLoading] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   
   // Contract instances
   const [kycContract, setKycContract] = useState<Contract | null>(null);
@@ -108,6 +117,21 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
   const isCorrectNetwork = process.env.NODE_ENV === 'development' 
     ? (networkId === NETWORK_IDS.GANACHE || networkId === NETWORK_IDS.LOCALHOST)
     : (networkId !== null && networkId !== NETWORK_IDS.GANACHE && networkId !== NETWORK_IDS.LOCALHOST);
+
+  // Load transactions from storage
+  const refreshTransactions = () => {
+    if (account) {
+      const accountTransactions = getTransactions(account);
+      setTransactions(accountTransactions);
+    } else {
+      setTransactions([]);
+    }
+  };
+
+  // Load transactions when account changes
+  useEffect(() => {
+    refreshTransactions();
+  }, [account]);
 
   // Initialize contracts when web3 and account are available
   useEffect(() => {
@@ -304,6 +328,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     setTrustScoreContract(null);
     setLoanContract(null);
     setConnectionError(null);
+    setTransactions([]);
     
     toast.info("Wallet disconnected");
   };
@@ -315,8 +340,24 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      await kycContract.methods.submitKYC(documentHash).send({ from: account });
+      const tx = await kycContract.methods.submitKYC(documentHash).send({ from: account });
+      
+      // Track the transaction
+      const transaction = trackTransaction(
+        tx.transactionHash,
+        'kyc',
+        'KYC Document Submitted',
+        account,
+        networkId || 0
+      );
+      
+      // Watch for confirmation
+      watchTransaction(web3, tx.transactionHash, account);
+      
       toast.success("KYC documents submitted successfully");
+      refreshTransactions();
+      
+      return tx;
     } catch (error) {
       console.error("Error submitting KYC:", error);
       toast.error("Failed to submit KYC: " + (error as Error).message);
@@ -330,8 +371,24 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      await kycContract.methods.verifyKYC(userAddress, status).send({ from: account });
+      const tx = await kycContract.methods.verifyKYC(userAddress, status).send({ from: account });
+      
+      // Track the transaction
+      const transaction = trackTransaction(
+        tx.transactionHash,
+        'verification',
+        `KYC ${status ? 'Approved' : 'Rejected'} for ${userAddress.substring(0, 6)}...`,
+        account,
+        networkId || 0
+      );
+      
+      // Watch for confirmation
+      watchTransaction(web3, tx.transactionHash, account);
+      
       toast.success(`KYC ${status ? 'approved' : 'rejected'} for ${userAddress}`);
+      refreshTransactions();
+      
+      return tx;
     } catch (error) {
       console.error("Error verifying KYC:", error);
       toast.error("Failed to verify KYC: " + (error as Error).message);
@@ -359,8 +416,24 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      await trustScoreContract.methods.updateScore(userAddress, score).send({ from: account });
+      const tx = await trustScoreContract.methods.updateScore(userAddress, score).send({ from: account });
+      
+      // Track the transaction
+      const transaction = trackTransaction(
+        tx.transactionHash,
+        'verification',
+        `Trust Score Updated for ${userAddress.substring(0, 6)}...`,
+        account,
+        networkId || 0
+      );
+      
+      // Watch for confirmation
+      watchTransaction(web3, tx.transactionHash, account);
+      
       toast.success(`Trust score updated for ${userAddress}`);
+      refreshTransactions();
+      
+      return tx;
     } catch (error) {
       console.error("Error updating trust score:", error);
       toast.error("Failed to update trust score: " + (error as Error).message);
@@ -389,9 +462,24 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      const result = await loanContract.methods.requestLoan(amount, duration).send({ from: account });
-      const loanId = result.events.LoanRequested.returnValues.loanId;
+      const tx = await loanContract.methods.requestLoan(amount, duration).send({ from: account });
+      const loanId = tx.events.LoanRequested.returnValues.loanId;
+      
+      // Track the transaction
+      const transaction = trackTransaction(
+        tx.transactionHash,
+        'loan',
+        `Loan Request Submitted (ID: ${loanId})`,
+        account,
+        networkId || 0
+      );
+      
+      // Watch for confirmation
+      watchTransaction(web3, tx.transactionHash, account);
+      
       toast.success(`Loan request submitted with ID: ${loanId}`);
+      refreshTransactions();
+      
       return loanId;
     } catch (error) {
       console.error("Error requesting loan:", error);
@@ -406,8 +494,24 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      await loanContract.methods.approveLoan(loanId).send({ from: account });
+      const tx = await loanContract.methods.approveLoan(loanId).send({ from: account });
+      
+      // Track the transaction
+      const transaction = trackTransaction(
+        tx.transactionHash,
+        'loan',
+        `Loan #${loanId} Approved`,
+        account,
+        networkId || 0
+      );
+      
+      // Watch for confirmation
+      watchTransaction(web3, tx.transactionHash, account);
+      
       toast.success(`Loan #${loanId} approved`);
+      refreshTransactions();
+      
+      return tx;
     } catch (error) {
       console.error("Error approving loan:", error);
       toast.error("Failed to approve loan: " + (error as Error).message);
@@ -421,8 +525,24 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      await loanContract.methods.rejectLoan(loanId).send({ from: account });
+      const tx = await loanContract.methods.rejectLoan(loanId).send({ from: account });
+      
+      // Track the transaction
+      const transaction = trackTransaction(
+        tx.transactionHash,
+        'loan',
+        `Loan #${loanId} Rejected`,
+        account,
+        networkId || 0
+      );
+      
+      // Watch for confirmation
+      watchTransaction(web3, tx.transactionHash, account);
+      
       toast.success(`Loan #${loanId} rejected`);
+      refreshTransactions();
+      
+      return tx;
     } catch (error) {
       console.error("Error rejecting loan:", error);
       toast.error("Failed to reject loan: " + (error as Error).message);
@@ -436,8 +556,24 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      await loanContract.methods.repayLoan(loanId, amount).send({ from: account });
+      const tx = await loanContract.methods.repayLoan(loanId, amount).send({ from: account });
+      
+      // Track the transaction
+      const transaction = trackTransaction(
+        tx.transactionHash,
+        'loan',
+        `Loan #${loanId} Repaid (${amount} ETH)`,
+        account,
+        networkId || 0
+      );
+      
+      // Watch for confirmation
+      watchTransaction(web3, tx.transactionHash, account);
+      
       toast.success(`Loan #${loanId} repaid with ${amount} ETH`);
+      refreshTransactions();
+      
+      return tx;
     } catch (error) {
       console.error("Error repaying loan:", error);
       toast.error("Failed to repay loan: " + (error as Error).message);
@@ -485,7 +621,9 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         approveLoan,
         rejectLoan,
         repayLoan,
-        getUserLoans
+        getUserLoans,
+        transactions,
+        refreshTransactions
       }}
     >
       {children}

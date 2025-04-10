@@ -158,3 +158,82 @@ export const verifyHashInDatabase = async (
     throw error;
   }
 };
+
+// Calculate a checksum for document numbers (like Aadhaar)
+export const calculateChecksum = (documentNumber: string): number => {
+  // Simple Luhn algorithm for checksum
+  const digits = documentNumber.split('').map(Number);
+  let sum = 0;
+  let isSecond = false;
+  
+  for (let i = digits.length - 1; i >= 0; i--) {
+    let digit = digits[i];
+    
+    if (isSecond) {
+      digit *= 2;
+      if (digit > 9) {
+        digit -= 9;
+      }
+    }
+    
+    sum += digit;
+    isSecond = !isSecond;
+  }
+  
+  return (10 - (sum % 10)) % 10;
+};
+
+// Validate if a document number has a valid checksum
+export const hasValidChecksum = (documentNumber: string): boolean => {
+  // For Aadhaar and similar documents with a checksum digit
+  if (documentNumber.length < 2) return false;
+  
+  const mainNumber = documentNumber.slice(0, -1);
+  const checksumDigit = parseInt(documentNumber.slice(-1));
+  
+  return calculateChecksum(mainNumber) === checksumDigit;
+};
+
+// Check if a document might be fraudulent based on various heuristics
+export const checkForFraudSignals = (
+  documentType: DocumentType, 
+  documentNumber: string
+): { isSuspicious: boolean; reasons: string[] } => {
+  const reasons: string[] = [];
+  
+  switch (documentType) {
+    case DOCUMENT_TYPES.AADHAAR:
+      // Check if Aadhaar number starts with 0 or 1 (invalid)
+      if (documentNumber.startsWith('0') || documentNumber.startsWith('1')) {
+        reasons.push("Aadhaar numbers never start with 0 or 1");
+      }
+      
+      // Check if all digits are the same (suspicious)
+      if (new Set(documentNumber.split('')).size === 1) {
+        reasons.push("All digits are identical (highly suspicious)");
+      }
+      
+      // Check valid checksum for Aadhaar
+      if (!hasValidChecksum(documentNumber)) {
+        reasons.push("Checksum validation failed");
+      }
+      break;
+      
+    case DOCUMENT_TYPES.PAN:
+      // Check PAN format rules
+      if (documentNumber[3] !== 'P' && documentNumber[3] !== 'C' && 
+          documentNumber[3] !== 'H' && documentNumber[3] !== 'A' && 
+          documentNumber[3] !== 'B' && documentNumber[3] !== 'J' && 
+          documentNumber[3] !== 'G') {
+        reasons.push("Invalid PAN card 4th character");
+      }
+      break;
+      
+    // Add more document-specific fraud checks as needed
+  }
+  
+  return {
+    isSuspicious: reasons.length > 0,
+    reasons
+  };
+};
