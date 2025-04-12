@@ -15,27 +15,17 @@ async function deployContracts() {
   console.log('Deploying contracts with account:', deployer);
   console.log('Account balance:', await web3.eth.getBalance(deployer));
   
-  // Deploy KYC Verifier
-  const KYCVerifierData = fs.readFileSync(path.join(__dirname, '../KYCVerifier.sol'), 'utf8');
-  const KYCVerifierJson = JSON.parse(fs.readFileSync(path.join(__dirname, '../KYCVerifier.json'), 'utf8'));
-  
-  // Deploy Trust Score
-  const TrustScoreData = fs.readFileSync(path.join(__dirname, '../TrustScore.sol'), 'utf8');
-  const TrustScoreJson = JSON.parse(fs.readFileSync(path.join(__dirname, '../TrustScore.json'), 'utf8'));
-  
-  // Deploy Loan Manager
-  const LoanManagerData = fs.readFileSync(path.join(__dirname, '../LoanManager.sol'), 'utf8');
-  const LoanManagerJson = JSON.parse(fs.readFileSync(path.join(__dirname, '../LoanManager.json'), 'utf8'));
-  
   try {
-    // Compile contracts using solc (would be implemented here)
-    // For simplicity, we'll assume the contracts are already compiled
-    // and we have the ABI and bytecode
+    // Read contract JSON files
+    const kycVerifierJson = JSON.parse(fs.readFileSync(path.join(__dirname, '../KYCVerifier.json'), 'utf8'));
+    const trustScoreJson = JSON.parse(fs.readFileSync(path.join(__dirname, '../TrustScore.json'), 'utf8'));
+    const loanManagerJson = JSON.parse(fs.readFileSync(path.join(__dirname, '../LoanManager.json'), 'utf8'));
     
     // Deploy KYC Verifier
-    const KYCVerifierContract = new web3.eth.Contract(KYCVerifierJson.abi);
+    console.log('Deploying KYC Verifier contract...');
+    const KYCVerifierContract = new web3.eth.Contract(kycVerifierJson.abi);
     const kycVerifier = await KYCVerifierContract.deploy({
-      data: KYCVerifierJson.bytecode
+      data: kycVerifierJson.bytecode
     }).send({
       from: deployer,
       gas: 3000000
@@ -43,22 +33,25 @@ async function deployContracts() {
     console.log('KYC Verifier deployed to:', kycVerifier.options.address);
     
     // Deploy Trust Score
-    const TrustScoreContract = new web3.eth.Contract(TrustScoreJson.abi);
+    console.log('Deploying Trust Score contract...');
+    const TrustScoreContract = new web3.eth.Contract(trustScoreJson.abi);
     const trustScore = await TrustScoreContract.deploy({
-      data: TrustScoreJson.bytecode
+      data: trustScoreJson.bytecode
     }).send({
       from: deployer,
       gas: 3000000
     });
     console.log('Trust Score deployed to:', trustScore.options.address);
     
-    // Deploy Loan Manager
-    const LoanManagerContract = new web3.eth.Contract(LoanManagerJson.abi);
+    // Deploy Loan Manager with references to other contracts
+    console.log('Deploying Loan Manager contract...');
+    const LoanManagerContract = new web3.eth.Contract(loanManagerJson.abi);
     const loanManager = await LoanManagerContract.deploy({
-      data: LoanManagerJson.bytecode
+      data: loanManagerJson.bytecode,
+      arguments: [trustScore.options.address, kycVerifier.options.address] // Pass the deployed contract addresses
     }).send({
       from: deployer,
-      gas: 3000000
+      gas: 4000000
     });
     console.log('Loan Manager deployed to:', loanManager.options.address);
     
@@ -78,6 +71,48 @@ REACT_APP_LOAN_MANAGER_ADDRESS=${loanManager.options.address}
     
     fs.writeFileSync(path.join(__dirname, '../../../.env'), envContent);
     console.log('\nEnvironment file (.env) created with contract addresses');
+    
+    // Test the deployed contracts with some initial values
+    console.log('\nSetting up test data...');
+    
+    // Create 2 test accounts with KYC and trust scores
+    const testAccount1 = accounts[1];
+    const testAccount2 = accounts[2];
+    
+    console.log('Setting up test KYC for:', testAccount1);
+    await kycVerifier.methods.submitKYC("0x4578616d706c65446f63756d656e7448617368").send({ from: testAccount1 });
+    await kycVerifier.methods.verifyKYC(testAccount1, true).send({ from: deployer });
+    
+    console.log('Setting up test KYC for:', testAccount2);
+    await kycVerifier.methods.submitKYC("0x416e6f7468657244656d6f446f63756d656e7448617368").send({ from: testAccount2 });
+    await kycVerifier.methods.verifyKYC(testAccount2, true).send({ from: deployer });
+    
+    console.log('Setting up test trust scores');
+    await trustScore.methods.updateScore(testAccount1, 75).send({ from: deployer });
+    await trustScore.methods.updateScore(testAccount2, 90).send({ from: deployer });
+    
+    console.log('Creating example loan applications');
+    // Create test loan applications
+    const loanAmount1 = web3.utils.toWei('1', 'ether');
+    const loanAmount2 = web3.utils.toWei('2', 'ether');
+    
+    await loanManager.methods.applyForLoan(loanAmount1, 30, "Business expansion loan").send({ 
+      from: testAccount1,
+      gas: 3000000
+    });
+    
+    await loanManager.methods.applyForLoan(loanAmount2, 60, "Home renovation project").send({ 
+      from: testAccount2,
+      gas: 3000000
+    });
+    
+    console.log('Test data setup complete!');
+    console.log('\nDeployment and setup successful!');
+    console.log('-----------------------------------------------');
+    console.log('Remember to:');
+    console.log('1. Connect your MetaMask to Ganache (http://localhost:7545)');
+    console.log('2. Import the Ganache accounts into MetaMask for testing');
+    console.log('3. Use the transactions app to interact with the contracts');
     
   } catch (error) {
     console.error('Error deploying contracts:', error);
