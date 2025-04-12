@@ -7,13 +7,14 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { InfoIcon, CheckCircle, Clock, AlertTriangle } from "lucide-react";
 import { BankRegistrationForm } from "@/components/bank/BankRegistrationForm";
 import { useBlockchain } from "@/contexts/BlockchainContext";
-import { BankRegistration, getBankRegistrationStatus } from "@/utils/bankRegistration";
+import { getBankRegistrationStatus } from "@/utils/bankRegistration";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import type { BankRegistration as BankRegistrationType } from "@/utils/bankRegistration";
 
 export default function BankRegistration() {
   const { isConnected, account } = useBlockchain();
-  const [registration, setRegistration] = useState<BankRegistration | null>(null);
+  const [registration, setRegistration] = useState<BankRegistrationType | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

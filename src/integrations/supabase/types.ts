@@ -9,6 +9,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      bank_registrations: {
+        Row: {
+          blockchain_tx_hash: string | null
+          created_at: string | null
+          document_url: string | null
+          id: string
+          name: string
+          registration_number: string
+          status: string
+          updated_at: string | null
+          wallet_address: string
+        }
+        Insert: {
+          blockchain_tx_hash?: string | null
+          created_at?: string | null
+          document_url?: string | null
+          id?: string
+          name: string
+          registration_number: string
+          status?: string
+          updated_at?: string | null
+          wallet_address: string
+        }
+        Update: {
+          blockchain_tx_hash?: string | null
+          created_at?: string | null
+          document_url?: string | null
+          id?: string
+          name?: string
+          registration_number?: string
+          status?: string
+          updated_at?: string | null
+          wallet_address?: string
+        }
+        Relationships: []
+      }
       blockchain_transactions: {
         Row: {
           created_at: string | null

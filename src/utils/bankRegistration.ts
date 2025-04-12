@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { trackTransaction, watchTransaction } from "@/utils/transactionTracker";
 import { toast } from "sonner";
+import { BankRegistrationType } from "@/types/supabase-extensions";
 
 export interface BankRegistration {
   id: string;

@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { BlockchainTransactionType } from "@/types/supabase-extensions";
 
 // Transaction types
 export type TransactionType = 'kyc' | 'loan' | 'verification' | 'registration' | 'other';
@@ -48,6 +49,7 @@ export const trackTransaction = async (
       .insert({
         hash: transaction.hash,
         from_address: transaction.account.toLowerCase(),
+        to_address: "",  // Optional in our schema
         type: transaction.type,
         description: transaction.description,
         status: transaction.status,

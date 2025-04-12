@@ -113,10 +113,15 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     ? (networkId === NETWORK_IDS.GANACHE || networkId === NETWORK_IDS.LOCALHOST)
     : (networkId !== null && networkId !== NETWORK_IDS.GANACHE && networkId !== NETWORK_IDS.LOCALHOST);
 
-  const refreshTransactions = () => {
+  const refreshTransactions = async () => {
     if (account) {
-      const accountTransactions = getTransactions(account);
-      setTransactions(accountTransactions);
+      try {
+        const accountTransactions = await getTransactions(account);
+        setTransactions(accountTransactions);
+      } catch (error) {
+        console.error("Failed to refresh transactions:", error);
+        setTransactions([]);
+      }
     } else {
       setTransactions([]);
     }
