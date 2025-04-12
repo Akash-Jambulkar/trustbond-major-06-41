@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -294,7 +295,7 @@ const LoanApplicationPage = () => {
             </Card>
           )}
           
-          {trustScore !== null && trustScore < 50 && (
+          {trustScore !== null && Number(trustScore) < 50 && (
             <Card className="border-amber-200 bg-amber-50">
               <CardHeader className="pb-2">
                 <CardTitle className="text-amber-800 flex items-center gap-2">
