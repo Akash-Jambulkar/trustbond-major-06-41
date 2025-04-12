@@ -50,12 +50,17 @@ export const trackTransaction = async (
         hash: transaction.hash,
         from_address: transaction.account.toLowerCase(),
         to_address: "",  // Optional in our schema
+        data_hash: transaction.hash, // Using hash as data_hash since it's required
+        gas_price: "0", // Default value, will be updated when transaction is confirmed
+        gas_used: "0", // Default value, will be updated when transaction is confirmed
         type: transaction.type,
-        description: transaction.description,
-        status: transaction.status,
-        network: String(transaction.network),
-        metadata: transaction.metadata,
-        timestamp: transaction.timestamp
+        timestamp: transaction.timestamp,
+        metadata: {
+          description: transaction.description,
+          status: transaction.status,
+          network: String(transaction.network),
+          blockNumber: transaction.blockNumber
+        }
       });
     
     if (error) {
@@ -83,13 +88,32 @@ export const updateTransactionStatus = async (
   metadata?: any
 ): Promise<void> => {
   try {
+    // First get the existing transaction to access its metadata
+    const { data: existingTx, error: fetchError } = await supabase
+      .from('blockchain_transactions')
+      .select('*')
+      .eq('hash', hash.toLowerCase())
+      .eq('from_address', account.toLowerCase())
+      .single();
+    
+    if (fetchError) {
+      console.error("Error fetching transaction:", fetchError);
+      return;
+    }
+    
+    // Update the metadata with new information
+    const updatedMetadata = {
+      ...(existingTx.metadata || {}),
+      status: status,
+      blockNumber: blockNumber,
+      ...(metadata || {})
+    };
+    
     // Update transaction in Supabase
     const { error, data } = await supabase
       .from('blockchain_transactions')
       .update({
-        status,
-        block_number: blockNumber,
-        metadata: metadata
+        metadata: updatedMetadata
       })
       .eq('hash', hash.toLowerCase())
       .eq('from_address', account.toLowerCase())
@@ -101,14 +125,16 @@ export const updateTransactionStatus = async (
       return;
     }
     
+    const description = data.metadata?.description || "Transaction";
+    
     // Show toast notification based on status
     if (status === 'confirmed') {
-      toast.success(`Transaction confirmed: ${data.description}`, {
+      toast.success(`Transaction confirmed: ${description}`, {
         description: `Block: ${blockNumber}`,
         duration: 5000
       });
     } else if (status === 'failed') {
-      toast.error(`Transaction failed: ${data.description}`, {
+      toast.error(`Transaction failed: ${description}`, {
         description: "Please check blockchain explorer for details",
         duration: 5000
       });
@@ -135,12 +161,12 @@ export const getTransactions = async (account: string): Promise<Transaction[]> =
     return data.map(tx => ({
       hash: tx.hash,
       timestamp: tx.timestamp,
-      status: tx.status as TransactionStatus,
+      status: tx.metadata?.status || 'pending',
       type: tx.type as TransactionType,
-      description: tx.description,
+      description: tx.metadata?.description || "",
       account: tx.from_address,
-      network: tx.network,
-      blockNumber: tx.block_number,
+      network: tx.metadata?.network || "",
+      blockNumber: tx.metadata?.blockNumber,
       metadata: tx.metadata
     }));
   } catch (err) {

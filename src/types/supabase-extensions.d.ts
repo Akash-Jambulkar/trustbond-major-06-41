@@ -36,11 +36,15 @@ export type BlockchainTransactionType = {
   from_address: string;
   to_address?: string;
   type: string;
-  description: string;
-  status: "pending" | "confirmed" | "failed";
-  metadata?: any;
-  block_number?: number;
-  network: string;
+  data_hash: string;
+  gas_price: string;
+  gas_used: string;
+  metadata?: {
+    description: string;
+    status: "pending" | "confirmed" | "failed";
+    network: string;
+    blockNumber?: number;
+  };
   timestamp: number;
   created_at: string;
 };
