@@ -588,9 +588,9 @@ const ManageLoansPage = () => {
                             <div>
                               <div className="flex justify-between mb-1">
                                 <span className="text-xs font-medium text-muted-foreground">Credit Risk</span>
-                                {userTrustScores[selectedLoan.borrower] >= 80 ? (
+                                {Number(userTrustScores[selectedLoan.borrower]) >= 80 ? (
                                   <span className="text-xs font-medium text-green-600">Low</span>
-                                ) : userTrustScores[selectedLoan.borrower] >= 50 ? (
+                                ) : Number(userTrustScores[selectedLoan.borrower]) >= 50 ? (
                                   <span className="text-xs font-medium text-amber-600">Medium</span>
                                 ) : (
                                   <span className="text-xs font-medium text-red-600">High</span>
@@ -599,9 +599,9 @@ const ManageLoansPage = () => {
                               <div className="w-full bg-gray-200 rounded-full h-1.5">
                                 <div 
                                   className={`h-1.5 rounded-full ${
-                                    userTrustScores[selectedLoan.borrower] >= 80 ? 
+                                    Number(userTrustScores[selectedLoan.borrower]) >= 80 ? 
                                       'bg-green-500' : 
-                                      userTrustScores[selectedLoan.borrower] >= 50 ? 
+                                      Number(userTrustScores[selectedLoan.borrower]) >= 50 ? 
                                         'bg-amber-500' : 
                                         'bg-red-500'
                                   }`}
