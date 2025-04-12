@@ -29,6 +29,14 @@ export type BankRegistrationType = {
   blockchain_tx_hash?: string;
 };
 
+// Transaction metadata type to ensure strong typing
+export type TransactionMetadata = {
+  description: string;
+  status: "pending" | "confirmed" | "failed";
+  network: string;
+  blockNumber?: number;
+};
+
 // Blockchain transaction type
 export type BlockchainTransactionType = {
   id: string;
@@ -39,12 +47,7 @@ export type BlockchainTransactionType = {
   data_hash: string;
   gas_price: string;
   gas_used: string;
-  metadata?: {
-    description: string;
-    status: "pending" | "confirmed" | "failed";
-    network: string;
-    blockNumber?: number;
-  };
+  metadata?: TransactionMetadata;
   timestamp: number;
   created_at: string;
 };

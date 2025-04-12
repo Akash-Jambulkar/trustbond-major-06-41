@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { BlockchainTransactionType } from "@/types/supabase-extensions";
+import { BlockchainTransactionType, TransactionMetadata } from "@/types/supabase-extensions";
 
 // Transaction types
 export type TransactionType = 'kyc' | 'loan' | 'verification' | 'registration' | 'other';
@@ -60,7 +60,7 @@ export const trackTransaction = async (
           status: transaction.status,
           network: String(transaction.network),
           blockNumber: transaction.blockNumber
-        }
+        } as TransactionMetadata
       });
     
     if (error) {
@@ -101,12 +101,15 @@ export const updateTransactionStatus = async (
       return;
     }
     
+    // Create safe typed metadata from existing data
+    const existingMetadata = existingTx?.metadata as TransactionMetadata || {} as TransactionMetadata;
+    
     // Update the metadata with new information
-    const updatedMetadata = {
-      ...(existingTx.metadata || {}),
+    const updatedMetadata: TransactionMetadata = {
+      ...existingMetadata,
       status: status,
       blockNumber: blockNumber,
-      ...(metadata || {})
+      ...(metadata as object || {})
     };
     
     // Update transaction in Supabase
@@ -125,7 +128,9 @@ export const updateTransactionStatus = async (
       return;
     }
     
-    const description = data.metadata?.description || "Transaction";
+    // Safely access metadata
+    const txMetadata = data.metadata as TransactionMetadata || {} as TransactionMetadata;
+    const description = txMetadata.description || "Transaction";
     
     // Show toast notification based on status
     if (status === 'confirmed') {
@@ -158,17 +163,22 @@ export const getTransactions = async (account: string): Promise<Transaction[]> =
       return [];
     }
     
-    return data.map(tx => ({
-      hash: tx.hash,
-      timestamp: tx.timestamp,
-      status: tx.metadata?.status || 'pending',
-      type: tx.type as TransactionType,
-      description: tx.metadata?.description || "",
-      account: tx.from_address,
-      network: tx.metadata?.network || "",
-      blockNumber: tx.metadata?.blockNumber,
-      metadata: tx.metadata
-    }));
+    return data.map(tx => {
+      // Type-cast the metadata safely
+      const txMetadata = tx.metadata as TransactionMetadata || {} as TransactionMetadata;
+      
+      return {
+        hash: tx.hash,
+        timestamp: tx.timestamp,
+        status: txMetadata.status || 'pending' as TransactionStatus,
+        type: tx.type as TransactionType,
+        description: txMetadata.description || "",
+        account: tx.from_address,
+        network: txMetadata.network || "",
+        blockNumber: txMetadata.blockNumber,
+        metadata: tx.metadata
+      };
+    });
   } catch (err) {
     console.error("Failed to fetch transactions from database:", err);
     return [];
