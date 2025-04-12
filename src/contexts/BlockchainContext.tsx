@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useMode } from "@/contexts/ModeContext";
 import Web3 from "web3";
@@ -16,16 +17,16 @@ import {
 } from "@/utils/transactionTracker";
 
 const CONTRACT_ADDRESSES = {
-  KYC_VERIFIER: process.env.REACT_APP_KYC_VERIFIER_ADDRESS || 
-    (process.env.NODE_ENV === 'development' 
+  KYC_VERIFIER: import.meta.env.VITE_APP_KYC_VERIFIER_ADDRESS || 
+    (import.meta.env.MODE === 'development' 
       ? "0x5FbDB2315678afecb367f032d93F642f64180aa3"
       : "0x5FbDB2315678afecb367f032d93F642f64180aa3"),
-  TRUST_SCORE: process.env.REACT_APP_TRUST_SCORE_ADDRESS || 
-    (process.env.NODE_ENV === 'development'
+  TRUST_SCORE: import.meta.env.VITE_APP_TRUST_SCORE_ADDRESS || 
+    (import.meta.env.MODE === 'development'
       ? "0x5FbDB2315678afecb367f032d93F642f64180aa4"
       : "0x5FbDB2315678afecb367f032d93F642f64180aa4"),
-  LOAN_MANAGER: process.env.REACT_APP_LOAN_MANAGER_ADDRESS || 
-    (process.env.NODE_ENV === 'development'
+  LOAN_MANAGER: import.meta.env.VITE_APP_LOAN_MANAGER_ADDRESS || 
+    (import.meta.env.MODE === 'development'
       ? "0x5FbDB2315678afecb367f032d93F642f64180aa5"
       : "0x5FbDB2315678afecb367f032d93F642f64180aa5"),
 };
@@ -112,7 +113,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
   const networkName = getNetworkName(networkId);
   const isGanache = networkId === NETWORK_IDS.GANACHE || networkId === NETWORK_IDS.LOCALHOST;
   
-  const isCorrectNetwork = process.env.NODE_ENV === 'development' 
+  const isCorrectNetwork = import.meta.env.MODE === 'development' 
     ? (networkId === NETWORK_IDS.GANACHE || networkId === NETWORK_IDS.LOCALHOST)
     : (networkId !== null && networkId !== NETWORK_IDS.GANACHE && networkId !== NETWORK_IDS.LOCALHOST);
 
