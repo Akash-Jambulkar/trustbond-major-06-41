@@ -2,7 +2,7 @@
 import { toast } from "sonner";
 
 // Transaction types
-export type TransactionType = 'kyc' | 'loan' | 'verification' | 'other';
+export type TransactionType = 'kyc' | 'loan' | 'verification' | 'registration' | 'other';
 
 // Transaction status
 export type TransactionStatus = 'pending' | 'confirmed' | 'failed';
