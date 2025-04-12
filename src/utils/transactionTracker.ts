@@ -1,4 +1,5 @@
 
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 // Transaction types
@@ -17,18 +18,18 @@ export interface Transaction {
   account: string;
   network: string | number;
   blockNumber?: number;
-  metadata?: any; // Added metadata property
+  metadata?: any;
 }
 
 // Add a transaction to the history
-export const trackTransaction = (
+export const trackTransaction = async (
   hash: string, 
   type: TransactionType, 
   description: string,
   account: string,
   network: string | number,
-  metadata?: any // Added optional metadata parameter
-): Transaction => {
+  metadata?: any
+): Promise<Transaction> => {
   const transaction: Transaction = {
     hash,
     timestamp: Date.now(),
@@ -37,18 +38,30 @@ export const trackTransaction = (
     description,
     account,
     network,
-    metadata // Include metadata in transaction
+    metadata
   };
 
-  // Get existing transactions for this account
-  const existingJson = localStorage.getItem(`transactions_${account.toLowerCase()}`);
-  const existing = existingJson ? JSON.parse(existingJson) : [];
-  
-  // Add new transaction at the beginning
-  const updated = [transaction, ...existing];
-  
-  // Store in local storage
-  localStorage.setItem(`transactions_${account.toLowerCase()}`, JSON.stringify(updated));
+  try {
+    // Store transaction in Supabase
+    const { error } = await supabase
+      .from('blockchain_transactions')
+      .insert({
+        hash: transaction.hash,
+        from_address: transaction.account.toLowerCase(),
+        type: transaction.type,
+        description: transaction.description,
+        status: transaction.status,
+        network: String(transaction.network),
+        metadata: transaction.metadata,
+        timestamp: transaction.timestamp
+      });
+    
+    if (error) {
+      console.error("Error storing transaction:", error);
+    }
+  } catch (err) {
+    console.error("Failed to store transaction in database:", err);
+  }
   
   // Show toast notification
   toast.success(`Transaction submitted: ${description}`, {
@@ -60,62 +73,94 @@ export const trackTransaction = (
 };
 
 // Update transaction status
-export const updateTransactionStatus = (
+export const updateTransactionStatus = async (
   hash: string,
   status: TransactionStatus,
   account: string,
   blockNumber?: number,
-  metadata?: any // Added optional metadata parameter
-): void => {
-  // Get existing transactions
-  const existingJson = localStorage.getItem(`transactions_${account.toLowerCase()}`);
-  if (!existingJson) return;
-  
-  const transactions: Transaction[] = JSON.parse(existingJson);
-  
-  // Find and update the transaction
-  const updatedTransactions = transactions.map(tx => {
-    if (tx.hash.toLowerCase() === hash.toLowerCase()) {
-      return {
-        ...tx,
+  metadata?: any
+): Promise<void> => {
+  try {
+    // Update transaction in Supabase
+    const { error, data } = await supabase
+      .from('blockchain_transactions')
+      .update({
         status,
-        blockNumber,
-        metadata: metadata || tx.metadata // Update metadata if provided
-      };
+        block_number: blockNumber,
+        metadata: metadata
+      })
+      .eq('hash', hash.toLowerCase())
+      .eq('from_address', account.toLowerCase())
+      .select()
+      .single();
+    
+    if (error) {
+      console.error("Error updating transaction:", error);
+      return;
     }
-    return tx;
-  });
-  
-  // Store updated transactions
-  localStorage.setItem(`transactions_${account.toLowerCase()}`, JSON.stringify(updatedTransactions));
-  
-  // Show toast notification based on status
-  const tx = updatedTransactions.find(t => t.hash.toLowerCase() === hash.toLowerCase());
-  
-  if (tx) {
+    
+    // Show toast notification based on status
     if (status === 'confirmed') {
-      toast.success(`Transaction confirmed: ${tx.description}`, {
+      toast.success(`Transaction confirmed: ${data.description}`, {
         description: `Block: ${blockNumber}`,
         duration: 5000
       });
     } else if (status === 'failed') {
-      toast.error(`Transaction failed: ${tx.description}`, {
+      toast.error(`Transaction failed: ${data.description}`, {
         description: "Please check blockchain explorer for details",
         duration: 5000
       });
     }
+  } catch (err) {
+    console.error("Failed to update transaction in database:", err);
+  }
+};
+
+// Get all transactions for an account
+export const getTransactions = async (account: string): Promise<Transaction[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('blockchain_transactions')
+      .select('*')
+      .eq('from_address', account.toLowerCase())
+      .order('timestamp', { ascending: false });
+    
+    if (error) {
+      console.error("Error fetching transactions:", error);
+      return [];
+    }
+    
+    return data.map(tx => ({
+      hash: tx.hash,
+      timestamp: tx.timestamp,
+      status: tx.status as TransactionStatus,
+      type: tx.type as TransactionType,
+      description: tx.description,
+      account: tx.from_address,
+      network: tx.network,
+      blockNumber: tx.block_number,
+      metadata: tx.metadata
+    }));
+  } catch (err) {
+    console.error("Failed to fetch transactions from database:", err);
+    return [];
   }
 };
 
 // Clear transaction history (for testing or privacy)
-export const clearTransactionHistory = (account: string): void => {
-  localStorage.removeItem(`transactions_${account.toLowerCase()}`);
-};
-
-// Get all transactions for an account
-export const getTransactions = (account: string): Transaction[] => {
-  const existingJson = localStorage.getItem(`transactions_${account.toLowerCase()}`);
-  return existingJson ? JSON.parse(existingJson) : [];
+export const clearTransactionHistory = async (account: string): Promise<void> => {
+  try {
+    const { error } = await supabase
+      .from('blockchain_transactions')
+      .delete()
+      .eq('from_address', account.toLowerCase());
+    
+    if (error) {
+      console.error("Error clearing transaction history:", error);
+    }
+  } catch (err) {
+    console.error("Failed to clear transaction history:", err);
+  }
 };
 
 // Listen for transaction confirmation

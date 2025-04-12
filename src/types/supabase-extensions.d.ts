@@ -15,3 +15,32 @@ export type ExtendedTables = {
       // Example: customField?: string;
     }
 };
+
+// Bank registration type
+export type BankRegistrationType = {
+  id: string;
+  name: string;
+  registration_number: string;
+  wallet_address: string;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+  updated_at: string;
+  document_url?: string;
+  blockchain_tx_hash?: string;
+};
+
+// Blockchain transaction type
+export type BlockchainTransactionType = {
+  id: string;
+  hash: string;
+  from_address: string;
+  to_address?: string;
+  type: string;
+  description: string;
+  status: "pending" | "confirmed" | "failed";
+  metadata?: any;
+  block_number?: number;
+  network: string;
+  timestamp: number;
+  created_at: string;
+};

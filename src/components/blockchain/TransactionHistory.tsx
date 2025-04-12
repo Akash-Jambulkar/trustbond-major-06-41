@@ -15,15 +15,27 @@ export const TransactionHistory = () => {
   const [activeTab, setActiveTab] = useState<string>("all");
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
   // Load transactions whenever the account changes
   useEffect(() => {
-    if (isConnected && account) {
-      const userTransactions = getTransactions(account);
-      setTransactions(userTransactions);
-    } else {
-      setTransactions([]);
-    }
+    const fetchTransactions = async () => {
+      if (isConnected && account) {
+        setIsLoading(true);
+        try {
+          const txs = await getTransactions(account);
+          setTransactions(txs);
+        } catch (error) {
+          console.error("Failed to fetch transactions:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        setTransactions([]);
+      }
+    };
+
+    fetchTransactions();
   }, [account, isConnected]);
 
   // Filter transactions based on active tab
@@ -70,6 +82,7 @@ export const TransactionHistory = () => {
       case 'kyc': return 'KYC Submission';
       case 'verification': return 'Document Verification';
       case 'loan': return 'Loan Operation';
+      case 'registration': return 'Bank Registration';
       default: return 'Other Transaction';
     }
   };
@@ -97,7 +110,12 @@ export const TransactionHistory = () => {
             <TabsTrigger value="loan">Loans</TabsTrigger>
           </TabsList>
           
-          {transactions.length > 0 ? (
+          {isLoading ? (
+            <div className="text-center py-10">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-800 mx-auto"></div>
+              <p className="mt-2 text-sm text-gray-500">Loading transactions...</p>
+            </div>
+          ) : transactions.length > 0 ? (
             <div className="space-y-3 mt-4">
               {filteredTransactions.map((tx) => (
                 <div key={tx.hash} className="border rounded-lg p-3">

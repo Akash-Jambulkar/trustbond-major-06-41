@@ -22,42 +22,42 @@ export async function submitBankRegistration(
   documentId: string
 ) {
   try {
-    // Since there's no bank_registrations table, we'll use users_metadata table instead
+    // Store bank registration in Supabase
     const { data, error } = await supabase
-      .from('users_metadata')
+      .from('bank_registrations')
       .insert({
-        id: `bank_${Date.now()}`, // Generate a unique ID
-        role: 'bank',
+        name,
+        registration_number: registrationNumber,
         wallet_address: walletAddress.toLowerCase(),
-        is_verified: false,
-        // Store bank details in metadata field of another table that supports it
-        // or use local storage temporarily until proper table is created
+        document_url: documentId,
+        status: 'pending'
       })
       .select()
       .single();
 
     if (error) throw error;
     
-    // Store additional bank details in localStorage for demo purposes
-    // In a real app, you'd want to store this in a proper database table
-    const bankDetails = {
+    // Create user metadata entry if it doesn't exist
+    await supabase
+      .from('users_metadata')
+      .upsert({
+        id: `bank_${Date.now()}`,
+        role: 'bank',
+        wallet_address: walletAddress.toLowerCase(),
+        is_verified: false,
+      }, { onConflict: 'wallet_address' });
+    
+    return {
       id: data.id,
-      name,
-      registrationNumber,
-      walletAddress: walletAddress.toLowerCase(),
-      status: 'pending',
-      documentId,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    
-    // Save to localStorage (temporary solution)
-    const bankRegistrationsJson = localStorage.getItem('bank_registrations');
-    const bankRegistrations = bankRegistrationsJson ? JSON.parse(bankRegistrationsJson) : [];
-    bankRegistrations.push(bankDetails);
-    localStorage.setItem('bank_registrations', JSON.stringify(bankRegistrations));
-    
-    return bankDetails;
+      name: data.name,
+      registrationNumber: data.registration_number,
+      walletAddress: data.wallet_address,
+      status: data.status,
+      documentUrl: data.document_url,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+      blockchainTxHash: data.blockchain_tx_hash
+    } as BankRegistration;
   } catch (error) {
     console.error("Error submitting bank registration:", error);
     throw error;
@@ -66,17 +66,19 @@ export async function submitBankRegistration(
 
 export async function getBankRegistrationStatus(walletAddress: string) {
   try {
-    // First check if the bank exists in users_metadata
+    // Check if the bank exists in bank_registrations
     const { data, error } = await supabase
-      .from('users_metadata')
+      .from('bank_registrations')
       .select('*')
       .eq('wallet_address', walletAddress.toLowerCase())
-      .eq('role', 'bank')
       .order('created_at', { ascending: false })
       .limit(1)
       .single();
       
-    if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned" error
+    if (error) {
+      if (error.code === 'PGRST116') { // No rows returned
+        return null;
+      }
       throw error;
     }
     
@@ -84,31 +86,16 @@ export async function getBankRegistrationStatus(walletAddress: string) {
       return null;
     }
     
-    // Get additional details from localStorage (temporary solution)
-    const bankRegistrationsJson = localStorage.getItem('bank_registrations');
-    if (!bankRegistrationsJson) {
-      return null;
-    }
-    
-    const bankRegistrations = JSON.parse(bankRegistrationsJson);
-    const bankDetails = bankRegistrations.find(
-      (reg: any) => reg.walletAddress.toLowerCase() === walletAddress.toLowerCase()
-    );
-    
-    if (!bankDetails) {
-      return null;
-    }
-    
     return {
-      id: bankDetails.id,
-      name: bankDetails.name,
-      registrationNumber: bankDetails.registrationNumber,
-      walletAddress: bankDetails.walletAddress,
-      status: bankDetails.status,
-      createdAt: bankDetails.createdAt,
-      updatedAt: bankDetails.updatedAt,
-      documentUrl: bankDetails.documentUrl,
-      blockchainTxHash: bankDetails.blockchainTxHash
+      id: data.id,
+      name: data.name,
+      registrationNumber: data.registration_number,
+      walletAddress: data.wallet_address,
+      status: data.status,
+      documentUrl: data.document_url,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+      blockchainTxHash: data.blockchain_tx_hash
     } as BankRegistration;
   } catch (error) {
     console.error("Error getting bank registration status:", error);
@@ -121,25 +108,16 @@ export async function updateBankRegistrationWithTransaction(
   txHash: string
 ) {
   try {
-    // Update in localStorage (temporary solution)
-    const bankRegistrationsJson = localStorage.getItem('bank_registrations');
-    if (!bankRegistrationsJson) {
-      return false;
-    }
+    // Update in Supabase
+    const { error } = await supabase
+      .from('bank_registrations')
+      .update({
+        blockchain_tx_hash: txHash,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', registrationId);
     
-    const bankRegistrations = JSON.parse(bankRegistrationsJson);
-    const updatedRegistrations = bankRegistrations.map((reg: any) => {
-      if (reg.id === registrationId) {
-        return {
-          ...reg,
-          blockchainTxHash: txHash,
-          updatedAt: new Date().toISOString()
-        };
-      }
-      return reg;
-    });
-    
-    localStorage.setItem('bank_registrations', JSON.stringify(updatedRegistrations));
+    if (error) throw error;
     
     return true;
   } catch (error) {
@@ -151,7 +129,7 @@ export async function updateBankRegistrationWithTransaction(
 export async function approveBankRegistration(walletAddress: string) {
   try {
     // Update users_metadata to mark the bank as verified
-    const { error } = await supabase
+    const { error: metadataError } = await supabase
       .from('users_metadata')
       .update({
         is_verified: true
@@ -159,25 +137,18 @@ export async function approveBankRegistration(walletAddress: string) {
       .eq('wallet_address', walletAddress.toLowerCase())
       .eq('role', 'bank');
       
-    if (error) throw error;
+    if (metadataError) throw metadataError;
     
-    // Update in localStorage (temporary solution)
-    const bankRegistrationsJson = localStorage.getItem('bank_registrations');
-    if (bankRegistrationsJson) {
-      const bankRegistrations = JSON.parse(bankRegistrationsJson);
-      const updatedRegistrations = bankRegistrations.map((reg: any) => {
-        if (reg.walletAddress.toLowerCase() === walletAddress.toLowerCase()) {
-          return {
-            ...reg,
-            status: 'approved',
-            updatedAt: new Date().toISOString()
-          };
-        }
-        return reg;
-      });
-      
-      localStorage.setItem('bank_registrations', JSON.stringify(updatedRegistrations));
-    }
+    // Update bank_registrations status
+    const { error: registrationError } = await supabase
+      .from('bank_registrations')
+      .update({
+        status: 'approved',
+        updated_at: new Date().toISOString()
+      })
+      .eq('wallet_address', walletAddress.toLowerCase());
+    
+    if (registrationError) throw registrationError;
     
     toast.success(`Bank registration approved for ${walletAddress.substring(0, 8)}...`);
     return true;
