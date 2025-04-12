@@ -16,15 +16,18 @@ import {
 } from "@/utils/transactionTracker";
 
 const CONTRACT_ADDRESSES = {
-  KYC_VERIFIER: process.env.NODE_ENV === 'development' 
-    ? "0x5FbDB2315678afecb367f032d93F642f64180aa3"
-    : "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-  TRUST_SCORE: process.env.NODE_ENV === 'development'
-    ? "0x5FbDB2315678afecb367f032d93F642f64180aa4"
-    : "0x5FbDB2315678afecb367f032d93F642f64180aa4",
-  LOAN_MANAGER: process.env.NODE_ENV === 'development'
-    ? "0x5FbDB2315678afecb367f032d93F642f64180aa5"
-    : "0x5FbDB2315678afecb367f032d93F642f64180aa5",
+  KYC_VERIFIER: process.env.REACT_APP_KYC_VERIFIER_ADDRESS || 
+    (process.env.NODE_ENV === 'development' 
+      ? "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+      : "0x5FbDB2315678afecb367f032d93F642f64180aa3"),
+  TRUST_SCORE: process.env.REACT_APP_TRUST_SCORE_ADDRESS || 
+    (process.env.NODE_ENV === 'development'
+      ? "0x5FbDB2315678afecb367f032d93F642f64180aa4"
+      : "0x5FbDB2315678afecb367f032d93F642f64180aa4"),
+  LOAN_MANAGER: process.env.REACT_APP_LOAN_MANAGER_ADDRESS || 
+    (process.env.NODE_ENV === 'development'
+      ? "0x5FbDB2315678afecb367f032d93F642f64180aa5"
+      : "0x5FbDB2315678afecb367f032d93F642f64180aa5"),
 };
 
 interface BlockchainContextType {
