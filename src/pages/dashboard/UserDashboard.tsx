@@ -9,6 +9,7 @@ import UserProfile from "./user/ProfilePage";
 import KYCPage from "./user/KYCPage";
 import LoansPage from "./user/LoansPage";
 import TrustScorePage from "./user/TrustScorePage";
+import LoanApplicationPage from "./user/LoanApplicationPage";
 
 // Main User Dashboard Component with Routing
 const UserDashboard = () => {
@@ -31,6 +32,7 @@ const UserDashboard = () => {
         <Route path="kyc" element={<KYCPage />} />
         <Route path="loans" element={<LoansPage />} />
         <Route path="trust-score" element={<TrustScorePage />} />
+        <Route path="loan-application" element={<LoanApplicationPage />} />
       </Routes>
     </DashboardLayout>
   );
