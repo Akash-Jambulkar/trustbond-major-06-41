@@ -11,7 +11,8 @@ import {
   trackTransaction, 
   watchTransaction, 
   getTransactions, 
-  Transaction 
+  Transaction,
+  TransactionType
 } from "@/utils/transactionTracker";
 
 const CONTRACT_ADDRESSES = {
@@ -563,7 +564,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
       
       const transaction = trackTransaction(
         txHash,
-        'registration',
+        'registration' as TransactionType,
         `Bank Registration: ${name}`,
         account,
         networkId || 0,
