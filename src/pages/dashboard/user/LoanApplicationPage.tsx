@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -404,7 +405,7 @@ const LoanApplicationPage = () => {
                 <div className="text-center py-10 border rounded-lg bg-gray-50">
                   <AlertCircle className="h-10 w-10 mx-auto text-gray-400 mb-2" />
                   <p className="text-gray-500">
-                    You haven't applied for any loans yet
+                    You haven&apos;t applied for any loans yet
                   </p>
                 </div>
               )}
