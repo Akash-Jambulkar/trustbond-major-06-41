@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -366,7 +365,7 @@ const LoanApplicationPage = () => {
                         </div>
                       </div>
                       
-                      {loan.status >= 4 && ( // If funded or later
+                      {Number(loan.status) >= 4 && (
                         <div className="pt-2 border-t">
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                             <div>
@@ -389,7 +388,7 @@ const LoanApplicationPage = () => {
                             </div>
                           </div>
                           
-                          {loan.status === "5" && ( // If repaying
+                          {loan.status === "5" && (
                             <div className="mt-4">
                               <Button variant="outline" size="sm" className="w-full">
                                 Make Repayment
