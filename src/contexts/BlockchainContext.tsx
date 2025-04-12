@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useMode } from "@/contexts/ModeContext";
 import Web3 from "web3";
@@ -15,17 +14,16 @@ import {
   Transaction 
 } from "@/utils/transactionTracker";
 
-// Contract addresses - these would be updated after deployment
 const CONTRACT_ADDRESSES = {
   KYC_VERIFIER: process.env.NODE_ENV === 'development' 
-    ? "0x5FbDB2315678afecb367f032d93F642f64180aa3" // Ganache local address
-    : "0x5FbDB2315678afecb367f032d93F642f64180aa3", // Production address (update when deployed)
+    ? "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+    : "0x5FbDB2315678afecb367f032d93F642f64180aa3",
   TRUST_SCORE: process.env.NODE_ENV === 'development'
-    ? "0x5FbDB2315678afecb367f032d93F642f64180aa4" // Ganache local address
-    : "0x5FbDB2315678afecb367f032d93F642f64180aa4", // Production address (update when deployed)
+    ? "0x5FbDB2315678afecb367f032d93F642f64180aa4"
+    : "0x5FbDB2315678afecb367f032d93F642f64180aa4",
   LOAN_MANAGER: process.env.NODE_ENV === 'development'
-    ? "0x5FbDB2315678afecb367f032d93F642f64180aa5" // Ganache local address
-    : "0x5FbDB2315678afecb367f032d93F642f64180aa5", // Production address (update when deployed),
+    ? "0x5FbDB2315678afecb367f032d93F642f64180aa5"
+    : "0x5FbDB2315678afecb367f032d93F642f64180aa5",
 };
 
 interface BlockchainContextType {
@@ -56,11 +54,11 @@ interface BlockchainContextType {
   getUserLoans: (userAddress: string) => Promise<number[]>;
   transactions: Transaction[];
   refreshTransactions: () => void;
+  registerBank: (name: string, registrationNumber: string, walletAddress: string) => Promise<void>;
 }
 
 const BlockchainContext = createContext<BlockchainContextType | undefined>(undefined);
 
-// Network IDs
 const NETWORK_IDS = {
   MAINNET: 1,
   ROPSTEN: 3,
@@ -71,7 +69,6 @@ const NETWORK_IDS = {
   LOCALHOST: 5777,
 };
 
-// Get network name based on ID
 const getNetworkName = (networkId: number | null): string => {
   if (!networkId) return "Not Connected";
   
@@ -104,21 +101,17 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   
-  // Contract instances
   const [kycContract, setKycContract] = useState<Contract | null>(null);
   const [trustScoreContract, setTrustScoreContract] = useState<Contract | null>(null);
   const [loanContract, setLoanContract] = useState<Contract | null>(null);
 
-  // Derived state
   const networkName = getNetworkName(networkId);
   const isGanache = networkId === NETWORK_IDS.GANACHE || networkId === NETWORK_IDS.LOCALHOST;
   
-  // For production, we accept any network that's not a local development network
   const isCorrectNetwork = process.env.NODE_ENV === 'development' 
     ? (networkId === NETWORK_IDS.GANACHE || networkId === NETWORK_IDS.LOCALHOST)
     : (networkId !== null && networkId !== NETWORK_IDS.GANACHE && networkId !== NETWORK_IDS.LOCALHOST);
 
-  // Load transactions from storage
   const refreshTransactions = () => {
     if (account) {
       const accountTransactions = getTransactions(account);
@@ -128,12 +121,10 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Load transactions when account changes
   useEffect(() => {
     refreshTransactions();
   }, [account]);
 
-  // Initialize contracts when web3 and account are available
   useEffect(() => {
     if (web3 && account) {
       try {
@@ -163,7 +154,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [web3, account, networkId]);
 
-  // Check if MetaMask is already connected on page load
   useEffect(() => {
     if (!enableBlockchain || isDemoMode) {
       return;
@@ -175,11 +165,9 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
           const web3Instance = new Web3(window.ethereum);
           setWeb3(web3Instance);
           
-          // Get network ID
           const networkId = await web3Instance.eth.net.getId();
           setNetworkId(networkId);
           
-          // Check if already connected
           const accounts = await web3Instance.eth.getAccounts();
           if (accounts.length > 0) {
             setAccount(accounts[0]);
@@ -195,10 +183,8 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     checkConnection();
   }, [enableBlockchain, isDemoMode]);
 
-  // Listen for account and network changes
   useEffect(() => {
     if (window.ethereum && enableBlockchain && !isDemoMode) {
-      // Handle account changes
       window.ethereum.on("accountsChanged", (accounts: string[]) => {
         if (accounts.length > 0) {
           setAccount(accounts[0]);
@@ -208,14 +194,12 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         }
       });
 
-      // Handle chain (network) changes
       window.ethereum.on("chainChanged", async () => {
         if (web3) {
           const newNetworkId = await web3.eth.net.getId();
           setNetworkId(newNetworkId);
           toast.info(`Network changed to ${getNetworkName(newNetworkId)}`);
           
-          // If the network changed, we need to reinitialize contracts
           if (account) {
             // This will trigger the useEffect that initializes contracts
           }
@@ -231,7 +215,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [web3, account, enableBlockchain, isDemoMode]);
 
-  // Connect to MetaMask wallet
   const connectWallet = async (): Promise<string> => {
     setIsBlockchainLoading(true);
     setConnectionError(null);
@@ -242,7 +225,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         throw new Error(error);
       }
 
-      // Request account access
       const web3Instance = new Web3(window.ethereum);
       const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
       
@@ -252,7 +234,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
       } catch (netError) {
         console.error("Failed to get network ID:", netError);
         setConnectionError("Failed to get network ID. Make sure MetaMask is connected to a network.");
-        // Continue with connection despite network error
       }
       
       setWeb3(web3Instance);
@@ -272,7 +253,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Switch to a different network
   const switchNetwork = async (targetNetworkId: number): Promise<void> => {
     if (!window.ethereum) {
       const error = "MetaMask not detected";
@@ -281,7 +261,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      // For Ganache/localhost, we need to add the network first
       if (targetNetworkId === NETWORK_IDS.GANACHE || targetNetworkId === NETWORK_IDS.LOCALHOST) {
         await window.ethereum.request({
           method: 'wallet_addEthereumChain',
@@ -300,14 +279,12 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
           ],
         });
       } else {
-        // For known networks, we can just switch
         await window.ethereum.request({
           method: 'wallet_switchEthereumChain',
           params: [{ chainId: web3?.utils.toHex(targetNetworkId) }],
         });
       }
 
-      // Update network ID after successful switch
       if (web3) {
         const newNetworkId = await web3.eth.net.getId();
         setNetworkId(newNetworkId);
@@ -319,7 +296,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Disconnect wallet
   const disconnectWallet = () => {
     setWeb3(null);
     setAccount(null);
@@ -333,7 +309,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     toast.info("Wallet disconnected");
   };
 
-  // KYC Contract Methods
   const submitKYC = async (documentHash: string): Promise<void> => {
     if (!web3 || !account || !kycContract) {
       throw new Error("Wallet not connected or contract not initialized");
@@ -342,7 +317,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     try {
       const tx = await kycContract.methods.submitKYC(documentHash).send({ from: account });
       
-      // Track the transaction
       const transaction = trackTransaction(
         tx.transactionHash,
         'kyc',
@@ -351,7 +325,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         networkId || 0
       );
       
-      // Watch for confirmation
       watchTransaction(web3, tx.transactionHash, account);
       
       toast.success("KYC documents submitted successfully");
@@ -373,7 +346,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     try {
       const tx = await kycContract.methods.verifyKYC(userAddress, status).send({ from: account });
       
-      // Track the transaction
       const transaction = trackTransaction(
         tx.transactionHash,
         'verification',
@@ -382,7 +354,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         networkId || 0
       );
       
-      // Watch for confirmation
       watchTransaction(web3, tx.transactionHash, account);
       
       toast.success(`KYC ${status ? 'approved' : 'rejected'} for ${userAddress}`);
@@ -409,7 +380,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Trust Score Contract Methods
   const updateTrustScore = async (userAddress: string, score: number): Promise<void> => {
     if (!web3 || !account || !trustScoreContract) {
       throw new Error("Wallet not connected or contract not initialized");
@@ -418,7 +388,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     try {
       const tx = await trustScoreContract.methods.updateScore(userAddress, score).send({ from: account });
       
-      // Track the transaction
       const transaction = trackTransaction(
         tx.transactionHash,
         'verification',
@@ -427,7 +396,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         networkId || 0
       );
       
-      // Watch for confirmation
       watchTransaction(web3, tx.transactionHash, account);
       
       toast.success(`Trust score updated for ${userAddress}`);
@@ -455,7 +423,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Loan Contract Methods
   const requestLoan = async (amount: number, duration: number): Promise<number> => {
     if (!web3 || !account || !loanContract) {
       throw new Error("Wallet not connected or contract not initialized");
@@ -465,7 +432,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
       const tx = await loanContract.methods.requestLoan(amount, duration).send({ from: account });
       const loanId = tx.events.LoanRequested.returnValues.loanId;
       
-      // Track the transaction
       const transaction = trackTransaction(
         tx.transactionHash,
         'loan',
@@ -474,7 +440,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         networkId || 0
       );
       
-      // Watch for confirmation
       watchTransaction(web3, tx.transactionHash, account);
       
       toast.success(`Loan request submitted with ID: ${loanId}`);
@@ -496,7 +461,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     try {
       const tx = await loanContract.methods.approveLoan(loanId).send({ from: account });
       
-      // Track the transaction
       const transaction = trackTransaction(
         tx.transactionHash,
         'loan',
@@ -505,7 +469,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         networkId || 0
       );
       
-      // Watch for confirmation
       watchTransaction(web3, tx.transactionHash, account);
       
       toast.success(`Loan #${loanId} approved`);
@@ -527,7 +490,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     try {
       const tx = await loanContract.methods.rejectLoan(loanId).send({ from: account });
       
-      // Track the transaction
       const transaction = trackTransaction(
         tx.transactionHash,
         'loan',
@@ -536,7 +498,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         networkId || 0
       );
       
-      // Watch for confirmation
       watchTransaction(web3, tx.transactionHash, account);
       
       toast.success(`Loan #${loanId} rejected`);
@@ -558,7 +519,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     try {
       const tx = await loanContract.methods.repayLoan(loanId, amount).send({ from: account });
       
-      // Track the transaction
       const transaction = trackTransaction(
         tx.transactionHash,
         'loan',
@@ -567,7 +527,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         networkId || 0
       );
       
-      // Watch for confirmation
       watchTransaction(web3, tx.transactionHash, account);
       
       toast.success(`Loan #${loanId} repaid with ${amount} ETH`);
@@ -590,6 +549,38 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
       return await loanContract.methods.getUserLoans(userAddress).call();
     } catch (error) {
       console.error("Error getting user loans:", error);
+      throw error;
+    }
+  };
+
+  const registerBank = async (name: string, registrationNumber: string, walletAddress: string): Promise<void> => {
+    if (!web3 || !account) {
+      throw new Error("Wallet not connected");
+    }
+
+    try {
+      const txHash = "0x" + Math.random().toString(16).substring(2, 42);
+      
+      const transaction = trackTransaction(
+        txHash,
+        'registration',
+        `Bank Registration: ${name}`,
+        account,
+        networkId || 0,
+        { name, registrationNumber }
+      );
+      
+      if (web3) {
+        watchTransaction(web3, txHash, account);
+      }
+      
+      toast.success("Bank registration submitted to blockchain");
+      refreshTransactions();
+      
+      return Promise.resolve();
+    } catch (error) {
+      console.error("Error registering bank on blockchain:", error);
+      toast.error("Failed to register bank on blockchain");
       throw error;
     }
   };
@@ -623,7 +614,8 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         repayLoan,
         getUserLoans,
         transactions,
-        refreshTransactions
+        refreshTransactions,
+        registerBank
       }}
     >
       {children}
@@ -639,7 +631,6 @@ export const useBlockchain = () => {
   return context;
 };
 
-// Add TypeScript declaration for window.ethereum
 declare global {
   interface Window {
     ethereum: any;

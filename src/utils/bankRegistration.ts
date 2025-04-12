@@ -1,5 +1,4 @@
-
-import { supabaseClient } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { trackTransaction, watchTransaction } from "@/utils/transactionTracker";
 import { toast } from "sonner";
 
@@ -23,7 +22,7 @@ export async function submitBankRegistration(
 ) {
   try {
     // Step 1: Create record in database
-    const { data, error } = await supabaseClient
+    const { data, error } = await supabase
       .from('bank_registrations')
       .insert({
         name,
@@ -46,7 +45,7 @@ export async function submitBankRegistration(
 
 export async function getBankRegistrationStatus(walletAddress: string) {
   try {
-    const { data, error } = await supabaseClient
+    const { data, error } = await supabase
       .from('bank_registrations')
       .select('*')
       .eq('wallet_address', walletAddress.toLowerCase())
@@ -70,7 +69,7 @@ export async function updateBankRegistrationWithTransaction(
   txHash: string
 ) {
   try {
-    const { error } = await supabaseClient
+    const { error } = await supabase
       .from('bank_registrations')
       .update({
         blockchain_tx_hash: txHash
@@ -86,10 +85,9 @@ export async function updateBankRegistrationWithTransaction(
   }
 }
 
-// This would be called from a blockchain event listener
 export async function approveBankRegistration(walletAddress: string) {
   try {
-    const { error } = await supabaseClient
+    const { error } = await supabase
       .from('bank_registrations')
       .update({
         status: 'approved',
