@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,12 +7,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { CircleDollarSign, Clock, CheckCircle, XCircle, AlertTriangle, FileText, BarChart } from "lucide-react";
+import { CircleDollarSign, Clock, CheckCircle, XCircle, AlertTriangle, FileText, BarChart, AlertCircle } from "lucide-react";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Progress } from "@/components/ui/progress";
 
-// Loan status mapping to readable text
 const LOAN_STATUS = {
   0: { label: "Applied", icon: Clock, color: "text-amber-500" },
   1: { label: "Under Review", icon: FileText, color: "text-blue-500" },
@@ -40,7 +38,6 @@ const LoanApplicationPage = () => {
   const { loanContract, account, isConnected, trustScoreContract, kycContract } = useBlockchain();
   const { user } = useAuth();
   
-  // Load user's trust score and KYC status
   useEffect(() => {
     const loadUserData = async () => {
       if (!isConnected || !trustScoreContract || !kycContract || !account) {
@@ -65,7 +62,6 @@ const LoanApplicationPage = () => {
     loadUserData();
   }, [isConnected, trustScoreContract, kycContract, account]);
   
-  // Load user's existing loans
   useEffect(() => {
     const loadUserLoans = async () => {
       if (!isConnected || !loanContract || !account) {
@@ -75,10 +71,8 @@ const LoanApplicationPage = () => {
       
       setIsLoading(true);
       try {
-        // Get user's loan IDs
         const loanIds = await loanContract.methods.getUserLoans(account).call();
         
-        // Fetch details for each loan
         const loanPromises = loanIds.map((id: string) => 
           loanContract.methods.getLoan(id).call()
         );
@@ -109,25 +103,20 @@ const LoanApplicationPage = () => {
     
     setIsSubmitting(true);
     try {
-      // Convert loan amount to wei (assuming ETH)
       const amountInWei = window.web3.utils.toWei(loanAmount, "ether");
       
-      // Apply for loan
       await loanContract.methods
         .applyForLoan(amountInWei, loanTerm, loanPurpose)
         .send({ from: account });
       
       toast.success("Loan application submitted successfully!");
       
-      // Reset form
       setLoanAmount("");
       setLoanTerm("30");
       setLoanPurpose("");
       
-      // Switch to "My Loans" tab
       setActiveTab("my-loans");
       
-      // Refresh loans list
       const loanIds = await loanContract.methods.getUserLoans(account).call();
       const loanPromises = loanIds.map((id: string) => 
         loanContract.methods.getLoan(id).call()
@@ -164,7 +153,6 @@ const LoanApplicationPage = () => {
         </p>
       </div>
       
-      {/* KYC and Trust Score Panel */}
       <Card>
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -223,7 +211,6 @@ const LoanApplicationPage = () => {
           <TabsTrigger value="my-loans">My Loans</TabsTrigger>
         </TabsList>
         
-        {/* Apply for Loan Tab */}
         <TabsContent value="apply" className="space-y-4">
           <Card>
             <CardHeader>
@@ -322,7 +309,6 @@ const LoanApplicationPage = () => {
           )}
         </TabsContent>
         
-        {/* My Loans Tab */}
         <TabsContent value="my-loans">
           <Card>
             <CardHeader>

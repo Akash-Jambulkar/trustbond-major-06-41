@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,10 +33,10 @@ import {
   AlertTriangle, 
   FileText, 
   BarChart, 
-  Eye
+  Eye,
+  AlertCircle
 } from "lucide-react";
 
-// Loan status mapping to readable text and components
 const LOAN_STATUS = {
   0: { label: "Applied", icon: Clock, color: "text-amber-500", badgeVariant: "outline", bgColor: "bg-amber-50 border-amber-200 text-amber-700" },
   1: { label: "Under Review", icon: FileText, color: "text-blue-500", badgeVariant: "outline", bgColor: "bg-blue-50 border-blue-200 text-blue-700" },
@@ -62,19 +61,12 @@ const ManageLoansPage = () => {
   
   const { loanContract, isConnected, account, trustScoreContract, kycContract } = useBlockchain();
   
-  // Mock function to fetch all loans since the contract doesn't have this functionality
-  // In a real application, you would index loan events to get all loans
   const fetchAllLoans = async () => {
     if (!isConnected || !loanContract) {
       return [];
     }
     
-    // This is a simplified implementation
-    // In reality, you would need an indexer or event listener to track all loans
-    
-    // For demonstration purposes, we'll use a fixed set of loan IDs
-    // In production, these would come from indexed events
-    const loanIds = [0, 1, 2, 3, 4, 5]; // Assume these are the IDs of all loans in the system
+    const loanIds = [0, 1, 2, 3, 4, 5];
     
     try {
       const loanPromises = loanIds.map((id) => 
@@ -89,7 +81,6 @@ const ManageLoansPage = () => {
     }
   };
   
-  // Load all loans
   useEffect(() => {
     const loadLoans = async () => {
       if (!isConnected || !loanContract) {
@@ -102,7 +93,6 @@ const ManageLoansPage = () => {
         const loans = await fetchAllLoans();
         setAllLoans(loans);
         
-        // Fetch trust scores and KYC status for all borrowers
         if (trustScoreContract && kycContract) {
           const uniqueBorrowers = [...new Set(loans.map((loan: any) => loan.borrower))];
           
@@ -146,7 +136,6 @@ const ManageLoansPage = () => {
     loadLoans();
   }, [isConnected, loanContract, trustScoreContract, kycContract]);
   
-  // Handle loan review (approve/reject)
   const handleReviewLoan = async (loanId: string, approve: boolean) => {
     if (!isConnected || !loanContract) {
       toast.error("Please connect your wallet first");
@@ -155,7 +144,6 @@ const ManageLoansPage = () => {
     
     setIsProcessing(true);
     try {
-      // Status 2 = Approved, Status 3 = Rejected
       const newStatus = approve ? 2 : 3;
       
       await loanContract.methods
@@ -164,7 +152,6 @@ const ManageLoansPage = () => {
       
       toast.success(`Loan ${approve ? 'approved' : 'rejected'} successfully!`);
       
-      // Update local state
       setAllLoans(prevLoans => 
         prevLoans.map(loan => 
           loan.id === loanId 
@@ -173,7 +160,6 @@ const ManageLoansPage = () => {
         )
       );
       
-      // Close details dialog if open
       if (isDetailsOpen) {
         setIsDetailsOpen(false);
       }
@@ -185,7 +171,6 @@ const ManageLoansPage = () => {
     }
   };
   
-  // Handle loan funding
   const handleFundLoan = async (loanId: string, amount: string) => {
     if (!isConnected || !loanContract) {
       toast.error("Please connect your wallet first");
@@ -194,7 +179,6 @@ const ManageLoansPage = () => {
     
     setIsProcessing(true);
     try {
-      // Convert amount to wei
       const amountInWei = window.web3.utils.toWei(amount, "ether");
       
       await loanContract.methods
@@ -203,7 +187,6 @@ const ManageLoansPage = () => {
       
       toast.success("Loan funded successfully!");
       
-      // Update local state
       setAllLoans(prevLoans => 
         prevLoans.map(loan => 
           loan.id === loanId 
@@ -212,7 +195,6 @@ const ManageLoansPage = () => {
         )
       );
       
-      // Close details dialog if open
       if (isDetailsOpen) {
         setIsDetailsOpen(false);
       }
@@ -238,7 +220,6 @@ const ManageLoansPage = () => {
       
       toast.success("Loan marked as defaulted");
       
-      // Update local state
       setAllLoans(prevLoans => 
         prevLoans.map(loan => 
           loan.id === loanId 
@@ -247,7 +228,6 @@ const ManageLoansPage = () => {
         )
       );
       
-      // Close details dialog if open
       if (isDetailsOpen) {
         setIsDetailsOpen(false);
       }
@@ -259,13 +239,11 @@ const ManageLoansPage = () => {
     }
   };
   
-  // View loan details
   const viewLoanDetails = (loan: any) => {
     setSelectedLoan(loan);
     setIsDetailsOpen(true);
   };
   
-  // Format utilities
   const formatDate = (timestamp: string) => {
     if (!timestamp || timestamp === "0") return "N/A";
     return new Date(Number(timestamp) * 1000).toLocaleDateString();
@@ -279,7 +257,6 @@ const ManageLoansPage = () => {
     }
   };
   
-  // Filter loans by status and search term
   const filterLoans = () => {
     return allLoans.filter(loan => {
       const matchesSearch = 
@@ -392,7 +369,6 @@ const ManageLoansPage = () => {
                                 Details
                               </Button>
                               
-                              {/* Show Approve/Reject buttons only for pending loans */}
                               {(loan.status === "0" || loan.status === "1") && (
                                 <>
                                   <Button 
@@ -418,7 +394,6 @@ const ManageLoansPage = () => {
                                 </>
                               )}
                               
-                              {/* Show Fund button only for approved loans */}
                               {loan.status === "2" && (
                                 <Button 
                                   size="sm" 
@@ -432,7 +407,6 @@ const ManageLoansPage = () => {
                                 </Button>
                               )}
                               
-                              {/* Show Mark as Defaulted button for active loans past due date */}
                               {(loan.status === "4" || loan.status === "5") && 
                                Number(loan.repaymentDeadline) < (Date.now() / 1000) && (
                                 <Button 
@@ -454,7 +428,7 @@ const ManageLoansPage = () => {
                   </Table>
                 ) : (
                   <div className="text-center py-10 border rounded-lg bg-gray-50">
-                    <AlertTriangle className="h-10 w-10 mx-auto text-gray-400 mb-2" />
+                    <AlertCircle className="h-10 w-10 mx-auto text-gray-400 mb-2" />
                     <p className="text-gray-500">
                       No loan applications found
                     </p>
@@ -465,7 +439,6 @@ const ManageLoansPage = () => {
           </CardContent>
         </Card>
         
-        {/* Loan Details Dialog */}
         <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
           <DialogContent className="max-w-3xl">
             <DialogHeader>
@@ -648,7 +621,6 @@ const ManageLoansPage = () => {
                 </div>
                 
                 <DialogFooter>
-                  {/* Show different actions based on loan status */}
                   {(selectedLoan.status === "0" || selectedLoan.status === "1") && (
                     <>
                       <Button
@@ -716,7 +688,6 @@ const ManageLoansPage = () => {
                     </>
                   )}
                   
-                  {/* For loans with no applicable actions */}
                   {((selectedLoan.status === "3") || 
                     (selectedLoan.status === "6") || 
                     (selectedLoan.status === "7") ||
