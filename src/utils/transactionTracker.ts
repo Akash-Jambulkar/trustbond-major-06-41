@@ -17,6 +17,7 @@ export interface Transaction {
   account: string;
   network: string | number;
   blockNumber?: number;
+  metadata?: any; // Added metadata property
 }
 
 // Add a transaction to the history
@@ -25,7 +26,8 @@ export const trackTransaction = (
   type: TransactionType, 
   description: string,
   account: string,
-  network: string | number
+  network: string | number,
+  metadata?: any // Added optional metadata parameter
 ): Transaction => {
   const transaction: Transaction = {
     hash,
@@ -34,7 +36,8 @@ export const trackTransaction = (
     type,
     description,
     account,
-    network
+    network,
+    metadata // Include metadata in transaction
   };
 
   // Get existing transactions for this account
@@ -61,7 +64,8 @@ export const updateTransactionStatus = (
   hash: string,
   status: TransactionStatus,
   account: string,
-  blockNumber?: number
+  blockNumber?: number,
+  metadata?: any // Added optional metadata parameter
 ): void => {
   // Get existing transactions
   const existingJson = localStorage.getItem(`transactions_${account.toLowerCase()}`);
@@ -75,7 +79,8 @@ export const updateTransactionStatus = (
       return {
         ...tx,
         status,
-        blockNumber
+        blockNumber,
+        metadata: metadata || tx.metadata // Update metadata if provided
       };
     }
     return tx;
