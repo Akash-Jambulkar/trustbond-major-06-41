@@ -493,13 +493,13 @@ const ManageLoansPage = () => {
                             <Label className="text-sm text-muted-foreground">Applied Date</Label>
                             <p className="font-medium">{formatDate(selectedLoan.appliedDate)}</p>
                           </div>
-                          {selectedLoan.status >= 2 && (
+                          {Number(selectedLoan.status) >= 2 && (
                             <div>
                               <Label className="text-sm text-muted-foreground">Approval Date</Label>
                               <p className="font-medium">{formatDate(selectedLoan.approvalDate)}</p>
                             </div>
                           )}
-                          {selectedLoan.status >= 4 && (
+                          {Number(selectedLoan.status) >= 4 && (
                             <>
                               <div>
                                 <Label className="text-sm text-muted-foreground">Funding Date</Label>
