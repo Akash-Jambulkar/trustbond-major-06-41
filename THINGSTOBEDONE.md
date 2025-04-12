@@ -59,8 +59,8 @@ This document outlines the key components, features, and tasks required to build
 
 #### 4. Bank Network Features
 - [x] Complete bank dashboard
-- [ ] Add bank registration and verification
-- [ ] Implement secure document sharing between banks
+- [x] Add bank registration and verification
+- [x] Implement secure document sharing between banks
 - [x] Create KYC request system
 - [x] Develop audit trail for document access
 
@@ -110,6 +110,8 @@ This document outlines the key components, features, and tasks required to build
   - loan_applications: Track loan applications
   - verification_requests: Track verification requests between banks
   - blockchain_transactions: Track all blockchain transactions
+  - bank_registrations: Track bank registration applications
+  - document_shares: Track document sharing between banks
 
 ### Integration Architecture
 1. **Frontend → Backend → Blockchain Flow**:
@@ -126,6 +128,13 @@ This document outlines the key components, features, and tasks required to build
    - Verification status updated on blockchain
    - Notifications sent to user
    - Trust score updated
+
+3. **Document Sharing Flow**:
+   - Bank selects verified document to share
+   - Bank specifies target bank and access parameters
+   - System encrypts and grants access with expiry
+   - Target bank receives notification
+   - Access is recorded on blockchain for audit
 
 ### Security Considerations
 - Implement hash verification for document integrity
@@ -147,9 +156,9 @@ This document outlines the key components, features, and tasks required to build
 
 ## Next Phase Development
 1. Implement consensus mechanism for multi-bank verifications
-2. Add bank registration and verification process
+2. ✓ Add bank registration and verification process
 3. Complete loan application workflow and scoring algorithms
-4. Set up secure document sharing between banks
+4. ✓ Set up secure document sharing between banks
 5. Implement multi-factor authentication for enhanced security
 6. Create comprehensive test suite and compliance checks
 
