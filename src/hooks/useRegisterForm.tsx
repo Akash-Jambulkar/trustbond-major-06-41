@@ -12,7 +12,9 @@ const registerSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
   confirmPassword: z.string().min(6, { message: "Please confirm your password" }),
-  role: z.enum(["user", "bank"])
+  role: z.enum(["user", "bank"]).refine(value => ["user", "bank"].includes(value), {
+    message: "Invalid role selected"
+  })
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
@@ -32,7 +34,7 @@ export const useRegisterForm = () => {
       email: "",
       password: "",
       confirmPassword: "",
-      role: "user" as UserRole,
+      role: "user" as "user" | "bank", // Explicitly type this to match the schema
     },
     mode: "onChange"
   });
