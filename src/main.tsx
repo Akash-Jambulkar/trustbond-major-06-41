@@ -2,6 +2,7 @@
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
+import { BrowserRouter as Router } from 'react-router-dom'
 
 // Error handling for React rendering
 const renderApp = () => {
@@ -10,7 +11,11 @@ const renderApp = () => {
     const rootElement = document.getElementById("root");
 
     if (rootElement) {
-      createRoot(rootElement).render(<App />);
+      createRoot(rootElement).render(
+        <Router>
+          <App />
+        </Router>
+      );
       console.log("Application successfully mounted to DOM");
     } else {
       console.error("Root element not found - unable to render application");

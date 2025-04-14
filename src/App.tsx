@@ -1,6 +1,5 @@
 
 import {
-  BrowserRouter as Router,
   Route,
   Routes,
 } from "react-router-dom";
@@ -29,121 +28,119 @@ function App() {
     <ModeProvider>
       <AuthProvider>
         <BlockchainProvider>
-          <Router>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/login" element={<Login />} />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Login />} />
 
-              {/* User Routes */}
-              <Route
-                path="/dashboard/user"
-                element={
-                  <ProtectedRoute role="user">
-                    <DashboardLayout>
-                      <UserDashboard />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/user/kyc"
-                element={
-                  <ProtectedRoute role="user">
-                    <DashboardLayout>
-                      <KYCPage />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/user/loan-application"
-                element={
-                  <ProtectedRoute role="user">
-                    <DashboardLayout>
-                      <LoanApplicationPage />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/user/loans/:loanId"
-                element={
-                  <ProtectedRoute role="user">
-                    <DashboardLayout>
-                      <LoanDetailsPage />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/user/loans"
-                element={
-                  <ProtectedRoute role="user">
-                    <DashboardLayout>
-                      <LoansPage />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                }
-              />
+            {/* User Routes */}
+            <Route
+              path="/dashboard/user"
+              element={
+                <ProtectedRoute role="user">
+                  <DashboardLayout>
+                    <UserDashboard />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/user/kyc"
+              element={
+                <ProtectedRoute role="user">
+                  <DashboardLayout>
+                    <KYCPage />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/user/loan-application"
+              element={
+                <ProtectedRoute role="user">
+                  <DashboardLayout>
+                    <LoanApplicationPage />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/user/loans/:loanId"
+              element={
+                <ProtectedRoute role="user">
+                  <DashboardLayout>
+                    <LoanDetailsPage />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/user/loans"
+              element={
+                <ProtectedRoute role="user">
+                  <DashboardLayout>
+                    <LoansPage />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
 
-              {/* Bank Routes */}
-              <Route
-                path="/dashboard/bank"
-                element={
-                  <ProtectedRoute role="bank">
-                    <DashboardLayout>
-                      <BankDashboard />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/bank/verify-kyc"
-                element={
-                  <ProtectedRoute role="bank">
-                    <DashboardLayout>
-                      <BankVerificationPage />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                }
-              />
+            {/* Bank Routes */}
+            <Route
+              path="/dashboard/bank"
+              element={
+                <ProtectedRoute role="bank">
+                  <DashboardLayout>
+                    <BankDashboard />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/bank/verify-kyc"
+              element={
+                <ProtectedRoute role="bank">
+                  <DashboardLayout>
+                    <BankVerificationPage />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
 
-              {/* Admin Routes */}
-              <Route
-                path="/dashboard/admin"
-                element={
-                  <ProtectedRoute role="admin">
-                    <DashboardLayout>
-                      <AdminDashboard />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/admin/bank-registration"
-                element={
-                  <ProtectedRoute role="admin">
-                    <DashboardLayout>
-                      <BankRegistrationPage />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                }
-              />
+            {/* Admin Routes */}
+            <Route
+              path="/dashboard/admin"
+              element={
+                <ProtectedRoute role="admin">
+                  <DashboardLayout>
+                    <AdminDashboard />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/admin/bank-registration"
+              element={
+                <ProtectedRoute role="admin">
+                  <DashboardLayout>
+                    <BankRegistrationPage />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
 
-              {/* Common Routes */}
-              <Route
-                path="/dashboard/transactions"
-                element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <BlockchainTransactionsPage />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
-          </Router>
+            {/* Common Routes */}
+            <Route
+              path="/dashboard/transactions"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <BlockchainTransactionsPage />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
         </BlockchainProvider>
       </AuthProvider>
     </ModeProvider>

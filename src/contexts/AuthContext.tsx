@@ -1,6 +1,7 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useMode } from "@/contexts/ModeContext";
 
 type UserRole = "user" | "bank" | "admin" | null;
@@ -56,11 +57,18 @@ const DEMO_ACCOUNTS = [
 // In-memory storage for production mode users
 const PRODUCTION_USERS: AuthUser[] = [];
 
+// This wrapper is needed to conditionally use the router hooks
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  return <AuthProviderWithRouter>{children}</AuthProviderWithRouter>;
+};
+
+// Main implementation that uses router hooks
+const AuthProviderWithRouter = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { isDemoMode } = useMode();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Check for saved session on mount
   useEffect(() => {
