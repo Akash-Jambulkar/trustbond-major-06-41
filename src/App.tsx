@@ -1,3 +1,4 @@
+
 import {
   Route,
   Routes,
@@ -27,6 +28,7 @@ import BankVerification from "./pages/dashboard/bank/BankVerification";
 import LoansPage from "./pages/dashboard/user/LoansPage";
 import LoanDetailsPage from "./pages/dashboard/user/LoanDetailsPage";
 import ConsensusVerificationPage from "./pages/dashboard/bank/ConsensusVerificationPage";
+import ProfilePage from "./pages/dashboard/user/ProfilePage";
 
 function App() {
   return (
@@ -49,6 +51,16 @@ function App() {
                 <ProtectedRoute role="user">
                   <DashboardLayout>
                     <UserDashboard />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/user/profile"
+              element={
+                <ProtectedRoute role="user">
+                  <DashboardLayout>
+                    <ProfilePage />
                   </DashboardLayout>
                 </ProtectedRoute>
               }
