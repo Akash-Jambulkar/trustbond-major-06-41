@@ -8,15 +8,7 @@ const BlockchainTransactionsPage = () => {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Blockchain Transactions</h1>
       
-      <Card>
-        <CardHeader>
-          <CardTitle>Transaction History</CardTitle>
-          <CardDescription>View all your on-chain transactions</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <TransactionHistory />
-        </CardContent>
-      </Card>
+      <TransactionHistory />
     </div>
   );
 };
