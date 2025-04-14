@@ -11,7 +11,7 @@ const KYCPage = () => {
   const { kycStatus, isLoading, verificationTimestamp, isRejected, rejectionReason } = useKYCStatus();
   
   return (
-    <div className="w-full p-6">
+    <div className="w-full max-w-[1400px] mx-auto p-4 md:p-6">
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-2">
           <Shield className="h-6 w-6 text-trustbond-primary" />
