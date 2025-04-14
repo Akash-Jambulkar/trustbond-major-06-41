@@ -1,5 +1,5 @@
 
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ModeProvider } from './contexts/ModeContext';
 import { BlockchainProvider } from './contexts/BlockchainContext';
@@ -54,88 +54,86 @@ import BlockchainSetup from './pages/dashboard/admin/BlockchainSetup';
 
 function App() {
   return (
-    <Router>
-      <ModeProvider>
-        <BlockchainProvider>
-          <AuthProvider>
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<Index />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/mfa-verify" element={<MFAVerify />} />
-              <Route path="/whitepaper" element={<Whitepaper />} />
-              
-              {/* Protected Routes */}
-              <Route path="/mfa-setup" element={
-                <ProtectedRoute>
-                  <MFASetup />
-                </ProtectedRoute>
-              } />
-
-              {/* User Dashboard */}
-              <Route path="/dashboard/user" element={
-                <ProtectedRoute allowedRoles={["user"]}>
-                  <UserDashboard />
-                </ProtectedRoute>
-              }>
-                <Route index element={<UserHome />} />
-                <Route path="kyc" element={<KYCPage />} />
-                <Route path="loans" element={<LoansPage />} />
-                <Route path="loans/apply" element={<LoanApplicationPage />} />
-                <Route path="loans/:id" element={<LoanDetailsPage />} />
-                <Route path="profile" element={<ProfilePage />} />
-                <Route path="trust-score" element={<TrustScorePage />} />
-                <Route path="transactions" element={<BlockchainTransactionsPage />} />
-              </Route>
-
-              {/* Bank Dashboard */}
-              <Route path="/dashboard/bank" element={
-                <ProtectedRoute allowedRoles={["bank"]}>
-                  <BankDashboard />
-                </ProtectedRoute>
-              }>
-                <Route index element={<BankHome />} />
-                <Route path="verify-kyc" element={<VerifyKYC />} />
-                <Route path="consensus-verification" element={<ConsensusVerificationPage />} />
-                <Route path="loans" element={<BankLoans />} />
-                <Route path="manage-loans" element={<ManageLoans />} />
-                <Route path="profile" element={<BankProfile />} />
-                <Route path="verification" element={<BankVerification />} />
-                <Route path="registration" element={<BankRegistration />} />
-                <Route path="secure-sharing" element={<SecureSharing />} />
-                <Route path="trust-scores" element={<BankTrustScores />} />
-                <Route path="transactions" element={<BlockchainTransactionsPage />} />
-              </Route>
-
-              {/* Admin Dashboard */}
-              <Route path="/dashboard/admin" element={
-                <ProtectedRoute allowedRoles={["admin"]}>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }>
-                <Route index element={<AdminHome />} />
-                <Route path="users" element={<AdminUsers />} />
-                <Route path="banks" element={<AdminBanks />} />
-                <Route path="bank-registrations" element={<BankRegistrationPage />} />
-                <Route path="profile" element={<AdminProfile />} />
-                <Route path="settings" element={<AdminSettings />} />
-                <Route path="blockchain-setup" element={<BlockchainSetup />} />
-                <Route path="transactions" element={<BlockchainTransactionsPage />} />
-              </Route>
-
-              {/* 404 Not Found */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+    <ModeProvider>
+      <BlockchainProvider>
+        <AuthProvider>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<Index />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/mfa-verify" element={<MFAVerify />} />
+            <Route path="/whitepaper" element={<Whitepaper />} />
             
-            <Toaster />
-            <SonnerToaster position="top-right" />
-          </AuthProvider>
-        </BlockchainProvider>
-      </ModeProvider>
-    </Router>
+            {/* Protected Routes */}
+            <Route path="/mfa-setup" element={
+              <ProtectedRoute>
+                <MFASetup />
+              </ProtectedRoute>
+            } />
+
+            {/* User Dashboard */}
+            <Route path="/dashboard/user" element={
+              <ProtectedRoute allowedRoles={["user"]}>
+                <UserDashboard />
+              </ProtectedRoute>
+            }>
+              <Route index element={<UserHome />} />
+              <Route path="kyc" element={<KYCPage />} />
+              <Route path="loans" element={<LoansPage />} />
+              <Route path="loans/apply" element={<LoanApplicationPage />} />
+              <Route path="loans/:id" element={<LoanDetailsPage />} />
+              <Route path="profile" element={<ProfilePage />} />
+              <Route path="trust-score" element={<TrustScorePage />} />
+              <Route path="transactions" element={<BlockchainTransactionsPage />} />
+            </Route>
+
+            {/* Bank Dashboard */}
+            <Route path="/dashboard/bank" element={
+              <ProtectedRoute allowedRoles={["bank"]}>
+                <BankDashboard />
+              </ProtectedRoute>
+            }>
+              <Route index element={<BankHome />} />
+              <Route path="verify-kyc" element={<VerifyKYC />} />
+              <Route path="consensus-verification" element={<ConsensusVerificationPage />} />
+              <Route path="loans" element={<BankLoans />} />
+              <Route path="manage-loans" element={<ManageLoans />} />
+              <Route path="profile" element={<BankProfile />} />
+              <Route path="verification" element={<BankVerification />} />
+              <Route path="registration" element={<BankRegistration />} />
+              <Route path="secure-sharing" element={<SecureSharing />} />
+              <Route path="trust-scores" element={<BankTrustScores />} />
+              <Route path="transactions" element={<BlockchainTransactionsPage />} />
+            </Route>
+
+            {/* Admin Dashboard */}
+            <Route path="/dashboard/admin" element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }>
+              <Route index element={<AdminHome />} />
+              <Route path="users" element={<AdminUsers />} />
+              <Route path="banks" element={<AdminBanks />} />
+              <Route path="bank-registrations" element={<BankRegistrationPage />} />
+              <Route path="profile" element={<AdminProfile />} />
+              <Route path="settings" element={<AdminSettings />} />
+              <Route path="blockchain-setup" element={<BlockchainSetup />} />
+              <Route path="transactions" element={<BlockchainTransactionsPage />} />
+            </Route>
+
+            {/* 404 Not Found */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          
+          <Toaster />
+          <SonnerToaster position="top-right" />
+        </AuthProvider>
+      </BlockchainProvider>
+    </ModeProvider>
   );
 }
 
