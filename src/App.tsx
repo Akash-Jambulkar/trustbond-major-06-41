@@ -5,7 +5,8 @@ import { ModeProvider } from './contexts/ModeContext';
 import { BlockchainProvider } from './contexts/BlockchainContext';
 import { Toaster } from './components/ui/toaster';
 import { Toaster as SonnerToaster } from 'sonner';
-import ProtectedRoute from './components/ProtectedRoute';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { DashboardLayout } from './components/DashboardLayout';
 
 // Pages
 import Index from './pages/Index';
@@ -77,7 +78,9 @@ function App() {
             {/* User Dashboard */}
             <Route path="/dashboard/user" element={
               <ProtectedRoute allowedRoles={["user"]}>
-                <UserDashboard />
+                <DashboardLayout>
+                  <UserDashboard />
+                </DashboardLayout>
               </ProtectedRoute>
             }>
               <Route index element={<UserHome />} />
@@ -93,7 +96,9 @@ function App() {
             {/* Bank Dashboard */}
             <Route path="/dashboard/bank" element={
               <ProtectedRoute allowedRoles={["bank"]}>
-                <BankDashboard />
+                <DashboardLayout>
+                  <BankDashboard />
+                </DashboardLayout>
               </ProtectedRoute>
             }>
               <Route index element={<BankHome />} />
@@ -112,7 +117,9 @@ function App() {
             {/* Admin Dashboard */}
             <Route path="/dashboard/admin" element={
               <ProtectedRoute allowedRoles={["admin"]}>
-                <AdminDashboard />
+                <DashboardLayout>
+                  <AdminDashboard />
+                </DashboardLayout>
               </ProtectedRoute>
             }>
               <Route index element={<AdminHome />} />
