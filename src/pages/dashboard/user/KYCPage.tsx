@@ -1,33 +1,41 @@
 
 import React from "react";
+import { KYCStatusDisplay } from "@/components/kyc/KYCStatusDisplay";
 import { KYCTabs } from "@/components/kyc/KYCTabs";
-import { DashboardLayout } from "@/components/DashboardLayout";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
 import { useBlockchain } from "@/contexts/BlockchainContext";
+import { useKYCStatus } from "@/hooks/useKYCStatus";
+import { Shield } from "lucide-react";
 
 const KYCPage = () => {
-  const { isConnected } = useBlockchain();
+  const { isConnected, account } = useBlockchain();
+  const { kycStatus, isLoading, verificationTimestamp, isRejected, rejectionReason } = useKYCStatus(account);
   
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight mb-2">KYC Verification</h2>
+    <div className="w-full p-6">
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-2">
+          <Shield className="h-6 w-6 text-trustbond-primary" />
+          <h2 className="text-3xl font-bold tracking-tight">KYC Verification</h2>
+        </div>
         <p className="text-gray-500">
           Submit and manage your KYC documents for secure blockchain identity verification.
         </p>
       </div>
       
-      {!isConnected && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Please connect your wallet to submit and manage your KYC documents.
-          </AlertDescription>
-        </Alert>
-      )}
+      <div className="mb-6">
+        <KYCStatusDisplay 
+          kycStatus={kycStatus} 
+          isLoading={isLoading} 
+          isConnected={isConnected}
+          verificationTimestamp={verificationTimestamp}
+          isRejected={isRejected}
+          rejectionReason={rejectionReason}
+        />
+      </div>
       
-      <KYCTabs />
+      <div className="bg-white rounded-lg shadow">
+        <KYCTabs />
+      </div>
     </div>
   );
 };

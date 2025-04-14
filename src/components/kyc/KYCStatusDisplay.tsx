@@ -1,5 +1,6 @@
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Info, AlertCircle, Clock, ShieldAlert } from "lucide-react";
 import { useMode } from "@/contexts/ModeContext";
 import { formatDistanceToNow } from "date-fns";
@@ -23,11 +24,23 @@ export const KYCStatusDisplay = ({
 }: KYCStatusDisplayProps) => {
   const { isProductionMode } = useMode();
   
+  if (!isConnected) {
+    return (
+      <Alert variant="destructive" className="bg-red-50 border-red-200">
+        <AlertCircle className="h-5 w-5 text-red-600" />
+        <AlertTitle className="text-red-800 font-medium">Wallet Not Connected</AlertTitle>
+        <AlertDescription className="text-red-700">
+          Connect your blockchain wallet to submit and manage your KYC documents.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+  
   if (isLoading) {
     return (
       <Alert className="bg-gray-50 border-gray-200">
-        <Clock className="h-4 w-4 text-gray-600 animate-spin" />
-        <AlertTitle className="text-gray-800">Loading KYC Status</AlertTitle>
+        <Clock className="h-5 w-5 text-gray-600 animate-spin" />
+        <AlertTitle className="text-gray-800 font-medium">Loading KYC Status</AlertTitle>
         <AlertDescription className="text-gray-700">
           Fetching your KYC verification status from the blockchain...
         </AlertDescription>
@@ -35,60 +48,69 @@ export const KYCStatusDisplay = ({
     );
   }
 
+  if (kycStatus === true) {
+    return (
+      <Alert className="bg-green-50 border-green-200">
+        <CheckCircle2 className="h-5 w-5 text-green-600" />
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between w-full">
+          <div>
+            <AlertTitle className="text-green-800 font-medium">KYC Verified</AlertTitle>
+            <AlertDescription className="text-green-700">
+              Your KYC documents have been verified. You now have access to all platform features.
+              {isProductionMode && verificationTimestamp && (
+                ` (Verified ${formatDistanceToNow(verificationTimestamp)} ago)`
+              )}
+            </AlertDescription>
+          </div>
+          <Badge className="mt-2 md:mt-0 bg-green-600 text-white">Verified</Badge>
+        </div>
+      </Alert>
+    );
+  }
+  
+  if (isRejected) {
+    return (
+      <Alert variant="destructive" className="bg-red-50 border-red-200">
+        <ShieldAlert className="h-5 w-5 text-red-600" />
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between w-full">
+          <div>
+            <AlertTitle className="text-red-800 font-medium">KYC Verification Failed</AlertTitle>
+            <AlertDescription className="text-red-700">
+              {rejectionReason || "Your KYC documents could not be verified. Please resubmit with clearer documents or contact support for assistance."}
+            </AlertDescription>
+          </div>
+          <Badge variant="outline" className="mt-2 md:mt-0 bg-red-100 text-red-800 border-red-300">Rejected</Badge>
+        </div>
+      </Alert>
+    );
+  }
+  
+  if (kycStatus === false) {
+    return (
+      <Alert className="bg-amber-50 border-amber-200">
+        <Info className="h-5 w-5 text-amber-600" />
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between w-full">
+          <div>
+            <AlertTitle className="text-amber-800 font-medium">KYC Pending Verification</AlertTitle>
+            <AlertDescription className="text-amber-700">
+              Your KYC documents are pending verification. The average verification time is 24-48 hours. We'll notify you once verification is complete.
+            </AlertDescription>
+          </div>
+          <Badge variant="outline" className="mt-2 md:mt-0 bg-amber-100 text-amber-800 border-amber-300">Pending</Badge>
+        </div>
+      </Alert>
+    );
+  }
+  
+  // Default state - no submission yet
   return (
-    <>
-      {kycStatus !== null && !isRejected && (
-        <Alert className={kycStatus ? "bg-green-50 border-green-200" : "bg-amber-50 border-amber-200"}>
-          {kycStatus ? (
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
-          ) : (
-            <Info className="h-4 w-4 text-amber-600" />
-          )}
-          <AlertTitle className={kycStatus ? "text-green-800" : "text-amber-800"}>
-            {kycStatus ? "KYC Verified" : "KYC Pending Verification"}
-          </AlertTitle>
-          <AlertDescription className={kycStatus ? "text-green-700" : "text-amber-700"}>
-            {kycStatus 
-              ? `Your KYC documents have been verified. You now have access to all platform features.${
-                  isProductionMode && verificationTimestamp 
-                    ? ` (Verified ${formatDistanceToNow(verificationTimestamp)} ago)` 
-                    : ""
-                }`
-              : "Your KYC documents are pending verification. The average verification time is 24-48 hours. We'll notify you once verification is complete."}
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {isRejected && (
-        <Alert variant="destructive" className="bg-red-50 border-red-200">
-          <ShieldAlert className="h-4 w-4 text-red-600" />
-          <AlertTitle className="text-red-800">KYC Verification Failed</AlertTitle>
-          <AlertDescription className="text-red-700">
-            {rejectionReason || "Your KYC documents could not be verified. Please resubmit with clearer documents or contact support for assistance."}
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {!isConnected && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Wallet Not Connected</AlertTitle>
-          <AlertDescription>
-            Please connect your wallet to submit and view your KYC documents.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {isProductionMode && kycStatus === null && isConnected && !isRejected && (
-        <Alert className="bg-blue-50 border-blue-200">
-          <Info className="h-4 w-4 text-blue-600" />
-          <AlertTitle className="text-blue-800">First-Time Setup</AlertTitle>
-          <AlertDescription className="text-blue-700">
-            Welcome to TrustBond! To access all features, please submit your KYC documents using the form below.
-            In production mode, your verification will be processed through a secure blockchain consensus mechanism.
-          </AlertDescription>
-        </Alert>
-      )}
-    </>
+    <Alert className="bg-blue-50 border-blue-200">
+      <Info className="h-5 w-5 text-blue-600" />
+      <AlertTitle className="text-blue-800 font-medium">No Documents Submitted</AlertTitle>
+      <AlertDescription className="text-blue-700">
+        Welcome to TrustBond! To access all features, please submit your KYC documents using the form below.
+        Your verification will be processed through a secure blockchain consensus mechanism.
+      </AlertDescription>
+    </Alert>
   );
 };
