@@ -1,12 +1,60 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { FileText, ArrowLeft, Download, ExternalLink, BookOpen, Share2 } from "lucide-react";
+import { FileText, ArrowLeft, ArrowRight, Download, ExternalLink, BookOpen, Share2 } from "lucide-react";
+import { useState } from "react";
 
 const Whitepaper = () => {
+  const [activeSection, setActiveSection] = useState("abstract");
+  
+  const sections = [
+    { id: "abstract", name: "Abstract" },
+    { id: "introduction", name: "I. Introduction" },
+    { id: "kyc-smart-contracts", name: "II. KYC and Smart Contracts" },
+    { id: "literature-review", name: "III. Literature Review" },
+    { id: "proposed-model", name: "IV. Proposed Model" },
+    { id: "implementation", name: "V. Implementation" },
+    { id: "results", name: "VI. Results and Discussion" },
+    { id: "conclusion", name: "VII. Conclusion" },
+    { id: "team", name: "Our Team" }
+  ];
+  
+  const handleNext = () => {
+    const currentIndex = sections.findIndex(section => section.id === activeSection);
+    if (currentIndex < sections.length - 1) {
+      const nextSection = sections[currentIndex + 1];
+      setActiveSection(nextSection.id);
+      document.getElementById(nextSection.id)?.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+  
+  const handlePrevious = () => {
+    const currentIndex = sections.findIndex(section => section.id === activeSection);
+    if (currentIndex > 0) {
+      const prevSection = sections[currentIndex - 1];
+      setActiveSection(prevSection.id);
+      document.getElementById(prevSection.id)?.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + 200;
+      
+      for (let i = sections.length - 1; i >= 0; i--) {
+        const section = document.getElementById(sections[i].id);
+        if (section && section.offsetTop <= scrollPosition) {
+          setActiveSection(sections[i].id);
+          break;
+        }
+      }
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+  
   return (
     <div className="min-h-screen bg-white">
-      {/* Navigation */}
       <nav className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="container mx-auto flex justify-between items-center">
           <Link to="/" className="text-2xl font-bold text-trustbond-primary">
@@ -51,41 +99,25 @@ const Whitepaper = () => {
         </div>
       </nav>
 
-      {/* Whitepaper Content */}
       <div className="container mx-auto px-6 py-12">
         <div className="flex flex-col md:flex-row gap-8">
-          {/* Sidebar */}
           <div className="md:w-1/4">
             <div className="bg-gray-50 p-6 rounded-lg sticky top-6">
               <h3 className="text-lg font-semibold mb-4 text-trustbond-dark">Table of Contents</h3>
               <ul className="space-y-2">
-                <li>
-                  <a href="#abstract" className="text-trustbond-primary hover:underline">Abstract</a>
-                </li>
-                <li>
-                  <a href="#introduction" className="text-trustbond-dark hover:text-trustbond-primary">I. Introduction</a>
-                </li>
-                <li>
-                  <a href="#kyc-smart-contracts" className="text-trustbond-dark hover:text-trustbond-primary">II. KYC and Smart Contracts</a>
-                </li>
-                <li>
-                  <a href="#literature-review" className="text-trustbond-dark hover:text-trustbond-primary">III. Literature Review</a>
-                </li>
-                <li>
-                  <a href="#proposed-model" className="text-trustbond-dark hover:text-trustbond-primary">IV. Proposed Model</a>
-                </li>
-                <li>
-                  <a href="#implementation" className="text-trustbond-dark hover:text-trustbond-primary">V. Implementation</a>
-                </li>
-                <li>
-                  <a href="#results" className="text-trustbond-dark hover:text-trustbond-primary">VI. Results and Discussion</a>
-                </li>
-                <li>
-                  <a href="#conclusion" className="text-trustbond-dark hover:text-trustbond-primary">VII. Conclusion</a>
-                </li>
-                <li>
-                  <a href="#team" className="text-trustbond-dark hover:text-trustbond-primary">Our Team</a>
-                </li>
+                {sections.map(section => (
+                  <li key={section.id}>
+                    <a 
+                      href={`#${section.id}`} 
+                      className={`${activeSection === section.id 
+                        ? "text-trustbond-primary font-medium"
+                        : "text-trustbond-dark hover:text-trustbond-primary"}`}
+                      onClick={() => setActiveSection(section.id)}
+                    >
+                      {section.name}
+                    </a>
+                  </li>
+                ))}
               </ul>
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <Button variant="outline" className="w-full mb-2 flex items-center gap-2">
@@ -100,7 +132,6 @@ const Whitepaper = () => {
             </div>
           </div>
           
-          {/* Main Content */}
           <div className="md:w-3/4">
             <div className="mb-6">
               <Link to="/" className="text-trustbond-primary hover:underline inline-flex items-center">
@@ -449,7 +480,6 @@ const Whitepaper = () => {
         </div>
       </div>
       
-      {/* Footer */}
       <footer className="bg-trustbond-dark text-white py-8 px-6">
         <div className="container mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center">
