@@ -7,6 +7,7 @@ import { NetworkStatus } from "@/components/NetworkStatus";
 import { Shield, CreditCard, CheckCircle, User, FileText, Building2, PieChart } from "lucide-react";
 import { BlockchainActions } from "@/components/blockchain/BlockchainActions";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "react-router-dom";
 
 const BankHome = () => {
   const { user } = useAuth();
@@ -118,17 +119,23 @@ const BankHome = () => {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
-                <Button variant="outline" className="h-20 flex flex-col justify-center items-center">
-                  <FileText className="h-5 w-5 mb-1" />
-                  <span>Verify KYC</span>
+                <Button variant="outline" className="h-20 flex flex-col justify-center items-center" asChild>
+                  <Link to="/dashboard/bank/verify-kyc">
+                    <FileText className="h-5 w-5 mb-1" />
+                    <span>Verify KYC</span>
+                  </Link>
                 </Button>
-                <Button variant="outline" className="h-20 flex flex-col justify-center items-center">
-                  <CreditCard className="h-5 w-5 mb-1" />
-                  <span>Review Loans</span>
+                <Button variant="outline" className="h-20 flex flex-col justify-center items-center" asChild>
+                  <Link to="/dashboard/bank/manage-loans">
+                    <CreditCard className="h-5 w-5 mb-1" />
+                    <span>Manage Loans</span>
+                  </Link>
                 </Button>
-                <Button variant="outline" className="h-20 flex flex-col justify-center items-center">
-                  <PieChart className="h-5 w-5 mb-1" />
-                  <span>Check Trust Scores</span>
+                <Button variant="outline" className="h-20 flex flex-col justify-center items-center" asChild>
+                  <Link to="/dashboard/bank/trust-scores">
+                    <PieChart className="h-5 w-5 mb-1" />
+                    <span>Check Trust Scores</span>
+                  </Link>
                 </Button>
               </div>
             </CardContent>

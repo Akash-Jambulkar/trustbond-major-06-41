@@ -9,6 +9,7 @@ import BankProfile from "./bank/BankProfile";
 import VerifyKYC from "./bank/VerifyKYC";
 import BankLoans from "./bank/BankLoans";
 import BankTrustScores from "./bank/BankTrustScores";
+import ManageLoansPage from "./bank/ManageLoans";
 
 // Main Bank Dashboard Component with Routing
 const BankDashboard = () => {
@@ -30,6 +31,7 @@ const BankDashboard = () => {
         <Route path="profile" element={<BankProfile />} />
         <Route path="verify-kyc" element={<VerifyKYC />} />
         <Route path="loans" element={<BankLoans />} />
+        <Route path="manage-loans" element={<ManageLoansPage />} />
         <Route path="trust-scores" element={<BankTrustScores />} />
       </Routes>
     </DashboardLayout>

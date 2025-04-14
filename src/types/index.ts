@@ -60,6 +60,33 @@ export interface LoanRequest {
   status: 'pending' | 'approved' | 'rejected';
 }
 
+export interface BlockchainLoan {
+  id: string;
+  borrower: string;
+  lender: string;
+  amount: string;
+  interestRate: string;
+  termDays: string;
+  purpose: string;
+  status: string;
+  appliedDate: string;
+  approvalDate: string;
+  fundingDate: string;
+  repaymentDeadline: string;
+  amountRepaid: string;
+}
+
+export enum LoanStatusEnum {
+  Applied = "0",
+  UnderReview = "1",
+  Approved = "2",
+  Rejected = "3",
+  Funded = "4",
+  Repaying = "5",
+  Completed = "6",
+  Defaulted = "7"
+}
+
 // Transaction types
 export interface Transaction {
   id: number;
