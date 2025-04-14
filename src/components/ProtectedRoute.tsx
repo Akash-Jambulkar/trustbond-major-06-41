@@ -6,9 +6,10 @@ import { ReactNode } from "react";
 interface ProtectedRouteProps {
   children: ReactNode;
   role?: "user" | "bank" | "admin" | null;
+  allowedRoles?: Array<"user" | "bank" | "admin" | null>;
 }
 
-export const ProtectedRoute = ({ children, role }: ProtectedRouteProps) => {
+export const ProtectedRoute = ({ children, role, allowedRoles }: ProtectedRouteProps) => {
   const { user, isAuthenticated, isLoading } = useAuth();
 
   // Show loading while authentication state is being determined
@@ -25,7 +26,13 @@ export const ProtectedRoute = ({ children, role }: ProtectedRouteProps) => {
     return <Navigate to="/login" replace />;
   }
 
-  // If role is specified, check if user has the required role
+  // Check if user has one of the allowed roles (if specified)
+  if (allowedRoles && user?.role && !allowedRoles.includes(user.role)) {
+    // Redirect to the appropriate dashboard
+    return <Navigate to={`/dashboard/${user.role}`} replace />;
+  }
+
+  // Check for single role requirement (legacy support)
   if (role && user?.role !== role) {
     // Redirect to the appropriate dashboard or to login if no role matches
     if (user?.role) {
@@ -37,3 +44,6 @@ export const ProtectedRoute = ({ children, role }: ProtectedRouteProps) => {
   // User is authenticated and has the required role (or no role was required)
   return <>{children}</>;
 };
+
+// Add default export
+export default ProtectedRoute;

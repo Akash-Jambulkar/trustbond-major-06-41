@@ -5,10 +5,26 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { InputOTP, InputOTPGroup } from "@/components/ui/input-otp";
 import { Keypad, KeypadButton } from "@/components/ui/keypad";
 import { toast } from "sonner";
 import { Shield, Smartphone, Mail, ArrowLeft } from "lucide-react";
+
+// Custom InputOTPSlot component that doesn't require index prop
+const InputOTPSlot = ({ char, hasFakeCaret, isActive }: { char: string; hasFakeCaret: boolean; isActive: boolean }) => {
+  return (
+    <div
+      className={`relative flex h-10 w-10 items-center justify-center border-y border-r border-input text-sm transition-all first:rounded-l-md first:border-l last:rounded-r-md ${isActive ? "z-10 ring-2 ring-ring ring-offset-background" : ""}`}
+    >
+      {char}
+      {hasFakeCaret && (
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <div className="h-4 w-px animate-caret-blink bg-foreground duration-1000" />
+        </div>
+      )}
+    </div>
+  );
+};
 
 const MFAVerify = () => {
   const [code, setCode] = useState("");

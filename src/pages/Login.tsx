@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -129,7 +130,7 @@ const Login = () => {
             
             <MultifactorAuth 
               onComplete={handleMFAComplete} 
-              email={email || undefined}
+              email={email} 
             />
           </div>
         </main>

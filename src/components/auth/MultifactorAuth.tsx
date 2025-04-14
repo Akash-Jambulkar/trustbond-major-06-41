@@ -6,10 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
+import MFAVerification from "./MFAVerification";
 
-export const MultifactorAuth = () => {
+interface MultifactorAuthProps {
+  onComplete?: (verified: boolean) => void;
+  email?: string;
+}
+
+export const MultifactorAuth = ({ onComplete, email }: MultifactorAuthProps) => {
   const { user, disableMFA } = useAuth();
   const [isDisabling, setIsDisabling] = useState(false);
+  const [showVerification, setShowVerification] = useState(!!onComplete);
   const navigate = useNavigate();
 
   const handleSetupMFA = () => {
@@ -32,6 +39,30 @@ export const MultifactorAuth = () => {
       }
     }
   };
+
+  const handleVerifyComplete = () => {
+    if (onComplete) {
+      onComplete(true);
+    }
+    setShowVerification(false);
+  };
+
+  const handleVerifyCancel = () => {
+    if (onComplete) {
+      onComplete(false);
+    }
+    setShowVerification(false);
+  };
+
+  if (showVerification && email) {
+    return (
+      <MFAVerification
+        email={email}
+        onVerify={handleVerifyComplete}
+        onCancel={handleVerifyCancel}
+      />
+    );
+  }
 
   return (
     <Card>
