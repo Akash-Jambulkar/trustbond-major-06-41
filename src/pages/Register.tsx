@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMode } from "@/contexts/ModeContext";
@@ -19,6 +19,17 @@ const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
   const { isProductionMode } = useMode();
+  
+  // Clear form data when switching between production and demo modes
+  useEffect(() => {
+    // Reset form fields when in production mode
+    if (isProductionMode) {
+      setName("");
+      setEmail("");
+      setPassword("");
+      setConfirmPassword("");
+    }
+  }, [isProductionMode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
