@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { LoanStats } from "@/components/loans/LoanStats";
-import { LoanApplicationForm } from "@/components/loans/LoanApplicationForm";
+import { EnhancedLoanApplicationForm } from "@/components/loans/EnhancedLoanApplicationForm";
 import { LoansList } from "@/components/loans/LoansList";
 import { toast } from "sonner";
 
@@ -112,7 +112,7 @@ const LoanApplicationPage = () => {
         </TabsList>
         
         <TabsContent value="apply" className="space-y-4">
-          <LoanApplicationForm 
+          <EnhancedLoanApplicationForm 
             isConnected={isConnected}
             kyc={kyc}
             trustScore={trustScore}
