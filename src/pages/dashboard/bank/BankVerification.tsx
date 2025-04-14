@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { VerificationSteps } from "@/components/verification/VerificationSteps";
 import { DocumentViewer } from "@/components/verification/DocumentViewer";
 import { FraudDetectionPanel } from "@/components/verification/FraudDetectionPanel";
+import { LoanApprovalConsensus } from "@/components/bank/consensus/LoanApprovalConsensus";
 import { DocumentType } from "@/utils/documentHash";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -71,6 +72,7 @@ export default function BankVerification() {
         <TabsList>
           <TabsTrigger value="kyc">KYC Verification</TabsTrigger>
           <TabsTrigger value="loans">Loan Approval</TabsTrigger>
+          <TabsTrigger value="consensus">Consensus Approval</TabsTrigger>
         </TabsList>
         
         <TabsContent value="kyc">
@@ -194,6 +196,85 @@ export default function BankVerification() {
                       Please connect your wallet to interact with the loan approval smart contract.
                     </div>
                   )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="consensus">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-span-1">
+              <LoanApprovalConsensus 
+                isConnected={isConnected}
+                walletAddress={account}
+                approveLoan={approveLoan}
+                rejectLoan={rejectLoan}
+              />
+            </div>
+            
+            <div className="md:col-span-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Consensus Mechanism</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="font-medium mb-2">Multi-Bank Loan Approval</h3>
+                    <p className="text-sm text-muted-foreground">
+                      The loan approval consensus mechanism requires multiple banks to approve a loan before it is finalized:
+                    </p>
+                    <ul className="list-disc pl-5 mt-2 text-sm">
+                      <li>Multiple authorized banks must review and vote on each loan application</li>
+                      <li>A majority consensus is required before final approval/rejection</li>
+                      <li>All voting records are stored on the blockchain for transparency</li>
+                      <li>Each bank's vote is weighted based on their trust score and verification history</li>
+                      <li>Consensus prevents fraud and ensures compliance with regulatory requirements</li>
+                    </ul>
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div>
+                    <h3 className="font-medium mb-2">Recent Consensus Activities</h3>
+                    <div className="space-y-3">
+                      <div className="p-3 bg-slate-50 rounded-md border flex flex-col sm:flex-row justify-between gap-2">
+                        <div>
+                          <p className="font-medium">Loan #103</p>
+                          <p className="text-sm text-muted-foreground">Business expansion - ₹500,000</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="text-xs px-2 py-1 rounded bg-green-100 text-green-800">2 Approvals</div>
+                          <div className="text-xs px-2 py-1 rounded bg-red-100 text-red-800">1 Rejection</div>
+                          <div className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800">In Progress</div>
+                        </div>
+                      </div>
+                      
+                      <div className="p-3 bg-slate-50 rounded-md border flex flex-col sm:flex-row justify-between gap-2">
+                        <div>
+                          <p className="font-medium">Loan #102</p>
+                          <p className="text-sm text-muted-foreground">Home renovation - ₹300,000</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="text-xs px-2 py-1 rounded bg-green-100 text-green-800">3 Approvals</div>
+                          <div className="text-xs px-2 py-1 rounded bg-red-100 text-red-800">0 Rejections</div>
+                          <div className="text-xs px-2 py-1 rounded bg-green-100 text-green-800">Approved</div>
+                        </div>
+                      </div>
+                      
+                      <div className="p-3 bg-slate-50 rounded-md border flex flex-col sm:flex-row justify-between gap-2">
+                        <div>
+                          <p className="font-medium">Loan #101</p>
+                          <p className="text-sm text-muted-foreground">Education loan - ₹200,000</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="text-xs px-2 py-1 rounded bg-green-100 text-green-800">1 Approval</div>
+                          <div className="text-xs px-2 py-1 rounded bg-red-100 text-red-800">2 Rejections</div>
+                          <div className="text-xs px-2 py-1 rounded bg-red-100 text-red-800">Rejected</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </div>
