@@ -53,12 +53,18 @@ module.exports = {
         },
         trustbond: {
           primary: "#1e40af",    // Deep blue
-          secondary: "#3b82f6",  // Lighter blue
+          secondary: "#0d9488",  // Teal
           accent: "#10b981",     // Green for accents
           dark: "#1e293b",       // Dark slate for text
           light: "#f8fafc",      // Light background
           ethereum: "#3c3c3d",   // Ethereum color
           ganache: "#5e464d",    // Ganache color
+          success: "#16a34a",    // Success green
+          warning: "#d97706",    // Warning amber
+          error: "#dc2626",      // Error red
+          "gray-light": "#f9fafb", // Light gray for backgrounds
+          "gray-medium": "#9ca3af", // Medium gray for secondary text
+          "gray-dark": "#4b5563", // Dark gray for primary text
         },
       },
       borderRadius: {

@@ -23,6 +23,7 @@ import { ModeProvider } from "./contexts/ModeContext";
 import { BlockchainProvider } from "./contexts/BlockchainContext";
 import BankRegistrationPage from "./pages/dashboard/admin/BankRegistrationPage";
 import BankVerificationPage from "./pages/dashboard/bank/verify-kyc";
+import BankVerification from "./pages/dashboard/bank/BankVerification";
 import LoansPage from "./pages/dashboard/user/LoansPage";
 import LoanDetailsPage from "./pages/dashboard/user/LoanDetailsPage";
 import ConsensusVerificationPage from "./pages/dashboard/bank/ConsensusVerificationPage";
@@ -110,6 +111,17 @@ function App() {
                 <ProtectedRoute role="bank">
                   <DashboardLayout>
                     <BankVerificationPage />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path="/dashboard/bank/verification"
+              element={
+                <ProtectedRoute role="bank">
+                  <DashboardLayout>
+                    <BankVerification />
                   </DashboardLayout>
                 </ProtectedRoute>
               }

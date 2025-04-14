@@ -98,4 +98,33 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* TrustBond Custom Styles */
+  .gradient-background {
+    @apply bg-gradient-to-br from-trustbond-light via-white to-trustbond-light;
+  }
+  
+  .card-hover {
+    @apply transition-all duration-200 hover:shadow-md hover:-translate-y-1;
+  }
+  
+  .verification-tag {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+  
+  .verification-tag.pending {
+    @apply bg-amber-100 text-amber-800;
+  }
+  
+  .verification-tag.verified {
+    @apply bg-green-100 text-green-800;
+  }
+  
+  .verification-tag.rejected {
+    @apply bg-red-100 text-red-800;
+  }
+  
+  .blockchain-address {
+    @apply font-mono text-xs overflow-hidden overflow-ellipsis;
+  }
 }
