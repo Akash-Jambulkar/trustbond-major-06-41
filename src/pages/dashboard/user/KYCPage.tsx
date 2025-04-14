@@ -7,8 +7,8 @@ import { useKYCStatus } from "@/hooks/useKYCStatus";
 import { Shield } from "lucide-react";
 
 const KYCPage = () => {
-  const { isConnected, account } = useBlockchain();
-  const { kycStatus, isLoading, verificationTimestamp, isRejected, rejectionReason } = useKYCStatus(account);
+  const { isConnected } = useBlockchain();
+  const { kycStatus, isLoading, verificationTimestamp, isRejected, rejectionReason } = useKYCStatus();
   
   return (
     <div className="w-full p-6">
