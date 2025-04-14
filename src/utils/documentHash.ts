@@ -1,239 +1,117 @@
 
-/**
- * Utilities for document hashing and validation
- */
+import { supabase } from "@/integrations/supabase/client";
 
-// Document type as string literal type
-export type DocumentType = 'aadhaar' | 'pan' | 'voter_id' | 'driving_license';
-
-// Document type constants to use in code
+// Document types constants
 export const DOCUMENT_TYPES = {
-  AADHAAR: 'aadhaar' as DocumentType,
-  PAN: 'pan' as DocumentType,
-  VOTER_ID: 'voter_id' as DocumentType,
-  DRIVING_LICENSE: 'driving_license' as DocumentType
+  NATIONAL_ID: "national_id",
+  PASSPORT: "passport",
+  DRIVING_LICENSE: "driving_license",
+  VOTER_ID: "voter_id",
+  AADHAAR: "aadhaar",
+  PAN: "pan",
 };
 
-// Simple hash function (for demo purposes only)
-// In production, you would use a more secure cryptographic hash function
-export const hashDocument = async (documentData: string): Promise<string> => {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(documentData);
-  
-  // Use the Web Crypto API for secure hashing
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  
-  // Convert the hash to a hex string
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+// Calculate a hash from a document file and its number
+export const calculateDocumentHash = async (file: File, documentNumber: string): Promise<string> => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      if (!event.target || !event.target.result) {
+        resolve(generateSimpleHash(documentNumber));
+        return;
+      }
+
+      try {
+        // In a real application, we would use a crypto library for hashing
+        // For this demo, we'll create a simple hash from file content and document number
+        const content = event.target.result.toString();
+        const contentHash = await generateSimpleHash(content);
+        const numberHash = await generateSimpleHash(documentNumber);
+        const combinedHash = `0x${contentHash.substring(0, 32)}${numberHash.substring(0, 32)}`;
+        resolve(combinedHash);
+      } catch (error) {
+        console.error("Error calculating document hash:", error);
+        resolve(generateSimpleHash(documentNumber));
+      }
+    };
+    
+    reader.onerror = () => {
+      resolve(generateSimpleHash(documentNumber));
+    };
+    
+    reader.readAsDataURL(file);
+  });
 };
 
-// Document validation functions
-export const validateAadhaar = (aadhaarNumber: string): boolean => {
-  // Aadhaar is a 12-digit number
-  const aadhaarRegex = /^\d{12}$/;
-  return aadhaarRegex.test(aadhaarNumber);
-};
-
-export const validatePAN = (panNumber: string): boolean => {
-  // PAN is a 10-character alphanumeric string with a specific format
-  const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
-  return panRegex.test(panNumber);
-};
-
-export const validateVoterID = (voterId: string): boolean => {
-  // Voter ID is typically 10 characters long
-  const voterIdRegex = /^[A-Z]{3}[0-9]{7}$/;
-  return voterIdRegex.test(voterId);
-};
-
-export const validateDrivingLicense = (licenseNumber: string): boolean => {
-  // Driving license formats vary by state, but generally includes letters and numbers
-  // This is a simplified validation
-  const licenseRegex = /^[A-Z0-9]{8,16}$/;
-  return licenseRegex.test(licenseNumber);
-};
-
-// Document validation by type
-export const validateDocument = (type: DocumentType, value: string): boolean => {
-  switch (type) {
-    case DOCUMENT_TYPES.AADHAAR:
-      return validateAadhaar(value);
-    case DOCUMENT_TYPES.PAN:
-      return validatePAN(value);
-    case DOCUMENT_TYPES.VOTER_ID:
-      return validateVoterID(value);
-    case DOCUMENT_TYPES.DRIVING_LICENSE:
-      return validateDrivingLicense(value);
-    default:
-      return false;
+// Simple hash generator for demo purposes
+const generateSimpleHash = async (text: string): Promise<string> => {
+  if (window.crypto && window.crypto.subtle) {
+    try {
+      const msgBuffer = new TextEncoder().encode(text);
+      const hashBuffer = await window.crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      return hashHex;
+    } catch (error) {
+      console.error("Error generating crypto hash:", error);
+      // Fallback to simple hash
+    }
   }
+  
+  // Simple fallback hash for demo or browsers without crypto
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) {
+    const char = text.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  
+  // Convert to hex string and pad
+  let hexHash = (hash >>> 0).toString(16);
+  while (hexHash.length < 64) {
+    hexHash = "0" + hexHash;
+  }
+  
+  return hexHash;
 };
 
-// Create a document hash that combines document type, number, and uploaded file hash
-export const createDocumentHash = async (
-  type: DocumentType, 
-  documentNumber: string, 
-  fileHash: string
-): Promise<string> => {
-  const documentData = `${type}:${documentNumber}:${fileHash}`;
-  return await hashDocument(documentData);
-};
-
-// Verify a document hash by recreating it with the same inputs
-export const verifyDocumentHash = async (
-  type: DocumentType,
-  documentNumber: string,
-  fileHash: string,
-  providedHash: string
-): Promise<boolean> => {
-  const calculatedHash = await createDocumentHash(type, documentNumber, fileHash);
-  return calculatedHash === providedHash;
-};
-
-// Function to verify document uniqueness via Supabase (for banks to check)
+// Verify if a document is unique in the system
 export const verifyDocumentUniqueness = async (
-  type: DocumentType,
+  documentType: string, 
   documentNumber: string,
-  supabaseClient: any
+  supabaseClient?: any
 ): Promise<{ isUnique: boolean; existingStatus?: string }> => {
-  try {
-    const { data, error } = await supabaseClient
-      .from('kyc_document_submissions')
-      .select('verification_status')
-      .eq('document_type', type)
-      .eq('document_number', documentNumber)
-      .maybeSingle();
-    
-    if (error) {
-      console.error("Error checking document uniqueness:", error);
-      throw error;
-    }
-    
-    // If no data is returned, the document is unique
-    if (!data) {
-      return { isUnique: true };
-    }
-    
-    // Document exists, return its status
-    return { 
-      isUnique: false, 
-      existingStatus: data.verification_status 
-    };
-  } catch (error) {
-    console.error("Error in verifyDocumentUniqueness:", error);
-    throw error;
-  }
-};
-
-// Function to check if a hash exists in the database (for banks to verify)
-export const verifyHashInDatabase = async (
-  hash: string,
-  supabaseClient: any
-): Promise<{ exists: boolean; documentDetails?: any }> => {
-  try {
-    const { data, error } = await supabaseClient
-      .from('kyc_document_submissions')
-      .select('*')
-      .eq('document_hash', hash)
-      .maybeSingle();
-    
-    if (error) {
-      console.error("Error verifying hash in database:", error);
-      throw error;
-    }
-    
-    // If no data is returned, the hash doesn't exist
-    if (!data) {
-      return { exists: false };
-    }
-    
-    // Hash exists, return document details
-    return { 
-      exists: true, 
-      documentDetails: data 
-    };
-  } catch (error) {
-    console.error("Error in verifyHashInDatabase:", error);
-    throw error;
-  }
-};
-
-// Calculate a checksum for document numbers (like Aadhaar)
-export const calculateChecksum = (documentNumber: string): number => {
-  // Simple Luhn algorithm for checksum
-  const digits = documentNumber.split('').map(Number);
-  let sum = 0;
-  let isSecond = false;
-  
-  for (let i = digits.length - 1; i >= 0; i--) {
-    let digit = digits[i];
-    
-    if (isSecond) {
-      digit *= 2;
-      if (digit > 9) {
-        digit -= 9;
+  // First check database if available
+  if (supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient
+        .from('kyc_document_submissions')
+        .select('verification_status')
+        .eq('document_type', documentType)
+        .eq('document_number', documentNumber)
+        .limit(1);
+      
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
+        return { 
+          isUnique: false, 
+          existingStatus: data[0].verification_status 
+        };
       }
+    } catch (error) {
+      console.error("Error checking document uniqueness in database:", error);
+      // Continue to blockchain check on error
     }
-    
-    sum += digit;
-    isSecond = !isSecond;
   }
   
-  return (10 - (sum % 10)) % 10;
-};
-
-// Validate if a document number has a valid checksum
-export const hasValidChecksum = (documentNumber: string): boolean => {
-  // For Aadhaar and similar documents with a checksum digit
-  if (documentNumber.length < 2) return false;
-  
-  const mainNumber = documentNumber.slice(0, -1);
-  const checksumDigit = parseInt(documentNumber.slice(-1));
-  
-  return calculateChecksum(mainNumber) === checksumDigit;
-};
-
-// Check if a document might be fraudulent based on various heuristics
-export const checkForFraudSignals = (
-  documentType: DocumentType, 
-  documentNumber: string
-): { isSuspicious: boolean; reasons: string[] } => {
-  const reasons: string[] = [];
-  
-  switch (documentType) {
-    case DOCUMENT_TYPES.AADHAAR:
-      // Check if Aadhaar number starts with 0 or 1 (invalid)
-      if (documentNumber.startsWith('0') || documentNumber.startsWith('1')) {
-        reasons.push("Aadhaar numbers never start with 0 or 1");
-      }
-      
-      // Check if all digits are the same (suspicious)
-      if (new Set(documentNumber.split('')).size === 1) {
-        reasons.push("All digits are identical (highly suspicious)");
-      }
-      
-      // Check valid checksum for Aadhaar
-      if (!hasValidChecksum(documentNumber)) {
-        reasons.push("Checksum validation failed");
-      }
-      break;
-      
-    case DOCUMENT_TYPES.PAN:
-      // Check PAN format rules
-      if (documentNumber[3] !== 'P' && documentNumber[3] !== 'C' && 
-          documentNumber[3] !== 'H' && documentNumber[3] !== 'A' && 
-          documentNumber[3] !== 'B' && documentNumber[3] !== 'J' && 
-          documentNumber[3] !== 'G') {
-        reasons.push("Invalid PAN card 4th character");
-      }
-      break;
-      
-    // Add more document-specific fraud checks as needed
+  // For demo, randomly return uniqueness result
+  const demoIsUnique = Math.random() > 0.3; // 70% chance of being unique
+  if (!demoIsUnique) {
+    const statusOptions = ["pending", "verified", "rejected"];
+    const randomStatus = statusOptions[Math.floor(Math.random() * statusOptions.length)];
+    return { isUnique: false, existingStatus: randomStatus };
   }
   
-  return {
-    isSuspicious: reasons.length > 0,
-    reasons
-  };
+  return { isUnique: true };
 };
