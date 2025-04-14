@@ -1,11 +1,19 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { FileText, ArrowLeft, ArrowRight, Download, ExternalLink, BookOpen, Share2 } from "lucide-react";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 const Whitepaper = () => {
   const [activeSection, setActiveSection] = useState("abstract");
+  const [currentPage, setCurrentPage] = useState(1);
   
   const sections = [
     { id: "abstract", name: "Abstract" },
@@ -24,6 +32,7 @@ const Whitepaper = () => {
     if (currentIndex < sections.length - 1) {
       const nextSection = sections[currentIndex + 1];
       setActiveSection(nextSection.id);
+      setCurrentPage(currentIndex + 2);
       document.getElementById(nextSection.id)?.scrollIntoView({ behavior: "smooth" });
     }
   };
@@ -33,11 +42,18 @@ const Whitepaper = () => {
     if (currentIndex > 0) {
       const prevSection = sections[currentIndex - 1];
       setActiveSection(prevSection.id);
+      setCurrentPage(currentIndex);
       document.getElementById(prevSection.id)?.scrollIntoView({ behavior: "smooth" });
     }
   };
+  
+  const handlePageChange = (sectionId: string, pageNumber: number) => {
+    setActiveSection(sectionId);
+    setCurrentPage(pageNumber);
+    document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth" });
+  };
 
-  React.useEffect(() => {
+  useEffect(() => {
     const handleScroll = () => {
       const scrollPosition = window.scrollY + 200;
       
@@ -45,6 +61,7 @@ const Whitepaper = () => {
         const section = document.getElementById(sections[i].id);
         if (section && section.offsetTop <= scrollPosition) {
           setActiveSection(sections[i].id);
+          setCurrentPage(i + 1);
           break;
         }
       }
@@ -106,14 +123,14 @@ const Whitepaper = () => {
             <div className="bg-gray-50 p-6 rounded-lg sticky top-6">
               <h3 className="text-lg font-semibold mb-4 text-trustbond-dark">Table of Contents</h3>
               <ul className="space-y-2">
-                {sections.map(section => (
+                {sections.map((section, index) => (
                   <li key={section.id}>
                     <a 
                       href={`#${section.id}`} 
                       className={`${activeSection === section.id 
                         ? "text-trustbond-primary font-medium"
                         : "text-trustbond-dark hover:text-trustbond-primary"}`}
-                      onClick={() => setActiveSection(section.id)}
+                      onClick={() => handlePageChange(section.id, index + 1)}
                     >
                       {section.name}
                     </a>
