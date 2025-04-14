@@ -1,4 +1,3 @@
-
 import {
   Route,
   Routes,
@@ -6,6 +5,10 @@ import {
 import Index from "./pages/Index";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import Whitepaper from "./pages/Whitepaper";
+import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { DashboardLayout } from "./components/DashboardLayout";
@@ -30,11 +33,15 @@ function App() {
       <AuthProvider>
         <BlockchainProvider>
           <Routes>
+            {/* Public Routes */}
             <Route path="/" element={<Index />} />
-            <Route path="/register" element={<Register />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login />} />
-
-            {/* User Routes */}
+            <Route path="/register" element={<Register />} />
+            <Route path="/whitepaper" element={<Whitepaper />} />
+            
+            {/* Protected Routes */}
             <Route
               path="/dashboard/user"
               element={
