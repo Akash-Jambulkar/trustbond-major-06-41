@@ -1,6 +1,17 @@
 
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
+import { expect, afterEach } from 'vitest';
+import { cleanup } from '@testing-library/react';
+import matchers from '@testing-library/jest-dom/matchers';
+
+// Extend Vitest's expect method with Testing Library matchers
+expect.extend(matchers);
+
+// Clean up after each test
+afterEach(() => {
+  cleanup();
+});
 
 // Mock ResizeObserver
 global.ResizeObserver = vi.fn().mockImplementation(() => ({
