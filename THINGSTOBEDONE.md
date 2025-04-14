@@ -1,4 +1,3 @@
-
 # TrustBond - KYC Verification & Blockchain Loan Platform
 
 This document outlines the key components, features, and tasks required to build a comprehensive KYC verification system that leverages blockchain technology for security and transparency in loan applications.
@@ -77,7 +76,7 @@ This document outlines the key components, features, and tasks required to build
 - [x] Implement credit scoring algorithms
 - [x] Create loan approval smart contracts
 - [x] Add repayment tracking
-- [ ] Develop loan marketplace for approved users
+- [x] Develop loan marketplace for approved users
 
 #### 6. Security Enhancements
 - [x] Implement document encryption
