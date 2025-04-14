@@ -47,6 +47,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       return [
         ...baseItems,
         { label: "Verify KYC", icon: <ShieldCheck size={20} />, href: "/dashboard/bank/verify-kyc" },
+        { label: "Consensus Verification", icon: <Users size={20} />, href: "/dashboard/bank/consensus-verification" },
         { label: "Loan Requests", icon: <CreditCard size={20} />, href: "/dashboard/bank/loans" },
         { label: "Trust Scores", icon: <PieChart size={20} />, href: "/dashboard/bank/trust-scores" },
       ];

@@ -29,6 +29,33 @@ export type BankRegistrationType = {
   blockchain_tx_hash?: string;
 };
 
+// KYC Document Submission type
+export type KycDocumentSubmissionType = {
+  id: string;
+  user_id: string;
+  document_type: string;
+  document_number: string;
+  document_hash: string;
+  submitted_at: string;
+  verification_status: "pending" | "verified" | "rejected";
+  verified_at?: string;
+  verified_by?: string;
+  blockchain_tx_hash?: string;
+  consensus_status?: "pending" | "in_progress" | "approved" | "rejected";
+};
+
+// KYC Verification Vote type
+export type KycVerificationVoteType = {
+  id: string;
+  document_id: string;
+  bank_id: string;
+  bank_name: string;
+  approved: boolean;
+  notes?: string;
+  created_at: string;
+  updated_at?: string;
+};
+
 // Transaction metadata type to ensure strong typing
 export type TransactionMetadata = {
   description: string;

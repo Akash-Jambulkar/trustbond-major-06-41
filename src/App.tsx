@@ -22,6 +22,7 @@ import BankRegistrationPage from "./pages/dashboard/admin/BankRegistrationPage";
 import BankVerificationPage from "./pages/dashboard/bank/verify-kyc";
 import LoansPage from "./pages/dashboard/user/LoansPage";
 import LoanDetailsPage from "./pages/dashboard/user/LoanDetailsPage";
+import ConsensusVerificationPage from "./pages/dashboard/bank/ConsensusVerificationPage";
 
 function App() {
   return (
@@ -102,6 +103,17 @@ function App() {
                 <ProtectedRoute role="bank">
                   <DashboardLayout>
                     <BankVerificationPage />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path="/dashboard/bank/consensus-verification"
+              element={
+                <ProtectedRoute role="bank">
+                  <DashboardLayout>
+                    <ConsensusVerificationPage />
                   </DashboardLayout>
                 </ProtectedRoute>
               }
