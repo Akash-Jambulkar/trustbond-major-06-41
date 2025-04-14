@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { toast } from "sonner";
-import { trackTransaction, watchTransaction } from "@/utils/transactionTracker";
+import { trackTransaction, watchTransaction } from "@/utils/transactions";
 
 export const useKYCBlockchain = () => {
   const { kycContract, web3, account, isConnected } = useBlockchain();
