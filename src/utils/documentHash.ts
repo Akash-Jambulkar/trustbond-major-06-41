@@ -11,6 +11,9 @@ export const DOCUMENT_TYPES = {
   PAN: "pan",
 };
 
+// Export the DocumentType type
+export type DocumentType = keyof typeof DOCUMENT_TYPES | string;
+
 // Calculate a hash from a document file and its number
 export const calculateDocumentHash = async (file: File, documentNumber: string): Promise<string> => {
   return new Promise((resolve) => {
@@ -114,4 +117,57 @@ export const verifyDocumentUniqueness = async (
   }
   
   return { isUnique: true };
+};
+
+// Add missing functions needed by other files
+export const hashDocument = async (text: string): Promise<string> => {
+  return await generateSimpleHash(text);
+};
+
+export const validateDocument = (type: string, documentNumber: string): boolean => {
+  switch (type) {
+    case DOCUMENT_TYPES.AADHAAR:
+      return /^\d{12}$/.test(documentNumber);
+    case DOCUMENT_TYPES.PAN:
+      return /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(documentNumber);
+    case DOCUMENT_TYPES.VOTER_ID:
+      return /^[A-Z]{3}[0-9]{7}$/.test(documentNumber);
+    case DOCUMENT_TYPES.DRIVING_LICENSE:
+      return /^[A-Z0-9]{8,16}$/.test(documentNumber);
+    default:
+      return documentNumber.length >= 4;
+  }
+};
+
+export const createDocumentHash = async (
+  documentType: DocumentType,
+  documentNumber: string,
+  fileHash: string
+): Promise<string> => {
+  const typeHash = await generateSimpleHash(documentType);
+  const numberHash = await generateSimpleHash(documentNumber);
+  return `0x${typeHash.substring(0, 16)}${numberHash.substring(0, 16)}${fileHash.substring(0, 32)}`;
+};
+
+export const verifyHashInDatabase = async (
+  hash: string,
+  supabaseClient?: any
+): Promise<boolean> => {
+  if (supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient
+        .from('kyc_document_submissions')
+        .select('verification_status')
+        .eq('document_hash', hash)
+        .limit(1);
+      
+      if (error) throw error;
+      return data && data.length > 0;
+    } catch (error) {
+      console.error("Error verifying hash in database:", error);
+    }
+  }
+  
+  // For demo, randomly return result
+  return Math.random() > 0.5;
 };

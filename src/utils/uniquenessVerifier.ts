@@ -1,7 +1,5 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import { type DocumentType } from "@/utils/documentHash";
-import { hashDocument } from "@/utils/documentHash";
+import { DocumentType, DOCUMENT_TYPES, hashDocument } from "@/utils/documentHash";
 
 // Interface for document uniqueness verification result
 export interface UniquenessResult {

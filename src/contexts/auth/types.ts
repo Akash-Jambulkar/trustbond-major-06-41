@@ -7,6 +7,8 @@ export interface AuthUser {
   email: string;
   role: UserRole;
   walletAddress: string;
+  phone?: string;
+  address?: string;
 }
 
 export interface AuthContextType {

@@ -26,16 +26,12 @@ export const KYCTabs = ({ mfaVerified = true }: KYCTabsProps) => {
         </Alert>
       )}
       
-      {mfaVerified && (
-        <>
-          <TabsContent value="upload" className="mt-4">
-            <KYCDocumentUpload />
-          </TabsContent>
-          <TabsContent value="history" className="mt-4">
-            <KYCHistory />
-          </TabsContent>
-        </>
-      )}
+      <TabsContent value="upload" className="mt-4">
+        {mfaVerified ? <KYCDocumentUpload /> : null}
+      </TabsContent>
+      <TabsContent value="history" className="mt-4">
+        <KYCHistory />
+      </TabsContent>
     </Tabs>
   );
 };
