@@ -1,102 +1,69 @@
 
-/**
- * Multi-factor authentication utilities
- */
+// MFA utilities for authentication
 
-// Generate a random 6-digit code
+// Generate a random 6-digit MFA code
 export const generateMFACode = (): string => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// Validate that the entered code matches the generated code
-export const validateMFACode = (enteredCode: string, storedCode: string): boolean => {
-  return enteredCode === storedCode;
-};
-
-// Simulate sending a code via SMS (in a real app, this would use a service like Twilio)
-export const sendMFACodeViaSMS = async (phoneNumber: string, code: string): Promise<boolean> => {
-  console.log(`[MFA] Sending code ${code} to ${phoneNumber}`);
-  
-  // In a real implementation, we'd call an SMS service here
-  // For demo purposes, we'll simulate success after a delay
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(true);
-    }, 1000);
-  });
-};
-
-// Simulate sending a code via Email (in a real app, this would use a service like SendGrid)
-export const sendMFACodeViaEmail = async (email: string, code: string): Promise<boolean> => {
-  console.log(`[MFA] Sending code ${code} to ${email}`);
-  
-  // In a real implementation, we'd call an email service here
-  // For demo purposes, we'll simulate success after a delay
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(true);
-    }, 1000);
-  });
-};
-
-// Store MFA code in local storage (in a real app, this would be server-side)
+// Store MFA code in sessionStorage
 export const storeMFACode = (userId: string, code: string): void => {
-  localStorage.setItem(`mfa_code_${userId}`, code);
-  
-  // Set expiration time (5 minutes from now)
-  const expiresAt = Date.now() + 5 * 60 * 1000;
-  localStorage.setItem(`mfa_code_${userId}_expires`, expiresAt.toString());
+  sessionStorage.setItem(`mfa_code_${userId}`, code);
+  // Set expiry to 5 minutes from now
+  const expires = Date.now() + 5 * 60 * 1000;
+  sessionStorage.setItem(`mfa_code_${userId}_expires`, expires.toString());
 };
 
-// Retrieve stored MFA code
+// Retrieve MFA code from sessionStorage
 export const retrieveMFACode = (userId: string): string | null => {
-  const code = localStorage.getItem(`mfa_code_${userId}`);
-  const expiresAt = localStorage.getItem(`mfa_code_${userId}_expires`);
+  const expires = sessionStorage.getItem(`mfa_code_${userId}_expires`);
   
-  if (!code || !expiresAt) {
-    return null;
-  }
-  
-  // Check if the code has expired
-  if (Date.now() > parseInt(expiresAt, 10)) {
+  // Check if code has expired
+  if (expires && parseInt(expires) < Date.now()) {
     clearMFACode(userId);
     return null;
   }
   
-  return code;
+  return sessionStorage.getItem(`mfa_code_${userId}`);
 };
 
-// Clear MFA code after use or expiration
+// Clear MFA code from sessionStorage
 export const clearMFACode = (userId: string): void => {
-  localStorage.removeItem(`mfa_code_${userId}`);
-  localStorage.removeItem(`mfa_code_${userId}_expires`);
+  sessionStorage.removeItem(`mfa_code_${userId}`);
+  sessionStorage.removeItem(`mfa_code_${userId}_expires`);
 };
 
-// Types for MFA preferences
-export type MFAMethod = 'sms' | 'email' | 'app';
-
-export interface MFAPreferences {
+interface MFAPreferences {
   enabled: boolean;
-  method: MFAMethod;
+  method: 'sms' | 'email';
   phoneNumber?: string;
 }
 
-// Store MFA preferences in local storage
+// Store MFA preferences in localStorage
 export const storeMFAPreferences = (userId: string, preferences: MFAPreferences): void => {
   localStorage.setItem(`mfa_prefs_${userId}`, JSON.stringify(preferences));
 };
 
-// Retrieve MFA preferences
+// Retrieve MFA preferences from localStorage
 export const retrieveMFAPreferences = (userId: string): MFAPreferences | null => {
-  const prefsString = localStorage.getItem(`mfa_prefs_${userId}`);
-  if (!prefsString) {
-    return null;
-  }
-  
-  try {
-    return JSON.parse(prefsString) as MFAPreferences;
-  } catch (error) {
-    console.error("Failed to parse MFA preferences:", error);
-    return null;
-  }
+  const prefs = localStorage.getItem(`mfa_prefs_${userId}`);
+  return prefs ? JSON.parse(prefs) : null;
+};
+
+// Mock function to send MFA code via email
+export const sendMFACodeViaEmail = async (email: string, code: string): Promise<boolean> => {
+  console.log(`Sending MFA code ${code} to ${email}`);
+  // In a real app, this would call an API to send the email
+  // For demo purposes, we'll just simulate a successful send
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  return true;
+};
+
+// Mock function to send MFA code via SMS
+export const sendMFACodeViaSMS = async (phoneNumber: string, code: string): Promise<boolean> => {
+  console.log(`Sending MFA code ${code} to ${phoneNumber}`);
+  // In a real app, this would call an API to send the SMS
+  // For demo purposes, we'll just simulate a successful send
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  return true;
 };

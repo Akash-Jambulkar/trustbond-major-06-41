@@ -5,6 +5,11 @@ import { toast } from "sonner";
 interface ModeContextType {
   enableBlockchain: boolean;
   toggleBlockchain: () => void;
+  // Add these missing properties
+  isDemoMode: boolean;
+  isProductionMode: boolean;
+  mode: "production" | "demo";
+  toggleMode: () => void;
 }
 
 const ModeContext = createContext<ModeContextType | undefined>(undefined);
@@ -12,6 +17,8 @@ const ModeContext = createContext<ModeContextType | undefined>(undefined);
 export const ModeProvider = ({ children }: { children: ReactNode }) => {
   // Enable blockchain features by default
   const [enableBlockchain, setEnableBlockchain] = useState<boolean>(true);
+  // Add mode state
+  const [mode, setMode] = useState<"production" | "demo">("production");
   
   // Load saved blockchain preference
   useEffect(() => {
@@ -21,6 +28,15 @@ export const ModeProvider = ({ children }: { children: ReactNode }) => {
     } else {
       // Default to enabled
       localStorage.setItem("trustbond_blockchain", "true");
+    }
+    
+    // Load saved mode preference
+    const savedMode = localStorage.getItem("trustbond_mode");
+    if (savedMode && (savedMode === "production" || savedMode === "demo")) {
+      setMode(savedMode as "production" | "demo");
+    } else {
+      // Default to production
+      localStorage.setItem("trustbond_mode", "production");
     }
   }, []);
 
@@ -36,12 +52,33 @@ export const ModeProvider = ({ children }: { children: ReactNode }) => {
         : "Smart contract interactions disabled",
     });
   };
+  
+  // Toggle mode between production and demo
+  const toggleMode = () => {
+    const newMode = mode === "production" ? "demo" : "production";
+    setMode(newMode);
+    localStorage.setItem("trustbond_mode", newMode);
+    
+    toast.success(`Switched to ${newMode} mode`, {
+      description: newMode === "production" 
+        ? "Using production data and features" 
+        : "Using demo data and features",
+    });
+  };
+  
+  // Computed properties
+  const isDemoMode = mode === "demo";
+  const isProductionMode = mode === "production";
 
   return (
     <ModeContext.Provider
       value={{
         enableBlockchain,
         toggleBlockchain,
+        mode,
+        toggleMode,
+        isDemoMode,
+        isProductionMode
       }}
     >
       {children}
