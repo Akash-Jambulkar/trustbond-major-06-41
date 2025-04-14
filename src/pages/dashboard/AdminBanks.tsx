@@ -1,7 +1,5 @@
 
 import { useState } from "react";
-import { DashboardLayout } from "@/components/DashboardLayout";
-import { useMode } from "@/contexts/ModeContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,11 +20,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Search, Building2, PlusCircle, CheckCircle, XCircle, Info } from "lucide-react";
+import { Search, Building2, PlusCircle, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
 
-// Demo data
-const DEMO_BANKS = [
+// Bank data
+const INITIAL_BANKS = [
   {
     id: "1",
     name: "Global Trust Bank",
@@ -60,9 +58,8 @@ const DEMO_BANKS = [
 ];
 
 const AdminBanks = () => {
-  const { isDemoMode } = useMode();
   const [searchTerm, setSearchTerm] = useState("");
-  const [banks, setBanks] = useState(DEMO_BANKS);
+  const [banks, setBanks] = useState(INITIAL_BANKS);
 
   // Filter banks based on search term
   const filteredBanks = banks.filter(
@@ -115,186 +112,162 @@ const AdminBanks = () => {
   };
 
   const handleAddBank = () => {
-    toast.info("This feature is not available in demo mode", {
-      description: "In production mode, you would be able to add new banks to the platform.",
+    toast.info("Add new bank", {
+      description: "This would open a form to add a new bank to the platform.",
     });
   };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-trustbond-dark">Registered Banks</h1>
-            <p className="text-gray-500">
-              Manage banks that can verify KYC and issue loans on the platform
-            </p>
-          </div>
-          
-          {/* Mode indicator */}
-          {isDemoMode && (
-            <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
-              Demo Mode
-            </Badge>
-          )}
-          
-          <Button onClick={handleAddBank} className="flex items-center gap-2 bg-trustbond-primary hover:bg-trustbond-primary/90">
-            <PlusCircle size={16} />
-            <span>Add Bank</span>
-          </Button>
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-trustbond-dark">Registered Banks</h1>
+          <p className="text-gray-500">
+            Manage banks that can verify KYC and issue loans on the platform
+          </p>
         </div>
+        
+        <Button onClick={handleAddBank} className="flex items-center gap-2 bg-trustbond-primary hover:bg-trustbond-primary/90">
+          <PlusCircle size={16} />
+          <span>Add Bank</span>
+        </Button>
+      </div>
 
-        {/* Search and filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Search Banks</CardTitle>
-            <CardDescription>
-              Find banks by name, email, or wallet address
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-              <Input
-                placeholder="Search..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </CardContent>
-        </Card>
+      {/* Search and filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Search Banks</CardTitle>
+          <CardDescription>
+            Find banks by name, email, or wallet address
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+            <Input
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* Banks List */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Banks ({filteredBanks.length})</CardTitle>
-            <CardDescription>
-              List of all banks registered on the TrustBond platform
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Bank Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">KYC Verified</TableHead>
-                    <TableHead className="text-right">Loans Issued</TableHead>
-                    <TableHead className="text-right">Joined Date</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredBanks.length > 0 ? (
-                    filteredBanks.map((bank) => (
-                      <TableRow key={bank.id}>
-                        <TableCell className="font-medium">
-                          <div className="flex items-center gap-2">
-                            <Building2 size={18} className="text-trustbond-primary" />
-                            <span>{bank.name}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>{bank.email}</TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              bank.status === "active"
-                                ? "default"
-                                : bank.status === "pending"
-                                ? "outline"
-                                : "secondary"
-                            }
+      {/* Banks List */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Banks ({filteredBanks.length})</CardTitle>
+          <CardDescription>
+            List of all banks registered on the TrustBond platform
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Bank Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">KYC Verified</TableHead>
+                  <TableHead className="text-right">Loans Issued</TableHead>
+                  <TableHead className="text-right">Joined Date</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredBanks.length > 0 ? (
+                  filteredBanks.map((bank) => (
+                    <TableRow key={bank.id}>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          <Building2 size={18} className="text-trustbond-primary" />
+                          <span>{bank.name}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{bank.email}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            bank.status === "active"
+                              ? "default"
+                              : bank.status === "pending"
+                              ? "outline"
+                              : "secondary"
+                          }
+                          className={
+                            bank.status === "active"
+                              ? "bg-green-100 text-green-800 border-green-200"
+                              : bank.status === "pending"
+                              ? "bg-yellow-100 text-yellow-800 border-yellow-200"
+                              : "bg-gray-100 text-gray-800 border-gray-200"
+                          }
+                        >
+                          {bank.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">{bank.kycVerified}</TableCell>
+                      <TableCell className="text-right">{bank.loansIssued}</TableCell>
+                      <TableCell className="text-right">
+                        {new Date(bank.joinedDate).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {bank.status === "pending" ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleApproveBank(bank.id)}
+                            className="text-green-600 border-green-200 hover:bg-green-50"
+                          >
+                            <CheckCircle size={16} className="mr-1" />
+                            Approve
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleStatusToggle(bank.id)}
                             className={
                               bank.status === "active"
-                                ? "bg-green-100 text-green-800 border-green-200"
-                                : bank.status === "pending"
-                                ? "bg-yellow-100 text-yellow-800 border-yellow-200"
-                                : "bg-gray-100 text-gray-800 border-gray-200"
+                                ? "text-red-600 border-red-200 hover:bg-red-50"
+                                : "text-green-600 border-green-200 hover:bg-green-50"
                             }
                           >
-                            {bank.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">{bank.kycVerified}</TableCell>
-                        <TableCell className="text-right">{bank.loansIssued}</TableCell>
-                        <TableCell className="text-right">
-                          {new Date(bank.joinedDate).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {bank.status === "pending" ? (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleApproveBank(bank.id)}
-                              className="text-green-600 border-green-200 hover:bg-green-50"
-                            >
-                              <CheckCircle size={16} className="mr-1" />
-                              Approve
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleStatusToggle(bank.id)}
-                              className={
-                                bank.status === "active"
-                                  ? "text-red-600 border-red-200 hover:bg-red-50"
-                                  : "text-green-600 border-green-200 hover:bg-green-50"
-                              }
-                            >
-                              {bank.status === "active" ? (
-                                <>
-                                  <XCircle size={16} className="mr-1" />
-                                  Deactivate
-                                </>
-                              ) : (
-                                <>
-                                  <CheckCircle size={16} className="mr-1" />
-                                  Activate
-                                </>
-                              )}
-                            </Button>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center py-4 text-gray-500">
-                        No banks found matching your search
+                            {bank.status === "active" ? (
+                              <>
+                                <XCircle size={16} className="mr-1" />
+                                Deactivate
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle size={16} className="mr-1" />
+                                Activate
+                              </>
+                            )}
+                          </Button>
+                        )}
                       </TableCell>
                     </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <div className="text-sm text-gray-500">
-              Showing {filteredBanks.length} of {banks.length} banks
-            </div>
-          </CardFooter>
-        </Card>
-
-        {/* Additional helper text for demo mode */}
-        {isDemoMode && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-blue-700">
-            <h3 className="font-semibold flex items-center gap-1">
-              <Info size={16} />
-              Demo Mode Information
-            </h3>
-            <p className="text-sm mt-1">
-              You're viewing the admin banks dashboard in demo mode. Some features are limited.
-              To see how the full application would work in production, toggle to production mode
-              using the toggle in the top right corner of the dashboard.
-            </p>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-4 text-gray-500">
+                      No banks found matching your search
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
-        )}
-      </div>
-    </DashboardLayout>
+        </CardContent>
+        <CardFooter className="flex justify-between">
+          <div className="text-sm text-gray-500">
+            Showing {filteredBanks.length} of {banks.length} banks
+          </div>
+        </CardFooter>
+      </Card>
+    </div>
   );
 };
 

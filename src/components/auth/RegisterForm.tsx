@@ -1,12 +1,10 @@
 
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useMode } from "@/contexts/ModeContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { toast } from "sonner";
 import { User, Mail, LockKeyhole, CheckCircle2 } from "lucide-react";
 import { useRegisterForm, RegisterFormValues } from "@/hooks/useRegisterForm";
 import {
@@ -21,7 +19,6 @@ import {
 export const RegisterForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
-  const { isProductionMode } = useMode();
   const { form } = useRegisterForm();
 
   const handleSubmit = async (data: RegisterFormValues) => {
@@ -168,7 +165,7 @@ export const RegisterForm = () => {
         <div className="pt-2">
           <Button 
             type="submit" 
-            className={`w-full ${isProductionMode ? 'bg-red-600 hover:bg-red-700' : 'bg-trustbond-primary hover:bg-trustbond-primary/90'}`}
+            className="w-full bg-trustbond-primary hover:bg-trustbond-primary/90"
             disabled={isLoading}
           >
             {isLoading ? (
@@ -180,7 +177,7 @@ export const RegisterForm = () => {
                 Creating Account...
               </span>
             ) : (
-              isProductionMode ? "Register Production Account" : "Register Demo Account"
+              "Create Account"
             )}
           </Button>
         </div>

@@ -24,7 +24,7 @@ export const BlockchainActions = () => {
     isCorrectNetwork 
   } = useBlockchain();
   
-  const { enableBlockchain, isDemoMode } = useMode();
+  const { enableBlockchain } = useMode();
   const [documentId, setDocumentId] = useState("");
   const [hashedDocument, setHashedDocument] = useState("");
   const [isHashing, setIsHashing] = useState(false);
@@ -76,25 +76,9 @@ export const BlockchainActions = () => {
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>Blockchain features are disabled</AlertTitle>
         <AlertDescription>
-          Enable blockchain features in the mode settings to use this functionality.
+          Enable blockchain features in the settings to use this functionality.
         </AlertDescription>
       </Alert>
-    );
-  }
-
-  if (isDemoMode) {
-    return (
-      <div className="space-y-6">
-        <Alert className="bg-blue-50 border-blue-200">
-          <AlertCircle className="h-4 w-4 text-blue-600" />
-          <AlertTitle className="text-blue-800">Demo Mode</AlertTitle>
-          <AlertDescription className="text-blue-700">
-            You are in demo mode. Blockchain features show sample data only. Switch to Production mode to interact with real blockchain networks.
-          </AlertDescription>
-        </Alert>
-        
-        <TransactionHistory />
-      </div>
     );
   }
 

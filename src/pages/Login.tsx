@@ -1,14 +1,12 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useMode } from "@/contexts/ModeContext";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Wallet, User, LockKeyhole, Info, ToggleLeft, ToggleRight } from "lucide-react";
+import { Wallet, User, LockKeyhole } from "lucide-react";
 import { MultifactorAuth } from "@/components/auth/MultifactorAuth";
 
 const Login = () => {
@@ -18,7 +16,6 @@ const Login = () => {
   const [showMFA, setShowMFA] = useState(false);
   const { login, loginWithWallet } = useAuth();
   const { connectWallet, isBlockchainLoading } = useBlockchain();
-  const { isDemoMode, toggleMode } = useMode();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -26,18 +23,10 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      // In production mode, show MFA before completing login
-      if (!isDemoMode) {
-        // First validate credentials, then show MFA
-        // This is a simplified flow - normally you'd verify credentials with backend first
-        setShowMFA(true);
-        setIsLoading(false);
-        return;
-      }
-      
-      // In demo mode, complete login directly
-      await login(email, password);
-      // Navigation is handled in the login function
+      // Show MFA before completing login
+      setShowMFA(true);
+      setIsLoading(false);
+      return;
     } catch (error) {
       console.error("Login submission error:", error);
     } finally {
@@ -67,15 +56,10 @@ const Login = () => {
       setIsLoading(true);
       const address = await connectWallet();
       
-      // In production mode, show MFA
-      if (!isDemoMode) {
-        setShowMFA(true);
-        setIsLoading(false);
-        return;
-      }
-      
-      await loginWithWallet(address);
-      // Navigation is handled in the loginWithWallet function
+      // Show MFA
+      setShowMFA(true);
+      setIsLoading(false);
+      return;
     } catch (error) {
       console.error("Wallet login error:", error);
       toast.error("Failed to login with wallet: " + (error instanceof Error ? error.message : "Unknown error"));
@@ -101,18 +85,6 @@ const Login = () => {
               <Link to="/register" className="text-trustbond-primary font-medium">
                 Register
               </Link>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={toggleMode}
-                className="flex items-center gap-1"
-              >
-                {isDemoMode 
-                  ? <ToggleLeft className="h-4 w-4 text-trustbond-primary" /> 
-                  : <ToggleRight className="h-4 w-4 text-green-600" />
-                }
-                <span className="text-xs">{isDemoMode ? "Demo" : "Production"}</span>
-              </Button>
             </nav>
           </div>
         </header>
@@ -143,7 +115,7 @@ const Login = () => {
     );
   }
 
-  // Rest of the component remains unchanged
+  // Login form view
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
@@ -159,18 +131,6 @@ const Login = () => {
             <Link to="/register" className="text-trustbond-primary font-medium">
               Register
             </Link>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={toggleMode}
-              className="flex items-center gap-1"
-            >
-              {isDemoMode 
-                ? <ToggleLeft className="h-4 w-4 text-trustbond-primary" /> 
-                : <ToggleRight className="h-4 w-4 text-green-600" />
-              }
-              <span className="text-xs">{isDemoMode ? "Demo" : "Production"}</span>
-            </Button>
           </nav>
         </div>
       </header>
@@ -183,12 +143,6 @@ const Login = () => {
             <p className="text-gray-600 mt-2">
               Log in to access your TrustBond account
             </p>
-            {isDemoMode && (
-              <div className="mt-2 text-xs text-blue-600 flex items-center justify-center gap-1">
-                <Info size={12} />
-                <span>Using demo mode with sample accounts</span>
-              </div>
-            )}
           </div>
 
           <div className="mb-6">
@@ -277,18 +231,6 @@ const Login = () => {
               </Link>
             </p>
           </div>
-
-          {/* Demo Accounts Info - Only shown in demo mode */}
-          {isDemoMode && (
-            <div className="mt-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <h3 className="text-sm font-semibold text-gray-700 mb-2">Demo Accounts:</h3>
-              <ul className="text-xs text-gray-600 space-y-1">
-                <li><strong>Admin:</strong> admin@trustbond.com / admin123</li>
-                <li><strong>Bank:</strong> bank@trustbond.com / bank123</li>
-                <li><strong>User:</strong> user@trustbond.com / user123</li>
-              </ul>
-            </div>
-          )}
         </div>
       </main>
 

@@ -2,7 +2,7 @@
 import { AuthUser, UserRole } from './types';
 import { toast } from 'sonner';
 
-// In-memory storage for production mode users
+// In-memory storage for production users
 const PRODUCTION_USERS: AuthUser[] = [];
 
 export const productionAuthService = {

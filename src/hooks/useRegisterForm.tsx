@@ -1,10 +1,7 @@
 
-import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useMode } from "@/contexts/ModeContext";
-import { UserRole } from "@/contexts/auth/types";
 
 // Define the form validation schema
 const registerSchema = z.object({
@@ -24,8 +21,6 @@ const registerSchema = z.object({
 export type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export const useRegisterForm = () => {
-  const { isProductionMode } = useMode();
-  
   // Initialize the form with react-hook-form and zod validation
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -34,23 +29,10 @@ export const useRegisterForm = () => {
       email: "",
       password: "",
       confirmPassword: "",
-      role: "user" as "user" | "bank", // Explicitly type this to match the schema
+      role: "user" as "user" | "bank",
     },
     mode: "onChange"
   });
-  
-  // Clear form data when switching between production and demo modes
-  useEffect(() => {
-    if (isProductionMode) {
-      form.reset({
-        name: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-        role: "user",
-      });
-    }
-  }, [isProductionMode, form]);
 
   return {
     form
