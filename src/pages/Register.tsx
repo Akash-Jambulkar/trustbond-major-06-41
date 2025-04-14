@@ -1,9 +1,7 @@
 
-import { useEffect } from "react";
 import { RegisterHeader } from "@/components/auth/RegisterHeader";
 import { RegisterForm } from "@/components/auth/RegisterForm";
 import { RegisterFooter } from "@/components/auth/RegisterFooter";
-import { useRegisterForm } from "@/hooks/useRegisterForm";
 
 const Register = () => {
   return (
