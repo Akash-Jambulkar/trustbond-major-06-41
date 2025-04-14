@@ -4,10 +4,12 @@ import { useBlockchain } from "@/contexts/BlockchainContext";
 import { KYCStatusDisplay } from "@/components/kyc/KYCStatusDisplay";
 import { KYCTabs } from "@/components/kyc/KYCTabs";
 import { useKYCStatus } from "@/hooks/useKYCStatus";
+import { useMode } from "@/contexts/ModeContext";
 
 const KYCPage = () => {
   const { isConnected } = useBlockchain();
-  const { kycStatus, isLoading } = useKYCStatus();
+  const { kycStatus, isLoading, verificationTimestamp } = useKYCStatus();
+  const { isProductionMode } = useMode();
 
   return (
     <DashboardLayout>
@@ -15,7 +17,9 @@ const KYCPage = () => {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">KYC Verification</h1>
           <p className="text-muted-foreground">
-            Submit and manage your KYC documents for identity verification.
+            {isProductionMode 
+              ? "Submit and manage your KYC documents for secure blockchain identity verification."
+              : "Submit and manage your KYC documents for identity verification."}
           </p>
         </div>
 
@@ -23,6 +27,7 @@ const KYCPage = () => {
           kycStatus={kycStatus}
           isLoading={isLoading}
           isConnected={isConnected}
+          verificationTimestamp={verificationTimestamp}
         />
 
         <KYCTabs />

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,11 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Wallet, User, LockKeyhole, Info, ToggleLeft, ToggleRight } from "lucide-react";
+import { MultifactorAuth } from "@/components/auth/MultifactorAuth";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showMFA, setShowMFA] = useState(false);
   const { login, loginWithWallet } = useAuth();
   const { connectWallet, isBlockchainLoading } = useBlockchain();
   const { isDemoMode, toggleMode } = useMode();
@@ -24,6 +25,16 @@ const Login = () => {
     setIsLoading(true);
     
     try {
+      // In production mode, show MFA before completing login
+      if (!isDemoMode) {
+        // First validate credentials, then show MFA
+        // This is a simplified flow - normally you'd verify credentials with backend first
+        setShowMFA(true);
+        setIsLoading(false);
+        return;
+      }
+      
+      // In demo mode, complete login directly
       await login(email, password);
       // Navigation is handled in the login function
     } catch (error) {
@@ -33,10 +44,35 @@ const Login = () => {
     }
   };
 
+  const handleMFAComplete = async (verified: boolean) => {
+    if (verified) {
+      setIsLoading(true);
+      try {
+        await login(email, password);
+        // Navigation is handled in the login function
+      } catch (error) {
+        console.error("Login after MFA error:", error);
+        toast.error("Login failed: " + (error instanceof Error ? error.message : "Unknown error"));
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      setShowMFA(false);
+    }
+  };
+
   const handleWalletLogin = async () => {
     try {
       setIsLoading(true);
       const address = await connectWallet();
+      
+      // In production mode, show MFA
+      if (!isDemoMode) {
+        setShowMFA(true);
+        setIsLoading(false);
+        return;
+      }
+      
       await loginWithWallet(address);
       // Navigation is handled in the loginWithWallet function
     } catch (error) {
@@ -47,6 +83,66 @@ const Login = () => {
     }
   };
 
+  // Show MFA screen instead of login form when needed
+  if (showMFA) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        {/* Header - keep the same header */}
+        <header className="bg-white border-b border-gray-200 p-4">
+          <div className="container mx-auto flex justify-between items-center">
+            <Link to="/" className="text-2xl font-bold text-trustbond-primary">
+              TrustBond
+            </Link>
+            <nav className="flex items-center gap-4">
+              <Link to="/" className="text-trustbond-dark hover:text-trustbond-primary transition-colors">
+                Home
+              </Link>
+              <Link to="/register" className="text-trustbond-primary font-medium">
+                Register
+              </Link>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={toggleMode}
+                className="flex items-center gap-1"
+              >
+                {isDemoMode 
+                  ? <ToggleLeft className="h-4 w-4 text-trustbond-primary" /> 
+                  : <ToggleRight className="h-4 w-4 text-green-600" />
+                }
+                <span className="text-xs">{isDemoMode ? "Demo" : "Production"}</span>
+              </Button>
+            </nav>
+          </div>
+        </header>
+
+        {/* MFA Form */}
+        <main className="flex-1 flex items-center justify-center bg-gray-50 p-6">
+          <div className="w-full max-w-md">
+            <Button 
+              variant="ghost" 
+              className="mb-4" 
+              onClick={() => setShowMFA(false)}
+            >
+              ← Back to Login
+            </Button>
+            
+            <MultifactorAuth 
+              onComplete={handleMFAComplete} 
+              email={email || undefined}
+            />
+          </div>
+        </main>
+
+        {/* Footer - keep same footer */}
+        <footer className="bg-white border-t border-gray-200 p-4 text-center text-gray-500 text-sm">
+          © 2025 TrustBond. All rights reserved.
+        </footer>
+      </div>
+    );
+  }
+
+  // Rest of the component remains unchanged
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
