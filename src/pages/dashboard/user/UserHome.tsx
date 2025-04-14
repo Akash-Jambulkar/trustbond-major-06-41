@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +16,7 @@ const UserHome = () => {
         <NetworkStatus />
       </div>
       
+      {/* Dashboard cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -68,6 +68,7 @@ const UserHome = () => {
         </Card>
       </div>
       
+      {/* Tabs section */}
       <Tabs defaultValue="activity">
         <TabsList>
           <TabsTrigger value="activity">Recent Activity</TabsTrigger>

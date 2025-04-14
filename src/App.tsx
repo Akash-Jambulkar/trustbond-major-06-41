@@ -75,14 +75,17 @@ function App() {
               </ProtectedRoute>
             } />
 
-            {/* User Dashboard */}
-            <Route path="/dashboard/user" element={
-              <ProtectedRoute allowedRoles={["user"]}>
-                <DashboardLayout>
-                  <UserDashboard />
-                </DashboardLayout>
-              </ProtectedRoute>
-            }>
+            {/* User Dashboard - Fixed to avoid duplicate DashboardLayout */}
+            <Route 
+              path="/dashboard/user" 
+              element={
+                <ProtectedRoute allowedRoles={["user"]}>
+                  <DashboardLayout>
+                    <UserDashboard />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            >
               <Route index element={<UserHome />} />
               <Route path="kyc" element={<KYCPage />} />
               <Route path="loans" element={<LoansPage />} />
@@ -93,14 +96,17 @@ function App() {
               <Route path="transactions" element={<BlockchainTransactionsPage />} />
             </Route>
 
-            {/* Bank Dashboard */}
-            <Route path="/dashboard/bank" element={
-              <ProtectedRoute allowedRoles={["bank"]}>
-                <DashboardLayout>
-                  <BankDashboard />
-                </DashboardLayout>
-              </ProtectedRoute>
-            }>
+            {/* Bank Dashboard - Fixed to avoid duplicate DashboardLayout */}
+            <Route 
+              path="/dashboard/bank" 
+              element={
+                <ProtectedRoute allowedRoles={["bank"]}>
+                  <DashboardLayout>
+                    <BankDashboard />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            >
               <Route index element={<BankHome />} />
               <Route path="verify-kyc" element={<VerifyKYC />} />
               <Route path="consensus-verification" element={<ConsensusVerificationPage />} />
@@ -114,14 +120,17 @@ function App() {
               <Route path="transactions" element={<BlockchainTransactionsPage />} />
             </Route>
 
-            {/* Admin Dashboard */}
-            <Route path="/dashboard/admin" element={
-              <ProtectedRoute allowedRoles={["admin"]}>
-                <DashboardLayout>
-                  <AdminDashboard />
-                </DashboardLayout>
-              </ProtectedRoute>
-            }>
+            {/* Admin Dashboard - Fixed to avoid duplicate DashboardLayout */}
+            <Route 
+              path="/dashboard/admin" 
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <DashboardLayout>
+                    <AdminDashboard />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            >
               <Route index element={<AdminHome />} />
               <Route path="users" element={<AdminUsers />} />
               <Route path="banks" element={<AdminBanks />} />
