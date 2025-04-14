@@ -78,3 +78,23 @@ export type BlockchainTransactionType = {
   timestamp: number;
   created_at: string;
 };
+
+// Consensus verification result type
+export type ConsensusVerificationResult = {
+  documentId: string;
+  status: "pending" | "in_progress" | "approved" | "rejected";
+  votesRequired: number;
+  votesReceived: number;
+  approvalsReceived: number;
+  rejectionsReceived: number;
+  votes: {
+    bankId: string;
+    bankName: string;
+    approved: boolean;
+    timestamp: string;
+    notes?: string;
+  }[];
+  progress: number;
+  consensusReached: boolean;
+  finalDecision: boolean | null;
+};

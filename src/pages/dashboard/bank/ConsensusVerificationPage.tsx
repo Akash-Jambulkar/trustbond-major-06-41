@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { ConsensusVerificationPanel } from "@/components/bank/ConsensusVerificationPanel";
 import { 
@@ -10,11 +10,37 @@ import {
   CardTitle 
 } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertTriangle, Shield, Users } from "lucide-react";
+import { AlertTriangle, Shield, Users, Clock } from "lucide-react";
 import { useBlockchain } from "@/contexts/BlockchainContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { getDocumentsNeedingConsensus } from "@/utils/consensusVerifier";
+import { KycDocumentSubmissionType } from "@/types/supabase-extensions";
+import { toast } from "sonner";
 
 const ConsensusVerificationPage = () => {
   const { isConnected } = useBlockchain();
+  const { user } = useAuth();
+  const [documentsCount, setDocumentsCount] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  
+  useEffect(() => {
+    const fetchDocumentsCount = async () => {
+      if (!isConnected || !user) return;
+      
+      try {
+        setIsLoading(true);
+        const documents = await getDocumentsNeedingConsensus();
+        setDocumentsCount(documents.length);
+      } catch (error) {
+        console.error("Error fetching documents count:", error);
+        toast.error("Failed to load pending verifications");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchDocumentsCount();
+  }, [isConnected, user]);
   
   return (
     <DashboardLayout>
@@ -32,6 +58,16 @@ const ConsensusVerificationPage = () => {
             <AlertTitle>Wallet Not Connected</AlertTitle>
             <AlertDescription>
               Please connect your wallet to participate in consensus verification.
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {isConnected && !isLoading && documentsCount > 0 && (
+          <Alert className="bg-amber-50 border-amber-200">
+            <Clock className="h-4 w-4 text-amber-600" />
+            <AlertTitle className="text-amber-800">Documents Awaiting Verification</AlertTitle>
+            <AlertDescription className="text-amber-700">
+              There {documentsCount === 1 ? 'is' : 'are'} {documentsCount} document{documentsCount !== 1 ? 's' : ''} awaiting consensus verification.
             </AlertDescription>
           </Alert>
         )}

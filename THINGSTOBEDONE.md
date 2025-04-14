@@ -63,7 +63,7 @@ This document outlines the key components, features, and tasks required to build
 - [x] Implement chain indexer to sync on-chain events
 - [x] Create verification proofs on successful KYC
 - [x] Store verification attestations on chain
-- [ ] Implement consensus mechanism for multi-bank verifications
+- [x] Implement consensus mechanism for multi-bank verifications
 
 #### 4. Bank Network Features
 - [x] Complete bank dashboard
