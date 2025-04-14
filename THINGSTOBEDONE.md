@@ -81,7 +81,7 @@ This document outlines the key components, features, and tasks required to build
 
 #### 6. Security Enhancements
 - [x] Implement document encryption
-- [ ] Add multi-factor authentication
+- [x] Add multi-factor authentication
 - [ ] Create secure key management
 - [x] Implement role-based access control
 - [x] Set up audit logging for all critical operations
@@ -177,7 +177,7 @@ This document outlines the key components, features, and tasks required to build
 2. ✓ Add bank registration and verification process
 3. ✓ Complete loan application workflow and scoring algorithms
 4. ✓ Set up secure document sharing between banks
-5. [ ] Implement multi-factor authentication for enhanced security
+5. ✓ Implement multi-factor authentication for enhanced security
 6. [ ] Create comprehensive test suite and compliance checks
 
 ## Long-term Vision
