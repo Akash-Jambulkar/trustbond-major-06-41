@@ -1,6 +1,6 @@
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { CheckCircle2, Info, AlertCircle, Clock } from "lucide-react";
+import { CheckCircle2, Info, AlertCircle, Clock, ShieldAlert } from "lucide-react";
 import { useMode } from "@/contexts/ModeContext";
 import { formatDistanceToNow } from "date-fns";
 
@@ -9,13 +9,17 @@ interface KYCStatusDisplayProps {
   isLoading: boolean;
   isConnected: boolean;
   verificationTimestamp?: number | null;
+  isRejected?: boolean;
+  rejectionReason?: string | null;
 }
 
 export const KYCStatusDisplay = ({ 
   kycStatus, 
   isLoading, 
   isConnected,
-  verificationTimestamp 
+  verificationTimestamp,
+  isRejected = false,
+  rejectionReason = null
 }: KYCStatusDisplayProps) => {
   const { isProductionMode } = useMode();
   
@@ -33,7 +37,7 @@ export const KYCStatusDisplay = ({
 
   return (
     <>
-      {kycStatus !== null && (
+      {kycStatus !== null && !isRejected && (
         <Alert className={kycStatus ? "bg-green-50 border-green-200" : "bg-amber-50 border-amber-200"}>
           {kycStatus ? (
             <CheckCircle2 className="h-4 w-4 text-green-600" />
@@ -41,7 +45,7 @@ export const KYCStatusDisplay = ({
             <Info className="h-4 w-4 text-amber-600" />
           )}
           <AlertTitle className={kycStatus ? "text-green-800" : "text-amber-800"}>
-            {kycStatus ? "KYC Verified" : "KYC Not Verified"}
+            {kycStatus ? "KYC Verified" : "KYC Pending Verification"}
           </AlertTitle>
           <AlertDescription className={kycStatus ? "text-green-700" : "text-amber-700"}>
             {kycStatus 
@@ -50,7 +54,17 @@ export const KYCStatusDisplay = ({
                     ? ` (Verified ${formatDistanceToNow(verificationTimestamp)} ago)` 
                     : ""
                 }`
-              : "Your KYC documents are pending verification or have not been submitted. Please submit or wait for verification."}
+              : "Your KYC documents are pending verification. The average verification time is 24-48 hours. We'll notify you once verification is complete."}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {isRejected && (
+        <Alert variant="destructive" className="bg-red-50 border-red-200">
+          <ShieldAlert className="h-4 w-4 text-red-600" />
+          <AlertTitle className="text-red-800">KYC Verification Failed</AlertTitle>
+          <AlertDescription className="text-red-700">
+            {rejectionReason || "Your KYC documents could not be verified. Please resubmit with clearer documents or contact support for assistance."}
           </AlertDescription>
         </Alert>
       )}
@@ -65,7 +79,7 @@ export const KYCStatusDisplay = ({
         </Alert>
       )}
 
-      {isProductionMode && kycStatus === null && isConnected && (
+      {isProductionMode && kycStatus === null && isConnected && !isRejected && (
         <Alert className="bg-blue-50 border-blue-200">
           <Info className="h-4 w-4 text-blue-600" />
           <AlertTitle className="text-blue-800">First-Time Setup</AlertTitle>

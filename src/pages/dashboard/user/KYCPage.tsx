@@ -8,7 +8,7 @@ import { useMode } from "@/contexts/ModeContext";
 
 const KYCPage = () => {
   const { isConnected } = useBlockchain();
-  const { kycStatus, isLoading, verificationTimestamp } = useKYCStatus();
+  const { kycStatus, isLoading, verificationTimestamp, isRejected, rejectionReason } = useKYCStatus();
   const { isProductionMode } = useMode();
 
   return (
@@ -28,6 +28,8 @@ const KYCPage = () => {
           isLoading={isLoading}
           isConnected={isConnected}
           verificationTimestamp={verificationTimestamp}
+          isRejected={isRejected}
+          rejectionReason={rejectionReason}
         />
 
         <KYCTabs />
