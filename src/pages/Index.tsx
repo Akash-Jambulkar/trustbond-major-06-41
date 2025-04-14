@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, Shield, BarChart3, Building2, CreditCard, Lock, RefreshCw, Users } from "lucide-react";
+import Footer from "@/components/Footer";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -177,11 +178,9 @@ const Index = () => {
           </div>
           
           <div className="relative">
-            {/* Connection line */}
             <div className="hidden md:block absolute left-1/2 top-12 bottom-12 w-0.5 bg-gray-200 -translate-x-1/2 z-0"></div>
             
             <div className="space-y-12 relative z-10">
-              {/* Step 1 */}
               <div className="md:flex items-center">
                 <div className="md:w-1/2 md:pr-12 mb-6 md:mb-0 md:text-right">
                   <h3 className="text-xl font-semibold text-trustbond-dark mb-3">Document Submission</h3>
@@ -195,7 +194,6 @@ const Index = () => {
                 <div className="md:w-1/2 md:pl-12 hidden md:block"></div>
               </div>
               
-              {/* Step 2 */}
               <div className="md:flex items-center">
                 <div className="md:w-1/2 md:pr-12 hidden md:block"></div>
                 <div className="md:w-24 mx-auto md:mx-0 h-12 w-12 rounded-full bg-trustbond-primary flex items-center justify-center text-white font-semibold">
@@ -209,7 +207,6 @@ const Index = () => {
                 </div>
               </div>
               
-              {/* Step 3 */}
               <div className="md:flex items-center">
                 <div className="md:w-1/2 md:pr-12 mb-6 md:mb-0 md:text-right">
                   <h3 className="text-xl font-semibold text-trustbond-dark mb-3">Trust Score Generation</h3>
@@ -223,7 +220,6 @@ const Index = () => {
                 <div className="md:w-1/2 md:pl-12 hidden md:block"></div>
               </div>
               
-              {/* Step 4 */}
               <div className="md:flex items-center">
                 <div className="md:w-1/2 md:pr-12 hidden md:block"></div>
                 <div className="md:w-24 mx-auto md:mx-0 h-12 w-12 rounded-full bg-trustbond-primary flex items-center justify-center text-white font-semibold">
@@ -309,43 +305,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-trustbond-dark text-white py-12 px-6">
-        <div className="container mx-auto max-w-5xl">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="text-xl font-bold mb-4">TrustBond</h3>
-              <p className="text-white/70">
-                Blockchain-powered identity verification and financial services platform.
-              </p>
-            </div>
-            <div>
-              <h4 className="text-lg font-semibold mb-3">Quick Links</h4>
-              <ul className="space-y-2">
-                <li><Link to="/" className="text-white/70 hover:text-white transition-colors">Home</Link></li>
-                <li><Link to="/about" className="text-white/70 hover:text-white transition-colors">About</Link></li>
-                <li><Link to="/whitepaper" className="text-white/70 hover:text-white transition-colors">Whitepaper</Link></li>
-                <li><Link to="/contact" className="text-white/70 hover:text-white transition-colors">Contact</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-lg font-semibold mb-3">Legal</h4>
-              <ul className="space-y-2">
-                <li><Link to="/privacy" className="text-white/70 hover:text-white transition-colors">Privacy Policy</Link></li>
-                <li><Link to="/terms" className="text-white/70 hover:text-white transition-colors">Terms of Service</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-lg font-semibold mb-3">Contact</h4>
-              <p className="text-white/70 mb-2">info@trustbond.com</p>
-              <p className="text-white/70">+1 (555) 123-4567</p>
-            </div>
-          </div>
-          <div className="mt-8 pt-8 border-t border-white/10 text-center text-white/60 text-sm">
-            &copy; {new Date().getFullYear()} TrustBond. All rights reserved.
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };
