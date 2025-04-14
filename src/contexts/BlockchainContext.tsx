@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useMode } from "@/contexts/ModeContext";
 import Web3 from "web3";
@@ -640,9 +639,3 @@ export const useBlockchain = () => {
   }
   return context;
 };
-
-declare global {
-  interface Window {
-    ethereum: any;
-  }
-}
