@@ -43,6 +43,7 @@ export interface TransactionMetadata {
   status: "pending" | "confirmed" | "failed";
   network: string;
   blockNumber?: number;
+  [key: string]: string | number | boolean | undefined; // Add index signature to make it compatible with Json
 }
 
 export interface BlockchainTransactionType {

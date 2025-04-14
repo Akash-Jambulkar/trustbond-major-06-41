@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { BlockchainTransactionType, TransactionMetadata } from "@/types/supabase-extensions";
+import { Json } from "@/integrations/supabase/types";
 
 // Transaction types
 export type TransactionType = 'kyc' | 'loan' | 'verification' | 'registration' | 'other';
@@ -43,6 +44,14 @@ export const trackTransaction = async (
   };
 
   try {
+    // Convert TransactionMetadata to Json-compatible object
+    const txMetadata: Record<string, Json> = {
+      description: transaction.description,
+      status: transaction.status,
+      network: String(transaction.network),
+      blockNumber: transaction.blockNumber
+    };
+
     // Store transaction in Supabase
     const { error } = await supabase
       .from('blockchain_transactions')
@@ -55,12 +64,7 @@ export const trackTransaction = async (
         gas_used: "0", // Default value, will be updated when transaction is confirmed
         type: transaction.type,
         timestamp: transaction.timestamp,
-        metadata: {
-          description: transaction.description,
-          status: transaction.status,
-          network: String(transaction.network),
-          blockNumber: transaction.blockNumber
-        } as TransactionMetadata
+        metadata: txMetadata
       });
     
     if (error) {
@@ -101,15 +105,15 @@ export const updateTransactionStatus = async (
       return;
     }
     
-    // Create safe typed metadata from existing data
-    const existingMetadata = existingTx?.metadata as TransactionMetadata || {} as TransactionMetadata;
+    // Create safe metadata from existing data
+    const existingMetadata = existingTx?.metadata as Record<string, Json> || {};
     
     // Update the metadata with new information
-    const updatedMetadata: TransactionMetadata = {
+    const updatedMetadata: Record<string, Json> = {
       ...existingMetadata,
       status: status,
       blockNumber: blockNumber,
-      ...(metadata as object || {})
+      ...(metadata as Record<string, Json> || {})
     };
     
     // Update transaction in Supabase
@@ -129,8 +133,8 @@ export const updateTransactionStatus = async (
     }
     
     // Safely access metadata
-    const txMetadata = data.metadata as TransactionMetadata || {} as TransactionMetadata;
-    const description = txMetadata.description || "Transaction";
+    const txMetadata = data.metadata as Record<string, Json> || {};
+    const description = txMetadata.description as string || "Transaction";
     
     // Show toast notification based on status
     if (status === 'confirmed') {
@@ -165,17 +169,17 @@ export const getTransactions = async (account: string): Promise<Transaction[]> =
     
     return data.map(tx => {
       // Type-cast the metadata safely
-      const txMetadata = tx.metadata as TransactionMetadata || {} as TransactionMetadata;
+      const txMetadata = tx.metadata as Record<string, Json> || {};
       
       return {
         hash: tx.hash,
         timestamp: tx.timestamp,
-        status: txMetadata.status || 'pending' as TransactionStatus,
+        status: (txMetadata.status as string || 'pending') as TransactionStatus,
         type: tx.type as TransactionType,
-        description: txMetadata.description || "",
+        description: txMetadata.description as string || "",
         account: tx.from_address,
-        network: txMetadata.network || "",
-        blockNumber: txMetadata.blockNumber,
+        network: txMetadata.network as string || "",
+        blockNumber: txMetadata.blockNumber as number | undefined,
         metadata: tx.metadata
       };
     });
