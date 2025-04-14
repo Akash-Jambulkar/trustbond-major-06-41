@@ -17,6 +17,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import MFAVerification from "@/components/auth/MFAVerification";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -29,6 +30,8 @@ type ContactFormValues = z.infer<typeof formSchema>;
 
 const ContactForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showMFA, setShowMFA] = useState(false);
+  const [formData, setFormData] = useState<ContactFormValues | null>(null);
 
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(formSchema),
@@ -41,15 +44,42 @@ const ContactForm = () => {
   });
 
   const onSubmit = async (data: ContactFormValues) => {
+    // Store form data and show MFA verification
+    setFormData(data);
+    setShowMFA(true);
+  };
+
+  const handleMFAVerify = () => {
+    if (!formData) return;
+    
     setIsSubmitting(true);
     
-    // Simulate API call
+    // Simulate API call with the verified data
     setTimeout(() => {
       toast.success("Message sent successfully! We'll get back to you soon.");
       form.reset();
       setIsSubmitting(false);
+      setShowMFA(false);
+      setFormData(null);
     }, 1500);
   };
+
+  const handleMFACancel = () => {
+    setShowMFA(false);
+    setFormData(null);
+  };
+
+  if (showMFA && formData) {
+    return (
+      <div className="bg-white rounded-lg shadow-lg p-8">
+        <MFAVerification 
+          email={formData.email}
+          onVerify={handleMFAVerify}
+          onCancel={handleMFACancel}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-8">
