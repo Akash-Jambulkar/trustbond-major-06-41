@@ -1,3 +1,4 @@
+
 import {
   BrowserRouter as Router,
   Route,
@@ -8,18 +9,18 @@ import Register from "./pages/Register";
 import Login from "./pages/Login";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
-import { DashboardLayout } from "./layouts/DashboardLayout";
-import UserDashboard from "./pages/dashboard/user/UserDashboard";
-import BankDashboard from "./pages/dashboard/bank/BankDashboard";
-import AdminDashboard from "./pages/dashboard/admin/AdminDashboard";
+import { DashboardLayout } from "./components/DashboardLayout";
+import UserDashboard from "./pages/dashboard/UserDashboard";
+import BankDashboard from "./pages/dashboard/BankDashboard";
+import AdminDashboard from "./pages/dashboard/AdminDashboard";
 import KYCPage from "./pages/dashboard/user/KYCPage";
 import LoanApplicationPage from "./pages/dashboard/user/LoanApplicationPage";
 import BlockchainTransactionsPage from "./pages/dashboard/BlockchainTransactionsPage";
-import ModeToggle from "./components/ModeToggle";
+import { ModeToggle } from "./components/ModeToggle";
 import { ModeProvider } from "./contexts/ModeContext";
 import { BlockchainProvider } from "./contexts/BlockchainContext";
 import BankRegistrationPage from "./pages/dashboard/admin/BankRegistrationPage";
-import BankVerificationPage from "./pages/dashboard/bank/BankVerificationPage";
+import BankVerificationPage from "./pages/dashboard/bank/verify-kyc";
 import LoansPage from "./pages/dashboard/user/LoansPage";
 import LoanDetailsPage from "./pages/dashboard/user/LoanDetailsPage";
 

@@ -1,40 +1,48 @@
 
-import { useEffect } from "react";
-import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
-import { DashboardLayout } from "@/components/DashboardLayout";
+import React from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-// Dashboard Pages
-import AdminHome from "./admin/AdminHome";
-import AdminProfile from "./admin/AdminProfile";
-import BlockchainSetup from "./admin/BlockchainSetup";
-import AdminSettings from "./admin/AdminSettings";
-import AdminBanks from "./AdminBanks";
-import AdminUsers from "./admin/AdminUsers";
-
-// Main Admin Dashboard Component with Routing
 const AdminDashboard = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  
-  // Redirect to home if at the parent route
-  useEffect(() => {
-    if (location.pathname === "/dashboard/admin") {
-      navigate("/dashboard/admin/home");
-    }
-  }, [location, navigate]);
+  const { user } = useAuth();
 
   return (
-    <DashboardLayout>
-      <Routes>
-        <Route path="/" element={<AdminHome />} />
-        <Route path="home" element={<AdminHome />} />
-        <Route path="profile" element={<AdminProfile />} />
-        <Route path="blockchain-setup" element={<BlockchainSetup />} />
-        <Route path="settings" element={<AdminSettings />} />
-        <Route path="banks" element={<AdminBanks />} />
-        <Route path="users" element={<AdminUsers />} />
-      </Routes>
-    </DashboardLayout>
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+      <p className="text-muted-foreground">Welcome back, {user?.name}</p>
+      
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle>System Overview</CardTitle>
+            <CardDescription>Platform statistics</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p>View platform statistics and metrics</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Bank Management</CardTitle>
+            <CardDescription>Manage bank accounts</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p>Register and manage bank accounts</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Blockchain Setup</CardTitle>
+            <CardDescription>Configure blockchain settings</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p>Configure smart contracts and network settings</p>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 };
 

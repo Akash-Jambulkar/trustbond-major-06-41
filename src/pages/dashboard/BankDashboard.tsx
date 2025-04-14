@@ -1,40 +1,48 @@
 
-import { useEffect } from "react";
-import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
-import { DashboardLayout } from "@/components/DashboardLayout";
+import React from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-// Dashboard Pages
-import BankHome from "./bank/BankHome";
-import BankProfile from "./bank/BankProfile";
-import VerifyKYC from "./bank/VerifyKYC";
-import BankLoans from "./bank/BankLoans";
-import BankTrustScores from "./bank/BankTrustScores";
-import ManageLoansPage from "./bank/ManageLoans";
-
-// Main Bank Dashboard Component with Routing
 const BankDashboard = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  
-  // Redirect to home if at the parent route
-  useEffect(() => {
-    if (location.pathname === "/dashboard/bank") {
-      navigate("/dashboard/bank/home");
-    }
-  }, [location, navigate]);
+  const { user } = useAuth();
 
   return (
-    <DashboardLayout>
-      <Routes>
-        <Route path="/" element={<BankHome />} />
-        <Route path="home" element={<BankHome />} />
-        <Route path="profile" element={<BankProfile />} />
-        <Route path="verify-kyc" element={<VerifyKYC />} />
-        <Route path="loans" element={<BankLoans />} />
-        <Route path="manage-loans" element={<ManageLoansPage />} />
-        <Route path="trust-scores" element={<BankTrustScores />} />
-      </Routes>
-    </DashboardLayout>
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold">Bank Dashboard</h1>
+      <p className="text-muted-foreground">Welcome back, {user?.name}</p>
+      
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle>Pending KYC Verifications</CardTitle>
+            <CardDescription>Verification requests awaiting review</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p>Review pending KYC verification requests</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Loan Requests</CardTitle>
+            <CardDescription>Pending loan applications</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p>View and approve loan applications</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Bank Performance</CardTitle>
+            <CardDescription>Activity metrics</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p>Review bank performance statistics</p>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 };
 

@@ -1,40 +1,51 @@
 
-import { useEffect } from "react";
-import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
-import { DashboardLayout } from "@/components/DashboardLayout";
+import React from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-// Dashboard Pages
-import UserHome from "./user/UserHome";
-import UserProfile from "./user/ProfilePage";
-import KYCPage from "./user/KYCPage";
-import LoansPage from "./user/LoansPage";
-import TrustScorePage from "./user/TrustScorePage";
-import LoanApplicationPage from "./user/LoanApplicationPage";
-
-// Main User Dashboard Component with Routing
 const UserDashboard = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  
-  // Redirect to home if at the parent route
-  useEffect(() => {
-    if (location.pathname === "/dashboard/user") {
-      navigate("/dashboard/user/home");
-    }
-  }, [location, navigate]);
+  const { user } = useAuth();
 
   return (
-    <DashboardLayout>
-      <Routes>
-        <Route path="/" element={<UserHome />} />
-        <Route path="home" element={<UserHome />} />
-        <Route path="profile" element={<UserProfile />} />
-        <Route path="kyc" element={<KYCPage />} />
-        <Route path="loans" element={<LoansPage />} />
-        <Route path="trust-score" element={<TrustScorePage />} />
-        <Route path="loan-application" element={<LoanApplicationPage />} />
-      </Routes>
-    </DashboardLayout>
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold">User Dashboard</h1>
+      <p className="text-muted-foreground">Welcome back, {user?.name}</p>
+      
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle>KYC Status</CardTitle>
+            <CardDescription>Your verification status</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {/* Content will be added from KYCPage component */}
+            <p>Check your KYC verification status</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Active Loans</CardTitle>
+            <CardDescription>Your current loan status</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {/* Content will be added from LoansPage component */}
+            <p>View your active loans</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Trust Score</CardTitle>
+            <CardDescription>Your credit rating</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {/* Credit score will be displayed here */}
+            <p>View your current trust score</p>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 };
 
