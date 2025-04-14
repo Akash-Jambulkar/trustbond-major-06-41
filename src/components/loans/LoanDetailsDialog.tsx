@@ -251,7 +251,7 @@ export const LoanDetailsDialog: React.FC<LoanDetailsDialogProps> = ({
                   Cancel
                 </Button>
                 <Button
-                  onClick={() => onFundLoan(loan.id, window.web3.utils.fromWei(loan.amount, "ether"))}
+                  onClick={() => onFundLoan(loan.id, window.web3?.utils.fromWei(loan.amount, "ether") || "0")}
                   disabled={isProcessing}
                 >
                   <CircleDollarSign className="h-4 w-4 mr-1" />

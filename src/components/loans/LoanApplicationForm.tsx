@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,7 +43,7 @@ export const LoanApplicationForm: React.FC<LoanApplicationFormProps> = ({
     
     setIsSubmitting(true);
     try {
-      const amountInWei = window.web3.utils.toWei(loanAmount, "ether");
+      const amountInWei = window.web3?.utils.toWei(loanAmount, "ether");
       
       await loanContract.methods
         .applyForLoan(amountInWei, loanTerm, loanPurpose)

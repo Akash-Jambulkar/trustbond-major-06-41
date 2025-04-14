@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { LoanStats } from "@/components/loans/LoanStats";
 import { LoanApplicationForm } from "@/components/loans/LoanApplicationForm";
 import { LoansList } from "@/components/loans/LoansList";
+import { toast } from "sonner";
 
 const LoanApplicationPage = () => {
   const [activeTab, setActiveTab] = useState<string>("apply");
@@ -78,7 +79,7 @@ const LoanApplicationPage = () => {
   
   const formatAmount = (amount: string) => {
     try {
-      return `${window.web3.utils.fromWei(amount, "ether")} ETH`;
+      return `${window.web3?.utils.fromWei(amount, "ether")} ETH`;
     } catch (error) {
       return amount;
     }

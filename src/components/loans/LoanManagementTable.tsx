@@ -123,7 +123,7 @@ export const LoanManagementTable: React.FC<LoanManagementTableProps> = ({
                     size="sm" 
                     variant="outline" 
                     className="bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800 border-blue-200"
-                    onClick={() => onFundLoan(loan.id, window.web3.utils.fromWei(loan.amount, "ether"))}
+                    onClick={() => onFundLoan(loan.id, window.web3?.utils.fromWei(loan.amount, "ether") || "0")}
                     disabled={isProcessing}
                   >
                     <CircleDollarSign className="h-4 w-4 mr-1" />

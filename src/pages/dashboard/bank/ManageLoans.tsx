@@ -143,7 +143,7 @@ const ManageLoansPage = () => {
     
     setIsProcessing(true);
     try {
-      const amountInWei = window.web3.utils.toWei(amount, "ether");
+      const amountInWei = window.web3?.utils.toWei(amount, "ether");
       
       await loanContract.methods
         .fundLoan(loanId)
@@ -215,7 +215,7 @@ const ManageLoansPage = () => {
   
   const formatAmount = (amount: string) => {
     try {
-      return `${window.web3.utils.fromWei(amount, "ether")} ETH`;
+      return `${window.web3?.utils.fromWei(amount, "ether")} ETH`;
     } catch (error) {
       return amount;
     }
