@@ -1,6 +1,6 @@
 
 import { ReactNode } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation, Outlet } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { WalletStatus } from "@/components/WalletStatus";
 import { ModeToggle } from "@/components/ModeToggle";
@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/sidebar";
 
 interface DashboardLayoutProps {
-  children: ReactNode;
+  children?: ReactNode;
 }
 
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
@@ -129,7 +129,6 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
         {/* Main content */}
         <SidebarInset className="p-0">
-          {/* The secondary layout with nested navigation */}
           <div className="flex flex-col h-full overflow-hidden">
             {/* Header */}
             <header className="bg-white border-b border-gray-200 p-4 flex justify-between items-center shadow-sm">
@@ -142,9 +141,9 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               </div>
             </header>
 
-            {/* Nested layout with content and sidebar */}
-            <div className="flex-1 flex overflow-hidden">
-              {children}
+            {/* Content Area */}
+            <div className="flex-1 p-6 overflow-y-auto">
+              {children || <Outlet />}
             </div>
           </div>
         </SidebarInset>

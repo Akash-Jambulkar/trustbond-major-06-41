@@ -6,7 +6,7 @@ import {
   User, 
   FileText, 
   CreditCard, 
-  PieChart, 
+  PieChart,
   LogOut
 } from "lucide-react";
 
@@ -58,15 +58,10 @@ export const NestedDashboardLayout = ({
   };
 
   return (
-    <div className="flex flex-1 overflow-hidden">
+    <div className="flex-1 overflow-hidden">
       {/* Secondary Sidebar */}
-      <div className="w-64 bg-trustbond-primary text-white overflow-y-auto">
-        <div className="p-4 border-b border-trustbond-primary/20">
-          <h1 className="text-2xl font-bold">TrustBond</h1>
-          <p className="text-sm text-white/70">USER Dashboard</p>
-        </div>
-        
-        <nav className="p-4">
+      <div className="w-64 bg-trustbond-primary text-white h-full overflow-y-auto fixed">
+        <nav className="p-4 space-y-1">
           <ul className="space-y-2">
             {navItems.map((item, index) => (
               <li key={index}>
@@ -98,7 +93,7 @@ export const NestedDashboardLayout = ({
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
+      <div className="ml-64 p-6 bg-gray-50">
         {children}
       </div>
     </div>

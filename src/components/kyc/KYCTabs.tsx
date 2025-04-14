@@ -4,12 +4,15 @@ import { KYCDocumentUpload } from "@/components/kyc/KYCDocumentUpload";
 import { KYCHistory } from "@/components/kyc/KYCHistory";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface KYCTabsProps {
   mfaVerified?: boolean;
 }
 
 export const KYCTabs = ({ mfaVerified = true }: KYCTabsProps) => {
+  const { user } = useAuth();
+  
   return (
     <Tabs defaultValue="upload" className="w-full">
       <TabsList className="grid w-full grid-cols-2">
@@ -29,6 +32,7 @@ export const KYCTabs = ({ mfaVerified = true }: KYCTabsProps) => {
       <TabsContent value="upload" className="mt-4">
         {mfaVerified ? <KYCDocumentUpload /> : null}
       </TabsContent>
+      
       <TabsContent value="history" className="mt-4">
         <KYCHistory />
       </TabsContent>

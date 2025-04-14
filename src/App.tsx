@@ -1,4 +1,3 @@
-
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ModeProvider } from './contexts/ModeContext';
@@ -75,14 +74,12 @@ function App() {
               </ProtectedRoute>
             } />
 
-            {/* User Dashboard - Fixed to avoid duplicate DashboardLayout */}
+            {/* User Dashboard */}
             <Route 
               path="/dashboard/user" 
               element={
                 <ProtectedRoute allowedRoles={["user"]}>
-                  <DashboardLayout>
-                    <UserDashboard />
-                  </DashboardLayout>
+                  <DashboardLayout />
                 </ProtectedRoute>
               }
             >
@@ -96,14 +93,12 @@ function App() {
               <Route path="transactions" element={<BlockchainTransactionsPage />} />
             </Route>
 
-            {/* Bank Dashboard - Fixed to avoid duplicate DashboardLayout */}
+            {/* Bank Dashboard */}
             <Route 
               path="/dashboard/bank" 
               element={
                 <ProtectedRoute allowedRoles={["bank"]}>
-                  <DashboardLayout>
-                    <BankDashboard />
-                  </DashboardLayout>
+                  <DashboardLayout />
                 </ProtectedRoute>
               }
             >
@@ -120,14 +115,12 @@ function App() {
               <Route path="transactions" element={<BlockchainTransactionsPage />} />
             </Route>
 
-            {/* Admin Dashboard - Fixed to avoid duplicate DashboardLayout */}
+            {/* Admin Dashboard */}
             <Route 
               path="/dashboard/admin" 
               element={
                 <ProtectedRoute allowedRoles={["admin"]}>
-                  <DashboardLayout>
-                    <AdminDashboard />
-                  </DashboardLayout>
+                  <DashboardLayout />
                 </ProtectedRoute>
               }
             >
