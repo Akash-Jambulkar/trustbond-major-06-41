@@ -5,17 +5,16 @@ import { useBlockchainConnection } from "./useBlockchainConnection";
 import { useTransactionManagement } from "./useTransactionManagement";
 import { useContractInteractions } from "./useContractInteractions";
 import { BlockchainContextType } from "./types";
-import Web3 from "web3";
 
 const BlockchainContext = createContext<BlockchainContextType | undefined>(undefined);
 
 export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
-  const { enableBlockchain, isDemoMode } = useMode();
+  const { enableBlockchain } = useMode();
   
-  // Initialize blockchain connection
+  // Initialize blockchain connection (always production)
   const connection = useBlockchainConnection({ 
     enableBlockchain, 
-    isDemoMode 
+    isDemoMode: false // Always use production blockchain
   });
   
   // Initialize transaction management
