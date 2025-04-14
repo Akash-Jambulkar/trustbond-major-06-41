@@ -19,6 +19,17 @@ import {
   Users,
   Server
 } from "lucide-react";
+import {
+  SidebarProvider,
+  Sidebar,
+  SidebarContent,
+  SidebarHeader,
+  SidebarFooter,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarInset,
+} from "@/components/ui/sidebar";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -76,62 +87,68 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Sidebar */}
-      <aside className="w-64 bg-trustbond-primary text-white">
-        <div className="p-4 border-b border-trustbond-primary/20">
-          <h1 className="text-2xl font-bold">TrustBond</h1>
-          <p className="text-sm text-white/70">{user?.role?.toUpperCase()} Dashboard</p>
-        </div>
-        <nav className="p-4">
-          <ul className="space-y-2">
-            {navItems.map((item, index) => (
-              <li key={index}>
-                <Link
-                  to={item.href}
-                  className={`flex items-center gap-3 p-2 rounded transition-colors ${
-                    isActive(item.href) 
-                      ? 'bg-white/20 text-white' 
-                      : 'hover:bg-trustbond-primary/80 text-white/80 hover:text-white'
-                  }`}
-                >
-                  {item.icon}
-                  <span>{item.label}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-        <div className="absolute bottom-0 w-64 p-4 border-t border-trustbond-primary/20">
-          <Button 
-            onClick={() => logout()} 
-            variant="ghost" 
-            className="flex items-center justify-start w-full text-white hover:bg-trustbond-primary/80"
-          >
-            <LogOut size={20} className="mr-2" />
-            <span>Logout</span>
-          </Button>
-        </div>
-      </aside>
-
-      {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <header className="bg-white border-b border-gray-200 p-4 flex justify-between items-center shadow-sm">
-          <h2 className="text-xl font-semibold text-trustbond-dark">
-            Welcome, {user?.name}
-          </h2>
-          <div className="flex items-center gap-4">
-            <ModeToggle />
-            <WalletStatus />
-          </div>
-        </header>
+    <SidebarProvider>
+      <div className="flex h-screen bg-gray-100">
+        {/* Main Sidebar */}
+        <Sidebar className="bg-trustbond-primary text-white">
+          <SidebarHeader>
+            <div className="flex flex-col space-y-1 p-2">
+              <h1 className="text-2xl font-bold">TrustBond</h1>
+              <p className="text-sm text-white/70">{user?.role?.toUpperCase()} Dashboard</p>
+            </div>
+          </SidebarHeader>
+          <SidebarContent>
+            <SidebarMenu>
+              {navItems.map((item, index) => (
+                <SidebarMenuItem key={index}>
+                  <SidebarMenuButton 
+                    asChild 
+                    isActive={isActive(item.href)}
+                    tooltip={item.label}
+                  >
+                    <Link to={item.href} className="flex items-center gap-3">
+                      {item.icon}
+                      <span>{item.label}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarContent>
+          <SidebarFooter>
+            <Button 
+              onClick={() => logout()} 
+              variant="ghost" 
+              className="w-full text-white hover:bg-trustbond-primary/80 justify-start"
+            >
+              <LogOut size={20} className="mr-2" />
+              <span>Logout</span>
+            </Button>
+          </SidebarFooter>
+        </Sidebar>
 
         {/* Main content */}
-        <main className="flex-1 overflow-y-auto p-6 bg-gray-50">
-          {children}
-        </main>
+        <SidebarInset className="p-0">
+          {/* The secondary layout with nested navigation */}
+          <div className="flex flex-col h-full overflow-hidden">
+            {/* Header */}
+            <header className="bg-white border-b border-gray-200 p-4 flex justify-between items-center shadow-sm">
+              <h2 className="text-xl font-semibold text-trustbond-dark">
+                Welcome, {user?.name}
+              </h2>
+              <div className="flex items-center gap-4">
+                <ModeToggle />
+                <WalletStatus />
+              </div>
+            </header>
+
+            {/* Nested layout with content and sidebar */}
+            <div className="flex-1 flex overflow-hidden">
+              {children}
+            </div>
+          </div>
+        </SidebarInset>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };

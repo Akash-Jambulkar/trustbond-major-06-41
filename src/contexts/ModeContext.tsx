@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { toast } from "sonner";
 
@@ -23,6 +24,7 @@ export const ModeProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem("trustbond_blockchain", "true");
     }
     
+    // Always set to production mode
     localStorage.setItem("trustbond_mode", "production");
   }, []);
 
@@ -38,11 +40,13 @@ export const ModeProvider = ({ children }: { children: ReactNode }) => {
     });
   };
   
+  // Hard-coded production mode values
   const isDemoMode = false;
   const isProductionMode = true;
   const mode = "production" as const;
   
   const toggleMode = () => {
+    // No-op, we're always in production mode
     toast.info("The application is running in production mode");
   };
 
