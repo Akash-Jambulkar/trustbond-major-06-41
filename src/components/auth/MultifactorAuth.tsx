@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -77,6 +76,7 @@ export const MultifactorAuth = ({ onComplete, email }: MultifactorAuthProps) => 
       </CardHeader>
       <CardContent>
         {user?.mfaEnabled ? (
+          
           <div className="space-y-4">
             <div className="flex items-start space-x-4">
               <div className="mt-0.5 bg-green-100 rounded-full p-1">
@@ -107,6 +107,7 @@ export const MultifactorAuth = ({ onComplete, email }: MultifactorAuthProps) => 
             </div>
           </div>
         ) : (
+          
           <div className="space-y-4">
             <div className="flex items-start space-x-4">
               <div className="mt-0.5 bg-amber-100 rounded-full p-1">
@@ -131,6 +132,7 @@ export const MultifactorAuth = ({ onComplete, email }: MultifactorAuthProps) => 
                   <div className="mt-2 text-sm text-blue-700">
                     <ul className="list-disc space-y-1 pl-5">
                       <li>Protection against password theft</li>
+                      <li>Adds an extra verification step when signing in</li>
                       <li>Adds an extra verification step when signing in</li>
                       <li>Prevents unauthorized access to your account</li>
                       <li>Recommended for banking and financial services</li>

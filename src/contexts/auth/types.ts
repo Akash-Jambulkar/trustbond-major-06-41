@@ -1,5 +1,5 @@
 
-export type UserRole = "user" | "bank" | "admin" | null;
+export type UserRole = "user" | "bank" | "admin";
 
 export interface AuthUser {
   id: string;
@@ -15,12 +15,12 @@ export interface AuthUser {
 
 export interface AuthContextType {
   user: AuthUser | null;
-  isAuthenticated: boolean;
   isLoading: boolean;
+  isAuthenticated: boolean;
   isMFARequired: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  loginWithWallet: (walletAddress: string) => Promise<void>;
-  register: (name: string, email: string, password: string, role: UserRole) => Promise<void>;
+  login: (email: string, password: string) => Promise<AuthUser | undefined>;
+  loginWithWallet: (walletAddress: string) => Promise<AuthUser | undefined>;
+  register: (name: string, email: string, password: string, role: UserRole) => Promise<AuthUser | undefined>;
   logout: () => void;
   verifyMFA: (code: string) => Promise<boolean>;
   setupMFA: (phoneNumber: string, method: 'sms' | 'email') => Promise<boolean>;

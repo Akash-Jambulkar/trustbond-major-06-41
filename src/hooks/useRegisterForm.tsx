@@ -2,6 +2,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { UserRole } from "@/contexts/auth/types";
 
 // Define the form validation schema
 const registerSchema = z.object({
@@ -29,7 +30,7 @@ export const useRegisterForm = () => {
       email: "",
       password: "",
       confirmPassword: "",
-      role: "user" as "user" | "bank",
+      role: "user" as const,
     },
     mode: "onChange"
   });

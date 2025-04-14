@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,7 +15,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showMFA, setShowMFA] = useState(false);
-  const { login, loginWithWallet } = useAuth();
+  const { login, loginWithWallet, isMFARequired } = useAuth();
   const { connectWallet, isBlockchainLoading } = useBlockchain();
   const navigate = useNavigate();
 
@@ -23,31 +24,13 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      // Show MFA before completing login
-      setShowMFA(true);
-      setIsLoading(false);
-      return;
+      await login(email, password);
+      // If MFA is required, the auth context will redirect to MFA verification
     } catch (error) {
       console.error("Login submission error:", error);
+      toast.error("Login failed: " + (error instanceof Error ? error.message : "Unknown error"));
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleMFAComplete = async (verified: boolean) => {
-    if (verified) {
-      setIsLoading(true);
-      try {
-        await login(email, password);
-        // Navigation is handled in the login function
-      } catch (error) {
-        console.error("Login after MFA error:", error);
-        toast.error("Login failed: " + (error instanceof Error ? error.message : "Unknown error"));
-      } finally {
-        setIsLoading(false);
-      }
-    } else {
-      setShowMFA(false);
     }
   };
 
@@ -55,11 +38,10 @@ const Login = () => {
     try {
       setIsLoading(true);
       const address = await connectWallet();
-      
-      // Show MFA
-      setShowMFA(true);
-      setIsLoading(false);
-      return;
+      if (address) {
+        await loginWithWallet(address);
+        // If MFA is required, the auth context will redirect to MFA verification
+      }
     } catch (error) {
       console.error("Wallet login error:", error);
       toast.error("Failed to login with wallet: " + (error instanceof Error ? error.message : "Unknown error"));
@@ -68,54 +50,12 @@ const Login = () => {
     }
   };
 
-  // Show MFA screen instead of login form when needed
-  if (showMFA) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        {/* Header - keep the same header */}
-        <header className="bg-white border-b border-gray-200 p-4">
-          <div className="container mx-auto flex justify-between items-center">
-            <Link to="/" className="text-2xl font-bold text-trustbond-primary">
-              TrustBond
-            </Link>
-            <nav className="flex items-center gap-4">
-              <Link to="/" className="text-trustbond-dark hover:text-trustbond-primary transition-colors">
-                Home
-              </Link>
-              <Link to="/register" className="text-trustbond-primary font-medium">
-                Register
-              </Link>
-            </nav>
-          </div>
-        </header>
-
-        {/* MFA Form */}
-        <main className="flex-1 flex items-center justify-center bg-gray-50 p-6">
-          <div className="w-full max-w-md">
-            <Button 
-              variant="ghost" 
-              className="mb-4" 
-              onClick={() => setShowMFA(false)}
-            >
-              ← Back to Login
-            </Button>
-            
-            <MultifactorAuth 
-              onComplete={handleMFAComplete} 
-              email={email} 
-            />
-          </div>
-        </main>
-
-        {/* Footer - keep same footer */}
-        <footer className="bg-white border-t border-gray-200 p-4 text-center text-gray-500 text-sm">
-          © 2025 TrustBond. All rights reserved.
-        </footer>
-      </div>
-    );
+  // Redirect to MFA verify page if MFA is required
+  if (isMFARequired) {
+    navigate("/mfa-verify");
+    return null;
   }
 
-  // Login form view
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}

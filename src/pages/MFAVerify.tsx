@@ -3,12 +3,11 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { InputOTP, InputOTPGroup } from "@/components/ui/input-otp";
 import { Keypad, KeypadButton } from "@/components/ui/keypad";
 import { toast } from "sonner";
-import { Shield, Smartphone, Mail, ArrowLeft } from "lucide-react";
+import { Shield, ArrowLeft } from "lucide-react";
 
 // Custom InputOTPSlot component that doesn't require index prop
 const InputOTPSlot = ({ char, hasFakeCaret, isActive }: { char: string; hasFakeCaret: boolean; isActive: boolean }) => {
@@ -29,7 +28,7 @@ const InputOTPSlot = ({ char, hasFakeCaret, isActive }: { char: string; hasFakeC
 const MFAVerify = () => {
   const [code, setCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { verifyMFA, login, isMFARequired } = useAuth();
+  const { verifyMFA, isMFARequired } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -71,23 +70,8 @@ const MFAVerify = () => {
 
   // If MFA is not required, redirect to login
   if (!isMFARequired) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle>Verification Not Required</CardTitle>
-            <CardDescription>
-              You don't need to verify at this time
-            </CardDescription>
-          </CardHeader>
-          <CardFooter>
-            <Button className="w-full" onClick={handleBackToLogin}>
-              Back to Login
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
-    );
+    navigate("/login");
+    return null;
   }
 
   return (
@@ -117,8 +101,8 @@ const MFAVerify = () => {
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-6">
               <div className="flex items-center justify-center space-x-2 text-sm text-muted-foreground">
-                <Mail className="h-4 w-4" />
-                <span>Verification code was sent via email or SMS</span>
+                <Shield className="h-4 w-4" />
+                <span>Verification code was sent to your email or phone</span>
               </div>
               
               <div className="flex justify-center">
