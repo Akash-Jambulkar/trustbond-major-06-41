@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -179,14 +178,29 @@ const VerifyKYC = () => {
     setHashVerificationResult({ exists: false, isVerifying: true });
     
     try {
-      const result = await verifyHashInDatabase(hashToVerify, supabase);
+      const exists = await verifyHashInDatabase(hashToVerify, supabase);
+      
+      // Get document details if it exists
+      let documentDetails = null;
+      if (exists) {
+        const { data, error } = await supabase
+          .from('kyc_document_submissions')
+          .select('*')
+          .eq('document_hash', hashToVerify)
+          .maybeSingle();
+          
+        if (!error && data) {
+          documentDetails = data;
+        }
+      }
       
       setHashVerificationResult({
-        ...result,
+        exists,
+        documentDetails,
         isVerifying: false
       });
       
-      if (result.exists) {
+      if (exists) {
         toast.success("Document hash verification successful");
       } else {
         toast.error("Document hash not found in the system");
@@ -556,7 +570,7 @@ const VerifyKYC = () => {
               
               <div className="space-y-2 sm:col-span-2">
                 <h3 className="text-sm font-medium">Document Hash Verification</h3>
-                <div className="rounded-md border p-3 space-y-2 bg-gray-50">
+                <div className="rounded-md border p-3 mt-3 bg-gray-50">
                   <div className="grid grid-cols-4">
                     <div className="text-sm font-medium">Hash:</div>
                     <div className="text-xs font-mono col-span-3 truncate">
