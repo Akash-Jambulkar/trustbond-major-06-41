@@ -78,19 +78,18 @@ export const useKYCStatus = () => {
         // Try to also get data from Supabase if available
         try {
           if (supabase) {
-            // Simplify the type to avoid deep instantiation
-            interface SimpleSubmissionResponse {
-              data: any[] | null;
-              error: Error | null;
-            }
-            
-            // Use a simple type assertion to avoid complex type inference
-            const { data, error } = await supabase
+            // Avoid type instantiation issues by using any type for supabase response
+            // and then manually verifying and shaping the data
+            const result = await supabase
               .from('kyc_document_submissions')
               .select('*')
               .eq('wallet_address', account)
               .order('submitted_at', { ascending: false })
-              .limit(1) as unknown as SimpleSubmissionResponse;
+              .limit(1);
+            
+            // Manually extract data and error to avoid complex type inference
+            const data = result.data;
+            const error = result.error;
               
             if (!error && data && data.length > 0) {
               const submission = data[0];
