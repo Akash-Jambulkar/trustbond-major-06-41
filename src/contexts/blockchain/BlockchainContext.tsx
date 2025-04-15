@@ -13,8 +13,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
   
   // Initialize blockchain connection (always production)
   const connection = useBlockchainConnection({ 
-    enableBlockchain, 
-    isDemoMode: false // Always use production blockchain
+    enableBlockchain
   });
   
   // Initialize transaction management
