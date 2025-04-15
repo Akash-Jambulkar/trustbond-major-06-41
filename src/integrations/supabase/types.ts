@@ -22,6 +22,7 @@ export type Database = {
           role: string
           trust_score: number | null
           updated_at: string
+          user_id: string | null
           wallet_address: string | null
         }
         Insert: {
@@ -36,6 +37,7 @@ export type Database = {
           role: string
           trust_score?: number | null
           updated_at?: string
+          user_id?: string | null
           wallet_address?: string | null
         }
         Update: {
@@ -50,6 +52,7 @@ export type Database = {
           role?: string
           trust_score?: number | null
           updated_at?: string
+          user_id?: string | null
           wallet_address?: string | null
         }
         Relationships: []

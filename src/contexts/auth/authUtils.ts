@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { User, UserRole } from "./types";
@@ -59,7 +58,7 @@ export const createUserWithProfile = async (
       .insert([
         {
           id: data.user.id,
-          user_id: data.user.id,
+          user_id: data.user.id,  // Now explicitly setting user_id
           email: email,
           name: name,
           role: role,
