@@ -1,10 +1,12 @@
 
-import { createContext, useContext, ReactNode } from "react";
+import { createContext, useContext, ReactNode, useEffect } from "react";
 import { useMode } from "../ModeContext";
 import { useBlockchainConnection } from "./useBlockchainConnection";
 import { useTransactionManagement } from "./useTransactionManagement";
 import { useContractInteractions } from "./useContractInteractions";
 import { BlockchainContextType } from "./types";
+import { setupBasicEventListeners } from "@/utils/eventListener";
+import { toast } from "sonner";
 
 const BlockchainContext = createContext<BlockchainContextType | undefined>(undefined);
 
@@ -51,6 +53,32 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     trackAndWatchTransaction,
     refreshTransactions: transactionManager.refreshTransactions
   });
+
+  // Set up event listeners for real-time updates
+  useEffect(() => {
+    if (connection.isConnected && 
+        connection.kycContract && 
+        connection.trustScoreContract && 
+        connection.loanContract) {
+      
+      // Set up basic event listeners for blockchain events
+      setupBasicEventListeners(
+        connection.kycContract,
+        connection.trustScoreContract,
+        connection.loanContract
+      );
+      
+      toast.success("Real-time blockchain monitoring activated", {
+        description: "You'll receive instant notifications for all blockchain events",
+        duration: 5000
+      });
+    }
+    
+    // Clean up listeners when component unmounts or connection changes
+    return () => {
+      // The stopAllEventListeners function is imported and called by setupBasicEventListeners
+    };
+  }, [connection.isConnected, connection.kycContract, connection.trustScoreContract, connection.loanContract]);
 
   // Combine all context values
   const contextValue: BlockchainContextType = {
