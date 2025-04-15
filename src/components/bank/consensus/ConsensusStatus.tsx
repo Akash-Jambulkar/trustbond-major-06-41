@@ -11,30 +11,38 @@ import {
   Clock, 
   AlertTriangle 
 } from "lucide-react";
-import { ConsensusStatus, type ConsensusResult, type VerificationVote } from "@/utils/consensusVerifier";
+import { type ConsensusResult, type VerificationVote } from "@/utils/consensusVerifier";
+
+// Define the status enum separately to avoid using the type as a value
+enum ConsensusStatusEnum {
+  APPROVED = "APPROVED",
+  REJECTED = "REJECTED",
+  IN_PROGRESS = "IN_PROGRESS",
+  PENDING = "PENDING"
+}
 
 interface ConsensusStatusProps {
   consensusData: ConsensusResult;
 }
 
 export function ConsensusStatusComponent({ consensusData }: ConsensusStatusProps) {
-  const getStatusBadge = (status: ConsensusStatus) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
-      case ConsensusStatus.APPROVED:
+      case "approved":
         return (
           <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 flex items-center gap-1">
             <CheckCircle2 className="h-3 w-3" />
             <span>Approved</span>
           </Badge>
         );
-      case ConsensusStatus.REJECTED:
+      case "rejected":
         return (
           <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 flex items-center gap-1">
             <XCircle className="h-3 w-3" />
             <span>Rejected</span>
           </Badge>
         );
-      case ConsensusStatus.IN_PROGRESS:
+      case "in_progress":
         return (
           <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 flex items-center gap-1">
             <Clock className="h-3 w-3" />

@@ -27,6 +27,7 @@ type KYCDocument = {
   verificationDate?: string;
   documentHash?: string;
   documentFiles: string[];
+  blockchain_tx_hash?: string;
 };
 
 const VerifyKYC = () => {
@@ -98,7 +99,8 @@ const VerifyKYC = () => {
                   submissionDate: new Date(doc.submitted_at).toLocaleDateString(),
                   verificationDate: doc.verified_at ? new Date(doc.verified_at).toLocaleDateString() : undefined,
                   documentHash: doc.document_hash,
-                  documentFiles: ["document.jpg"]
+                  documentFiles: ["document.jpg"],
+                  blockchain_tx_hash: doc.blockchain_tx_hash
                 };
               } catch (err) {
                 console.error("Error processing document:", err);
@@ -112,7 +114,8 @@ const VerifyKYC = () => {
                   submissionDate: new Date(doc.submitted_at).toLocaleDateString(),
                   verificationDate: doc.verified_at ? new Date(doc.verified_at).toLocaleDateString() : undefined,
                   documentHash: doc.document_hash,
-                  documentFiles: ["document.jpg"]
+                  documentFiles: ["document.jpg"],
+                  blockchain_tx_hash: doc.blockchain_tx_hash
                 };
               }
             })

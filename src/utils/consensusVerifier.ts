@@ -3,7 +3,12 @@ import { kycSubmissionsTable, kycVerificationVotesTable, usersMetadataTable } fr
 import { KycDocumentSubmissionType, KycVerificationVoteType } from '@/types/supabase-extensions';
 import { supabase } from '@/integrations/supabase/client';
 
-export type ConsensusStatus = "pending" | "in_progress" | "approved" | "rejected";
+export enum ConsensusStatus {
+  APPROVED = "approved",
+  REJECTED = "rejected",
+  IN_PROGRESS = "in_progress",
+  PENDING = "pending"
+}
 
 export type VerificationVote = {
   bankId: string;
