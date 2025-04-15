@@ -7,6 +7,7 @@ interface ModeContextType {
   toggleBlockchain: () => void;
   isDemoMode: boolean;
   isProductionMode: boolean;
+  setProductionMode: (value: boolean) => void; // Added setProductionMode method
   mode: "production";
   toggleMode: () => void;
 }
@@ -15,6 +16,7 @@ const ModeContext = createContext<ModeContextType | undefined>(undefined);
 
 export const ModeProvider = ({ children }: { children: ReactNode }) => {
   const [enableBlockchain, setEnableBlockchain] = useState<boolean>(true);
+  const [isProductionMode, setIsProductionMode] = useState<boolean>(true); // Use state variable instead of hard-coded value
   
   useEffect(() => {
     const savedBlockchainPref = localStorage.getItem("trustbond_blockchain");
@@ -40,14 +42,21 @@ export const ModeProvider = ({ children }: { children: ReactNode }) => {
     });
   };
   
-  // Hard-coded production mode values
-  const isDemoMode = false;
-  const isProductionMode = true;
+  // Production mode handling
+  const isDemoMode = !isProductionMode;
   const mode = "production" as const;
   
+  const setProductionMode = (value: boolean) => {
+    setIsProductionMode(value);
+    localStorage.setItem("trustbond_mode", value ? "production" : "demo");
+  };
+  
   const toggleMode = () => {
-    // No-op, we're always in production mode
-    toast.info("The application is running in production mode");
+    const newValue = !isProductionMode;
+    setIsProductionMode(newValue);
+    localStorage.setItem("trustbond_mode", newValue ? "production" : "demo");
+    
+    toast.info(`The application is now running in ${newValue ? 'production' : 'demo'} mode`);
   };
 
   return (
@@ -58,7 +67,8 @@ export const ModeProvider = ({ children }: { children: ReactNode }) => {
         mode,
         toggleMode,
         isDemoMode,
-        isProductionMode
+        isProductionMode,
+        setProductionMode
       }}
     >
       {children}
