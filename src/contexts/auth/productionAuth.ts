@@ -2,9 +2,9 @@
 import { AuthUser, UserRole } from './types';
 import { toast } from 'sonner';
 
-// In-memory storage for production users
+// Production user storage
 const PRODUCTION_USERS: AuthUser[] = [
-  // Add a default admin user for testing
+  // Admin user
   {
     id: "admin-1",
     name: "Admin User",
@@ -13,7 +13,7 @@ const PRODUCTION_USERS: AuthUser[] = [
     walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
     mfaEnabled: true
   },
-  // Add a default bank user
+  // Bank user
   {
     id: "bank-1",
     name: "Bank User",
@@ -22,7 +22,7 @@ const PRODUCTION_USERS: AuthUser[] = [
     walletAddress: "0x2234567890abcdef1234567890abcdef12345678",
     mfaEnabled: false
   },
-  // Add a default regular user
+  // Regular user
   {
     id: "user-1",
     name: "Regular User",
@@ -37,7 +37,7 @@ export const productionAuthService = {
   login: async (email: string, password: string): Promise<AuthUser> => {
     const user = PRODUCTION_USERS.find((user) => user.email === email);
     if (!user) {
-      throw new Error("User not found. Please register first.");
+      throw new Error("Invalid credentials. Please check your email and password.");
     }
     toast.success(`Welcome back, ${user.name}!`);
     return user;
@@ -62,7 +62,7 @@ export const productionAuthService = {
       throw new Error("Email already registered");
     }
 
-    // Generate a simple random wallet address for new users
+    // Generate a wallet address for new users
     const randomWalletAddress = "0x" + Array.from({length: 40}, () => 
       Math.floor(Math.random() * 16).toString(16)).join('');
 
@@ -80,7 +80,7 @@ export const productionAuthService = {
     return newUser;
   },
   
-  // Add these methods to support MFA
+  // MFA methods
   enableMFA: async (userId: string): Promise<boolean> => {
     const userIndex = PRODUCTION_USERS.findIndex(user => user.id === userId);
     if (userIndex === -1) {

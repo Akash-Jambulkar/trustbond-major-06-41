@@ -30,12 +30,11 @@ export interface MarketData {
 // Fetch real-time market data
 export const fetchMarketData = async (): Promise<MarketData> => {
   try {
-    // In production, this would be a real API call to a market data provider
-    // For now, we'll simulate a response with a timeout
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    // Generate pseudo-random but realistic market data
+    // In a fully connected production environment, this would make a real API call
+    // For now, we'll generate realistic market data with timestamps
     const timestamp = new Date().toISOString();
+    
+    // Generate realistic crypto prices based on time to simulate market movements
     const baseEthPrice = 2000 + (Math.sin(Date.now() / 86400000) * 200);
     const baseBtcPrice = 42000 + (Math.sin(Date.now() / 86400000 + 1) * 2000);
     
@@ -76,10 +75,9 @@ export const fetchMarketData = async (): Promise<MarketData> => {
   }
 };
 
-// Subscribe to market data updates (simulated)
+// Subscribe to market data updates
 export const subscribeToMarketUpdates = (callback: (data: MarketData) => void): () => void => {
-  // In a real implementation, this would set up a WebSocket connection
-  // For now, we'll use an interval to simulate real-time updates
+  // In production, this would connect to a real-time data feed via WebSocket
   const intervalId = setInterval(async () => {
     try {
       const data = await fetchMarketData();

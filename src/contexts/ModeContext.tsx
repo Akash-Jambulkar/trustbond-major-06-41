@@ -14,7 +14,7 @@ const ModeContext = createContext<ModeContextType | undefined>(undefined);
 
 export const ModeProvider = ({ children }: { children: ReactNode }) => {
   const [enableBlockchain, setEnableBlockchain] = useState<boolean>(true);
-  const [isProductionMode] = useState<boolean>(true); // Always true for production
+  const [isProductionMode] = useState<boolean>(true);
   
   useEffect(() => {
     const savedBlockchainPref = localStorage.getItem("trustbond_blockchain");
@@ -40,11 +40,8 @@ export const ModeProvider = ({ children }: { children: ReactNode }) => {
     });
   };
   
-  // Production mode is always true - helper method kept for backward compatibility
-  const setProductionMode = (value: boolean) => {
-    if (!value) {
-      toast.warning("This application can only run in production mode");
-    }
+  // Helper method kept for backward compatibility
+  const setProductionMode = () => {
     localStorage.setItem("trustbond_mode", "production");
   };
 

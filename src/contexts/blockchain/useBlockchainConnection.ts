@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import Web3 from "web3";
 import { Contract } from "web3-eth-contract";
@@ -12,10 +11,9 @@ import { NETWORK_IDS } from './types';
 
 interface UseBlockchainConnectionProps {
   enableBlockchain: boolean;
-  isDemoMode: boolean;
 }
 
-export const useBlockchainConnection = ({ enableBlockchain, isDemoMode }: UseBlockchainConnectionProps) => {
+export const useBlockchainConnection = ({ enableBlockchain }: UseBlockchainConnectionProps) => {
   const [web3, setWeb3] = useState<Web3 | null>(null);
   const [account, setAccount] = useState<string | null>(null);
   const [networkId, setNetworkId] = useState<number | null>(null);
@@ -32,7 +30,6 @@ export const useBlockchainConnection = ({ enableBlockchain, isDemoMode }: UseBlo
     : (networkId !== null && networkId !== NETWORK_IDS.GANACHE && networkId !== NETWORK_IDS.LOCALHOST);
   const isConnected = !!account;
 
-  // Initialize contracts when web3 is available
   useEffect(() => {
     if (web3 && account) {
       try {
@@ -62,9 +59,8 @@ export const useBlockchainConnection = ({ enableBlockchain, isDemoMode }: UseBlo
     }
   }, [web3, account, networkId]);
 
-  // Check for existing connection on load
   useEffect(() => {
-    if (!enableBlockchain || isDemoMode) {
+    if (!enableBlockchain) {
       return;
     }
     
@@ -90,11 +86,10 @@ export const useBlockchainConnection = ({ enableBlockchain, isDemoMode }: UseBlo
     };
     
     checkConnection();
-  }, [enableBlockchain, isDemoMode]);
+  }, [enableBlockchain]);
 
-  // Set up event listeners for wallet and network changes
   useEffect(() => {
-    if (window.ethereum && enableBlockchain && !isDemoMode) {
+    if (window.ethereum && enableBlockchain) {
       window.ethereum.on("accountsChanged", (accounts: string[]) => {
         if (accounts.length > 0) {
           setAccount(accounts[0]);
@@ -119,7 +114,7 @@ export const useBlockchainConnection = ({ enableBlockchain, isDemoMode }: UseBlo
         window.ethereum.removeListener("chainChanged", () => {});
       }
     };
-  }, [web3, enableBlockchain, isDemoMode]);
+  }, [web3, enableBlockchain]);
 
   const connectWallet = async (): Promise<string> => {
     setIsBlockchainLoading(true);
