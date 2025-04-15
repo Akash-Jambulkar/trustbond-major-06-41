@@ -13,6 +13,7 @@ import { verifyHashInDatabase, verifyDocumentUniqueness, DOCUMENT_TYPES } from "
 import { supabase } from "@/integrations/supabase/client";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { KycDocumentSubmissionType } from "@/types/supabase-extensions";
 
 type KYCDocument = {
   id: number | string;
@@ -53,7 +54,7 @@ const VerifyKYC = () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
-        .from('kyc_document_submissions')
+        .from('kyc_document_submissions' as any)
         .select(`
           id, 
           user_id,
@@ -73,9 +74,9 @@ const VerifyKYC = () => {
       } else {
         if (data && data.length > 0) {
           const formattedDocuments = await Promise.all(
-            data.map(async (doc) => {
+            data.map(async (doc: KycDocumentSubmissionType) => {
               const { data: userData, error: userError } = await supabase
-                .from('users_metadata')
+                .from('users_metadata' as any)
                 .select('id')
                 .eq('id', doc.user_id)
                 .single();
@@ -91,7 +92,7 @@ const VerifyKYC = () => {
                 userName: userName,
                 documentType: getDocumentTypeName(doc.document_type),
                 documentId: doc.document_number,
-                status: doc.verification_status as "pending" | "verified" | "rejected",
+                status: doc.verification_status,
                 submissionDate: new Date(doc.submitted_at).toLocaleDateString(),
                 verificationDate: doc.verified_at ? new Date(doc.verified_at).toLocaleDateString() : undefined,
                 documentHash: doc.document_hash,
@@ -126,11 +127,10 @@ const VerifyKYC = () => {
     try {
       const now = new Date().toISOString();
       
-      // Convert docId to string for Supabase query if it's a number
       const documentIdString = String(docId);
       
       const { error } = await supabase
-        .from('kyc_document_submissions')
+        .from('kyc_document_submissions' as any)
         .update({ 
           verification_status: newStatus,
           verified_at: now,
@@ -180,11 +180,10 @@ const VerifyKYC = () => {
     try {
       const exists = await verifyHashInDatabase(hashToVerify, supabase);
       
-      // Get document details if it exists
       let documentDetails = null;
       if (exists) {
         const { data, error } = await supabase
-          .from('kyc_document_submissions')
+          .from('kyc_document_submissions' as any)
           .select('*')
           .eq('document_hash', hashToVerify)
           .maybeSingle();

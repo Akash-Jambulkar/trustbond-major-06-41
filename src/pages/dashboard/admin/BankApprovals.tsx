@@ -21,8 +21,9 @@ export default function BankApprovals() {
     const fetchBanks = async () => {
       setIsLoading(true);
       try {
+        // Using type casting as a workaround for the Supabase types
         const { data, error } = await supabase
-          .from('bank_registrations')
+          .from('bank_registrations' as any)
           .select('*')
           .order('created_at', { ascending: false });
         
@@ -30,7 +31,7 @@ export default function BankApprovals() {
           throw error;
         }
         
-        setBanks(data as BankRegistrationType[]);
+        setBanks(data as unknown as BankRegistrationType[]);
       } catch (error) {
         console.error("Error fetching banks:", error);
         toast.error("Failed to fetch bank registrations");
@@ -51,8 +52,9 @@ export default function BankApprovals() {
     setIsProcessing(bankId);
     try {
       // Update bank status in the database
+      // Using type casting as a workaround for the Supabase types
       const { error } = await supabase
-        .from('bank_registrations')
+        .from('bank_registrations' as any)
         .update({
           status: approved ? 'approved' : 'rejected',
           updated_at: new Date().toISOString()
@@ -84,15 +86,17 @@ export default function BankApprovals() {
     {
       id: "bank-1",
       name: "First National Bank",
+      email: "contact@fnb.com",
       registration_number: "FNB12345",
       wallet_address: "0x1234567890123456789012345678901234567890",
       status: "pending",
       created_at: new Date().toISOString(),
-      updated_at: null
+      updated_at: new Date().toISOString()
     },
     {
       id: "bank-2",
       name: "City Trust Bank",
+      email: "info@citytrust.com",
       registration_number: "CTB67890",
       wallet_address: "0x2345678901234567890123456789012345678901",
       status: "approved",
@@ -102,6 +106,7 @@ export default function BankApprovals() {
     {
       id: "bank-3",
       name: "Metro Finance",
+      email: "support@metrofinance.com",
       registration_number: "MF54321",
       wallet_address: "0x3456789012345678901234567890123456789012",
       status: "rejected",
@@ -164,9 +169,9 @@ export default function BankApprovals() {
                           <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
                             Pending
                           </Badge>
-                        ) : bank.status === "approved" ? (
+                        ) : bank.status === "approved" || bank.status === "verified" ? (
                           <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                            Approved
+                            {bank.status === "approved" ? "Approved" : "Verified"}
                           </Badge>
                         ) : (
                           <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">

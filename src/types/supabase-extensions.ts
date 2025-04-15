@@ -14,9 +14,11 @@ export interface KycDocumentSubmissionType {
   submitted_at: string;
   verification_status: 'pending' | 'verified' | 'rejected';
   verified_at?: string;
+  verified_by?: string;
   verification_notes?: string;
   rejection_reason?: string;
   blockchain_tx_hash?: string;
+  consensus_status?: "pending" | "in_progress" | "approved" | "rejected";
 }
 
 // Bank Registration Type
@@ -25,12 +27,14 @@ export interface BankRegistrationType {
   name: string;
   email: string;
   registration_number: string;
-  status: 'pending' | 'verified' | 'rejected';
+  wallet_address: string;
+  status: 'pending' | 'approved' | 'verified' | 'rejected';
   created_at: string;
   updated_at: string;
   verification_notes?: string;
   rejection_reason?: string;
   blockchain_tx_hash?: string;
+  document_url?: string;
 }
 
 // Trust Score Type
@@ -73,6 +77,46 @@ export interface LoanType {
   blockchain_tx_hash?: string;
 }
 
+// KYC Verification Vote type
+export interface KycVerificationVoteType {
+  id: string;
+  document_id: string;
+  bank_id: string;
+  bank_name: string;
+  approved: boolean;
+  notes?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+// Transaction metadata type to ensure strong typing
+export interface TransactionMetadata {
+  description: string;
+  status: "pending" | "confirmed" | "failed";
+  network: string;
+  blockNumber?: number;
+}
+
+// Consensus verification result type
+export interface ConsensusVerificationResult {
+  documentId: string;
+  status: "pending" | "in_progress" | "approved" | "rejected";
+  votesRequired: number;
+  votesReceived: number;
+  approvalsReceived: number;
+  rejectionsReceived: number;
+  votes: {
+    bankId: string;
+    bankName: string;
+    approved: boolean;
+    timestamp: string;
+    notes?: string;
+  }[];
+  progress: number;
+  consensusReached: boolean;
+  finalDecision: boolean | null;
+}
+
 /**
  * This declaration merges the Supabase Database type definition to include our custom tables
  */
@@ -80,6 +124,35 @@ declare module '@supabase/supabase-js' {
   interface Database {
     public: {
       Tables: {
+        profiles: {
+          Row: {
+            id: string;
+            created_at: string;
+            updated_at: string;
+            wallet_address: string | null;
+            role: string;
+            name: string | null;
+            email: string | null;
+          };
+          Insert: {
+            id?: string;
+            created_at?: string;
+            updated_at?: string;
+            wallet_address?: string | null;
+            role: string;
+            name?: string | null;
+            email?: string | null;
+          };
+          Update: Partial<{
+            id: string;
+            created_at: string;
+            updated_at: string;
+            wallet_address: string | null;
+            role: string;
+            name: string | null;
+            email: string | null;
+          }>;
+        };
         kyc_document_submissions: {
           Row: KycDocumentSubmissionType;
           Insert: Omit<KycDocumentSubmissionType, 'id'> & { id?: string };
@@ -87,8 +160,28 @@ declare module '@supabase/supabase-js' {
         };
         bank_registrations: {
           Row: BankRegistrationType;
-          Insert: Omit<BankRegistrationType, 'id'> & { id?: string };
+          Insert: Omit<BankRegistrationType, 'id' | 'created_at' | 'updated_at'> & { id?: string, created_at?: string, updated_at?: string };
           Update: Partial<BankRegistrationType>;
+        };
+        users_metadata: {
+          Row: {
+            id: string;
+            role: string;
+            wallet_address: string;
+            is_verified: boolean;
+          };
+          Insert: {
+            id: string;
+            role: string;
+            wallet_address: string;
+            is_verified?: boolean;
+          };
+          Update: Partial<{
+            id: string;
+            role: string;
+            wallet_address: string;
+            is_verified: boolean;
+          }>;
         };
         trust_scores: {
           Row: TrustScoreType;
@@ -104,6 +197,11 @@ declare module '@supabase/supabase-js' {
           Row: LoanType;
           Insert: Omit<LoanType, 'id'> & { id?: string };
           Update: Partial<LoanType>;
+        };
+        kyc_verification_votes: {
+          Row: KycVerificationVoteType;
+          Insert: Omit<KycVerificationVoteType, 'id'> & { id?: string };
+          Update: Partial<KycVerificationVoteType>;
         };
       };
     };
