@@ -1,6 +1,7 @@
 
 import { createContext, useContext, ReactNode, useEffect, useState } from "react";
 import { useMode } from "../ModeContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useBlockchainConnection } from "./useBlockchainConnection";
 import { useTransactionManagement } from "./useTransactionManagement";
 import { useContractInteractions } from "./useContractInteractions";
@@ -14,6 +15,7 @@ const BlockchainContext = createContext<BlockchainContextType | undefined>(undef
 
 export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
   const { enableBlockchain } = useMode();
+  const { user } = useAuth(); // Access the user from AuthContext
   
   // Initialize blockchain connection (always production)
   const connection = useBlockchainConnection({ 
