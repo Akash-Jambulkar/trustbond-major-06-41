@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { KycDocumentSubmissionType } from "@/types/supabase-extensions";
 
 export const useKYCStatus = () => {
   const { account, isConnected, getKYCStatus, kycContract } = useBlockchain();
@@ -79,19 +80,29 @@ export const useKYCStatus = () => {
           if (supabase) {
             const { data, error } = await supabase
               .from('kyc_document_submissions')
-              .select('verification_status, rejection_reason, verified_at')
+              .select('*')
               .eq('wallet_address', account)
               .order('submitted_at', { ascending: false })
               .limit(1);
               
             if (!error && data && data.length > 0) {
-              if (!status && data[0].verification_status === 'rejected' && !isRejected) {
+              const submission = data[0] as KycDocumentSubmissionType;
+              
+              // Check if we have a rejected status from database
+              if (!status && 
+                  submission.verification_status === 'rejected' && 
+                  !isRejected) {
                 setIsRejected(true);
-                setRejectionReason(data[0].rejection_reason || rejectionReason);
+                if (submission.rejection_reason) {
+                  setRejectionReason(submission.rejection_reason);
+                }
               }
               
-              if (status && data[0].verified_at && !verificationTimestamp) {
-                setVerificationTimestamp(new Date(data[0].verified_at).getTime());
+              // Set verification timestamp if available
+              if (status && 
+                  submission.verified_at && 
+                  !verificationTimestamp) {
+                setVerificationTimestamp(new Date(submission.verified_at).getTime());
               }
             }
           }
