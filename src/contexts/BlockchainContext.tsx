@@ -183,26 +183,27 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
       }
 
       // Record transaction
-      const { error: transactionError } = await supabase
-        .from('transactions')
-        .insert([
-          {
-            transaction_hash: transactionHash,
-            type: 'kyc',
-            from_address: account,
-            status: 'confirmed',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            user_id: user.user_id
-          }
-        ]);
-
-      if (transactionError) {
-        console.error("Transaction record error:", transactionError);
-        // Non-critical error, continue
+      try {
+        await supabase
+          .from('transactions')
+          .insert([
+            {
+              transaction_hash: transactionHash,
+              type: 'kyc',
+              from_address: account,
+              status: 'confirmed',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              user_id: user.user_id
+            }
+          ]);
+        toast.success("KYC document submitted successfully!");
+      } catch (error) {
+        console.error("Transaction record error:", error);
+        toast.error("Failed to submit KYC document");
+        return false;
       }
 
-      toast.success("KYC document submitted successfully!");
       return true;
     } catch (error) {
       console.error("KYC submission error:", error);
@@ -269,27 +270,30 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
       }
 
       // Record transaction
-      const { error: transactionError } = await supabase
-        .from('transactions')
-        .insert([
-          {
-            transaction_hash: transactionHash,
-            type: 'verification',
-            from_address: account,
-            status: 'confirmed',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            user_id: kycData.user_id,
-            bank_id: user.user_id
-          }
-        ]);
-
-      if (transactionError) {
-        console.error("Transaction record error:", transactionError);
-        // Non-critical error, continue
+      try {
+        await supabase
+          .from('transactions')
+          .insert([
+            {
+              transaction_hash: transactionHash,
+              type: 'verification',
+              from_address: account,
+              to_address: kycData.user_id,
+              amount: 0,
+              status: 'confirmed',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              user_id: kycData.user_id,
+              bank_id: user.user_id
+            }
+          ]);
+        toast.success(`KYC document ${verificationStatus}`);
+      } catch (error) {
+        console.error("Transaction record error:", error);
+        toast.error("Failed to verify KYC document");
+        return false;
       }
 
-      toast.success(`KYC document ${verificationStatus}`);
       return true;
     } catch (error) {
       console.error("KYC verification error:", error);
@@ -341,29 +345,30 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
       }
 
       // Record transaction
-      const { error: transactionError } = await supabase
-        .from('transactions')
-        .insert([
-          {
-            transaction_hash: transactionHash,
-            type: 'loan',
-            from_address: account,
-            to_address: loanData.bankId,
-            amount: loanData.amount,
-            status: 'confirmed',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            user_id: user.user_id,
-            bank_id: loanData.bankId
-          }
-        ]);
-
-      if (transactionError) {
-        console.error("Transaction record error:", transactionError);
-        // Non-critical error, continue
+      try {
+        await supabase
+          .from('transactions')
+          .insert([
+            {
+              transaction_hash: transactionHash,
+              type: 'loan',
+              from_address: account,
+              to_address: loanData.bankId,
+              amount: loanData.amount,
+              status: 'confirmed',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              user_id: user.user_id,
+              bank_id: loanData.bankId
+            }
+          ]);
+        toast.success("Loan application submitted successfully!");
+      } catch (error) {
+        console.error("Transaction record error:", error);
+        toast.error("Failed to submit loan application");
+        return null;
       }
 
-      toast.success("Loan application submitted successfully!");
       return loanInsertData.id;
     } catch (error) {
       console.error("Loan application error:", error);
@@ -418,29 +423,30 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
       }
 
       // Record transaction
-      const { error: transactionError } = await supabase
-        .from('transactions')
-        .insert([
-          {
-            transaction_hash: transactionHash,
-            type: 'loan',
-            from_address: account,
-            to_address: loanData.user_id,
-            amount: loanData.amount,
-            status: 'confirmed',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            user_id: loanData.user_id,
-            bank_id: user.user_id
-          }
-        ]);
-
-      if (transactionError) {
-        console.error("Transaction record error:", transactionError);
-        // Non-critical error, continue
+      try {
+        await supabase
+          .from('transactions')
+          .insert([
+            {
+              transaction_hash: transactionHash,
+              type: 'loan',
+              from_address: account,
+              to_address: loanData.user_id,
+              amount: loanData.amount,
+              status: 'confirmed',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              user_id: loanData.user_id,
+              bank_id: user.user_id
+            }
+          ]);
+        toast.success("Loan approved successfully!");
+      } catch (error) {
+        console.error("Transaction record error:", error);
+        toast.error("Failed to approve loan");
+        return false;
       }
 
-      toast.success("Loan approved successfully!");
       return true;
     } catch (error) {
       console.error("Loan approval error:", error);
@@ -561,26 +567,25 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     const transactionHash = generateMockTransactionHash();
 
     // Simulate transaction
-    supabase
-      .from('transactions')
-      .insert([
-        {
-          transaction_hash: transactionHash,
-          type: randomEventType,
-          from_address: account,
-          status: 'confirmed',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          user_id: user.user_id
-        }
-      ])
-      .then(() => {
-        toast.success("Simulated blockchain event created");
-      })
-      .catch((error) => {
-        console.error("Simulation error:", error);
-        toast.error("Failed to simulate blockchain event");
-      });
+    try {
+      await supabase
+        .from('transactions')
+        .insert([
+          {
+            transaction_hash: transactionHash,
+            type: randomEventType,
+            from_address: account,
+            status: 'confirmed',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            user_id: user.user_id
+          }
+        ]);
+      toast.success("Simulated blockchain event created");
+    } catch (error) {
+      console.error("Simulation error:", error);
+      toast.error("Failed to simulate blockchain event");
+    }
   };
 
   return (

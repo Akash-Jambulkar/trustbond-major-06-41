@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -67,7 +68,7 @@ export function ConsensusVerificationPanel() {
       setConsensusData(consensus);
       
       if (user?.email) {
-        const userId = user.id || user.email;
+        const userId = user.id || user.user_id || user.email;
         const eligibilityResult = await checkVotingEligibility(userId, document.id);
         setEligibility(eligibilityResult);
       }
@@ -85,7 +86,7 @@ export function ConsensusVerificationPanel() {
       return;
     }
     
-    const userId = user.id || user.email || 'unknown';
+    const userId = user.id || user.user_id || user.email || 'unknown';
     const userName = user.name || user.email || 'Unknown User';
     
     setIsSubmitting(true);

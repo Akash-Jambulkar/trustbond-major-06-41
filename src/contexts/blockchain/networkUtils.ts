@@ -1,40 +1,52 @@
 
-import { NETWORK_IDS } from "./types";
+import { NetworkName } from "./types";
+import { NETWORK_IDS } from "@/contexts/blockchain/types";
 
-export const CONTRACT_ADDRESSES = {
-  KYC_VERIFIER: import.meta.env.VITE_APP_KYC_VERIFIER_ADDRESS || 
-    (import.meta.env.MODE === 'development' 
-      ? "0x5FbDB2315678afecb367f032d93F642f64180aa3"
-      : "0x5FbDB2315678afecb367f032d93F642f64180aa3"),
-  TRUST_SCORE: import.meta.env.VITE_APP_TRUST_SCORE_ADDRESS || 
-    (import.meta.env.MODE === 'development'
-      ? "0x5FbDB2315678afecb367f032d93F642f64180aa4"
-      : "0x5FbDB2315678afecb367f032d93F642f64180aa4"),
-  LOAN_MANAGER: import.meta.env.VITE_APP_LOAN_MANAGER_ADDRESS || 
-    (import.meta.env.MODE === 'development'
-      ? "0x5FbDB2315678afecb367f032d93F642f64180aa5"
-      : "0x5FbDB2315678afecb367f032d93F642f64180aa5"),
-};
-
-export const getNetworkName = (networkId: number | null): string => {
-  if (!networkId) return "Not Connected";
+// Map network IDs to names
+export const getNetworkName = (networkId?: number): NetworkName => {
+  if (!networkId) return "Unknown";
   
   switch (networkId) {
     case NETWORK_IDS.MAINNET:
       return "Ethereum Mainnet";
-    case NETWORK_IDS.ROPSTEN:
-      return "Ropsten Testnet";
-    case NETWORK_IDS.RINKEBY:
-      return "Rinkeby Testnet";
     case NETWORK_IDS.GOERLI:
       return "Goerli Testnet";
-    case NETWORK_IDS.KOVAN:
-      return "Kovan Testnet";
+    case NETWORK_IDS.SEPOLIA:
+      return "Sepolia Testnet";
     case NETWORK_IDS.GANACHE:
-      return "Ganache";
     case NETWORK_IDS.LOCALHOST:
-      return "Localhost";
+      return "Local Network";
+    // Handle legacy networks that might appear in old code
+    case 3: // ROPSTEN (deprecated)
+      return "Ropsten Testnet (Deprecated)";
+    case 4: // RINKEBY (deprecated)
+      return "Rinkeby Testnet (Deprecated)";
+    case 42: // KOVAN (deprecated)
+      return "Kovan Testnet (Deprecated)";
     default:
-      return `Unknown Network (${networkId})`;
+      return "Unknown Network";
   }
+};
+
+// Determine if a network is supported for the application
+export const isSupportedNetwork = (networkId?: number): boolean => {
+  if (!networkId) return false;
+  
+  return [
+    NETWORK_IDS.MAINNET,
+    NETWORK_IDS.GOERLI,
+    NETWORK_IDS.SEPOLIA,
+    NETWORK_IDS.GANACHE,
+    NETWORK_IDS.LOCALHOST
+  ].includes(networkId);
+};
+
+// Get the chain ID to switch to for development
+export const getPreferredDevChainId = (): number => {
+  return NETWORK_IDS.GANACHE;
+};
+
+// Format chain ID for MetaMask
+export const formatChainIdForMetaMask = (chainId: number): string => {
+  return `0x${chainId.toString(16)}`;
 };

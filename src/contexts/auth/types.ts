@@ -16,6 +16,7 @@ export interface AuthUser {
   app_metadata?: any;
   user_metadata?: any;
   aud?: string;
+  user_id?: string; // For compatibility with components expecting user_id
 }
 
 export interface AuthContextType {

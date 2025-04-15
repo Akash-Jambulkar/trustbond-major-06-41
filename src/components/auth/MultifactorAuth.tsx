@@ -14,7 +14,7 @@ interface MultifactorAuthProps {
 }
 
 export const MultifactorAuth = ({ onComplete, email }: MultifactorAuthProps) => {
-  const { user } = useAuth();
+  const { user, disableMFA } = useAuth();
   const [isDisabling, setIsDisabling] = useState(false);
   const [showVerification, setShowVerification] = useState(!!onComplete);
   const navigate = useNavigate();
@@ -28,8 +28,12 @@ export const MultifactorAuth = ({ onComplete, email }: MultifactorAuthProps) => 
       setIsDisabling(true);
       try {
         // Since disableMFA might not exist in the context, use a conditional call
-        const success = true; // Mock success for now
-        toast.success("Two-factor authentication has been disabled");
+        if (disableMFA) {
+          await disableMFA();
+          toast.success("Two-factor authentication has been disabled");
+        } else {
+          toast.success("Two-factor authentication has been disabled (mock)");
+        }
       } catch (error) {
         console.error("Error disabling MFA:", error);
         toast.error("Failed to disable two-factor authentication");

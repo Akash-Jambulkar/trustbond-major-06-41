@@ -8,6 +8,16 @@ export const NETWORK_IDS = {
   LOCALHOST: 31337
 } as const;
 
+export type NetworkName = 
+  | "Ethereum Mainnet"
+  | "Goerli Testnet"
+  | "Sepolia Testnet"
+  | "Local Network"
+  | "Unknown Network"
+  | "Ropsten Testnet (Deprecated)"
+  | "Rinkeby Testnet (Deprecated)"
+  | "Kovan Testnet (Deprecated)";
+
 export interface BlockchainContextType {
   // Connection state
   account: string | null;

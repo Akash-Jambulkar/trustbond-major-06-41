@@ -1,142 +1,217 @@
-import React, { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { TabsContent, TabsList, TabsTrigger, Tabs } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { User, Mail, Briefcase, Phone, MapPin, Shield } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useBlockchain } from "@/contexts/BlockchainContext";
+import { MultifactorAuth } from "@/components/auth/MultifactorAuth";
 
-const profileFormSchema = z.object({
-  name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
-  }),
-  email: z.string().email({
-    message: "Please enter a valid email.",
-  }),
-  phone: z.string().optional(),
-  address: z.string().optional(),
-});
-
-type ProfileFormValues = z.infer<typeof profileFormSchema>;
-
-const ProfilePage = () => {
+export function ProfilePage() {
   const { user } = useAuth();
-  const form = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileFormSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      phone: "",
-      address: "",
-    },
+  const { account } = useBlockchain();
+  const [isEditingBasic, setIsEditingBasic] = useState(false);
+  const [isEditingContact, setIsEditingContact] = useState(false);
+  const [form, setForm] = useState({
+    name: user?.name || "",
+    email: user?.email || "",
+    role: user?.role || "",
+    phone: user?.phone || "",
+    address: user?.address || ""
   });
-
-  // Map the user data to form values
-  useEffect(() => {
-    if (user) {
-      form.reset({
-        name: user.name || '',
-        email: user.email || '',
-        phone: user.phone || '',
-        address: user.address || '',
-      });
-    }
-  }, [user, form]);
-
-  const onSubmit = async (data: ProfileFormValues) => {
-    toast({
-      title: "Profile updated successfully!",
-      description: "Your information has been saved.",
-    });
+  
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
   };
-
+  
+  const handleSaveBasic = () => {
+    setIsEditingBasic(false);
+    toast.success("Basic profile information updated");
+  };
+  
+  const handleSaveContact = () => {
+    setIsEditingContact(false);
+    toast.success("Contact information updated");
+  };
+  
   return (
-    <div className="container max-w-2xl mx-auto my-8">
-      <Card>
-        <CardHeader>
-          <CardTitle>Profile Information</CardTitle>
-          <CardDescription>
-            Update your personal details here.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Your name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Your email" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Phone Number</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="Your phone number" 
-                        {...field} 
-                        value={field.value || ''} 
+    <div className="p-6">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold tracking-tight">Profile Settings</h1>
+        <p className="text-muted-foreground">
+          Manage your account settings and security preferences
+        </p>
+      </div>
+      
+      <Tabs defaultValue="profile">
+        <TabsList className="mb-4">
+          <TabsTrigger value="profile">Profile Information</TabsTrigger>
+          <TabsTrigger value="security">Security</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="profile" className="space-y-6">
+          {/* Basic Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5 text-trustbond-primary" />
+                Basic Information
+              </CardTitle>
+              <CardDescription>
+                Your personal account details
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Full Name</Label>
+                    {isEditingBasic ? (
+                      <Input
+                        id="name"
+                        name="name"
+                        value={form.name}
+                        onChange={handleChange}
+                        placeholder="Your full name"
                       />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Address</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="Your physical address" 
-                        {...field} 
-                        value={field.value || ''} 
+                    ) : (
+                      <div className="flex items-center h-10 px-3 rounded-md border bg-muted/50">
+                        {form.name || "Not provided"}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email Address</Label>
+                    <div className="flex items-center h-10 px-3 rounded-md border bg-muted/50">
+                      {form.email}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="role">Account Type</Label>
+                    <div className="flex items-center h-10 px-3 rounded-md border bg-muted/50">
+                      <Briefcase className="mr-2 h-4 w-4 text-muted-foreground" />
+                      {form.role.charAt(0).toUpperCase() + form.role.slice(1)} Account
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="wallet">Wallet Address</Label>
+                    <div className="flex items-center h-10 px-3 rounded-md border bg-muted/50 font-mono text-sm truncate">
+                      {user?.walletAddress || account || "Not connected"}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end">
+                  {isEditingBasic ? (
+                    <div className="space-x-2">
+                      <Button variant="outline" onClick={() => setIsEditingBasic(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleSaveBasic}>
+                        Save Changes
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button onClick={() => setIsEditingBasic(true)}>
+                      Edit Basic Information
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* Contact Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Mail className="h-5 w-5 text-trustbond-primary" />
+                Contact Information
+              </CardTitle>
+              <CardDescription>
+                How we can reach you
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone Number</Label>
+                    {isEditingContact ? (
+                      <Input
+                        id="phone"
+                        name="phone"
+                        value={form.phone}
+                        onChange={handleChange}
+                        placeholder="Your phone number"
                       />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit">Update Profile</Button>
-            </form>
-          </Form>
-        </CardContent>
-        <CardFooter>
-          <p className="text-sm text-muted-foreground">
-            Your profile information is securely stored.
-          </p>
-        </CardFooter>
-      </Card>
+                    ) : (
+                      <div className="flex items-center h-10 px-3 rounded-md border bg-muted/50">
+                        <Phone className="mr-2 h-4 w-4 text-muted-foreground" />
+                        {form.phone || "Not provided"}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Address</Label>
+                    {isEditingContact ? (
+                      <Input
+                        id="address"
+                        name="address"
+                        value={form.address}
+                        onChange={handleChange}
+                        placeholder="Your address"
+                      />
+                    ) : (
+                      <div className="flex items-center h-10 px-3 rounded-md border bg-muted/50">
+                        <MapPin className="mr-2 h-4 w-4 text-muted-foreground" />
+                        {form.address || "Not provided"}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex justify-end">
+                  {isEditingContact ? (
+                    <div className="space-x-2">
+                      <Button variant="outline" onClick={() => setIsEditingContact(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleSaveContact}>
+                        Save Changes
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button onClick={() => setIsEditingContact(true)}>
+                      Edit Contact Information
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="security">
+          {/* Two-Factor Authentication */}
+          <MultifactorAuth />
+        </TabsContent>
+      </Tabs>
     </div>
   );
-};
+}
 
 export default ProfilePage;

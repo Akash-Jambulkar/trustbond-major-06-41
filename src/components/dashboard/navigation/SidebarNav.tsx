@@ -18,7 +18,7 @@ export const SidebarNav = ({ user, onLogout }: SidebarNavProps) => {
   
   // Get navigation items based on user role
   const role = user?.role || 'user';
-  const navItems = getNavItems(role as 'user' | 'bank' | 'admin');
+  const navItemGroups = getNavItems(role);
 
   return (
     <div className="flex h-full flex-col overflow-y-auto bg-white">
@@ -49,7 +49,7 @@ export const SidebarNav = ({ user, onLogout }: SidebarNavProps) => {
       </div>
       <div className="flex-1 px-3 py-2">
         <div className="space-y-1">
-          {navItems.map((item, index) => (
+          {navItemGroups.main.map((item, index) => (
             <Button
               key={index}
               variant="ghost"
@@ -65,6 +65,32 @@ export const SidebarNav = ({ user, onLogout }: SidebarNavProps) => {
               </Link>
             </Button>
           ))}
+          
+          {navItemGroups.roleSpecific.length > 0 && (
+            <>
+              <Separator className="my-2" />
+              <p className="px-2 py-1 text-xs font-medium text-muted-foreground">
+                {role.charAt(0).toUpperCase() + role.slice(1)} Features
+              </p>
+              
+              {navItemGroups.roleSpecific.map((item, index) => (
+                <Button
+                  key={index}
+                  variant="ghost"
+                  asChild
+                  className={cn(
+                    "w-full justify-start",
+                    location.pathname === item.href && "bg-secondary"
+                  )}
+                >
+                  <Link to={item.href}>
+                    <item.icon className="mr-2 h-4 w-4" />
+                    {item.title}
+                  </Link>
+                </Button>
+              ))}
+            </>
+          )}
         </div>
       </div>
       <div className="px-3 py-2">

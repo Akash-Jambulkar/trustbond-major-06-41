@@ -1,235 +1,193 @@
-import React, { useState, useCallback } from "react";
+
+import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { File, Upload, CheckCircle, AlertTriangle } from "lucide-react";
-import { useKYCBlockchain } from "@/hooks/useKYCBlockchain";
-import { 
-  hashDocument, 
-  createDocumentHash, 
-  DOCUMENT_TYPES, 
-  DocumentType,
-  validateDocument
-} from "@/utils/documentHash";
+import { DOCUMENT_TYPES, DocumentType, createDocumentHash, validateDocument } from "@/utils/documentHash";
+import { useBlockchain } from "@/contexts/BlockchainContext";
+import { toast } from "sonner";
+import { ArrowUpCircle, FileText, Shield } from "lucide-react";
 
-export const KYCDocumentUpload = () => {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [fileHash, setFileHash] = useState<string | null>(null);
+export function KYCDocumentUpload() {
+  const { submitKYC, isConnected } = useBlockchain();
+  const [documentType, setDocumentType] = useState<DocumentType>(DOCUMENT_TYPES.PAN);
   const [documentNumber, setDocumentNumber] = useState("");
-  const [selectedDocumentType, setSelectedDocumentType] = useState<string>("");
-  const { submitKYC, isSubmitting, hasSubmitted, documentHash, checkDocumentHashUniqueness } = useKYCBlockchain();
-  const [isUnique, setIsUnique] = useState<boolean | null>(null);
-  const [isCheckingUniqueness, setIsCheckingUniqueness] = useState(false);
-
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    const file = acceptedFiles[0];
-    setSelectedFile(file);
-
-    try {
-      const reader = new FileReader();
-      reader.onload = async () => {
-        if (reader.result) {
-          const hash = await hashDocument(reader.result.toString());
-          setFileHash(hash);
-        }
-      };
-      reader.readAsText(file);
-    } catch (error) {
-      console.error("Error hashing file:", error);
-      toast.error("Failed to process document");
-    }
+  const [file, setFile] = useState<File | null>(null);
+  const [fileHash, setFileHash] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
+  
+  // Dropzone configuration
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    const selectedFile = acceptedFiles[0];
+    setFile(selectedFile);
+    
+    // Create a hash of the file
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      if (event.target && event.target.result) {
+        const arrayBuffer = event.target.result as ArrayBuffer;
+        const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        setFileHash(`0x${hash}`);
+      }
+    };
+    reader.readAsArrayBuffer(selectedFile);
   }, []);
-
-  const { getRootProps, getInputProps } = useDropzone({
+  
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
     onDrop,
-    multiple: false,
     accept: {
-      'text/plain': ['.txt', '.pdf'],
-      'image/jpeg': ['.jpeg', '.jpg', '.png'],
+      'image/*': ['.jpeg', '.jpg', '.png', '.gif'],
+      'application/pdf': ['.pdf']
     },
+    maxFiles: 1,
+    maxSize: 5 * 1024 * 1024 // 5MB
   });
-
+  
   const handleDocumentNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDocumentNumber(e.target.value);
   };
-
+  
   const handleDocumentTypeChange = (value: string) => {
-    setSelectedDocumentType(value);
+    setDocumentType(value as DocumentType);
   };
-
-  const generateDocumentHash = async () => {
-    if (!selectedDocumentType || !documentNumber || !fileHash) {
-      toast.error("Please fill all required fields and upload a document");
-      return null;
+  
+  const isDocumentValid = () => {
+    return validateDocument(documentType, documentNumber);
+  };
+  
+  const handleSubmit = async () => {
+    if (!isConnected) {
+      toast.error("Please connect your wallet first");
+      return;
     }
     
+    if (!file) {
+      toast.error("Please upload a document");
+      return;
+    }
+    
+    if (!fileHash) {
+      toast.error("Please wait for file processing to complete");
+      return;
+    }
+    
+    if (!isDocumentValid()) {
+      toast.error(`Invalid ${documentType} number format`);
+      return;
+    }
+    
+    setIsUploading(true);
     try {
-      // Convert the selected document type to the expected enum value
-      const docType = selectedDocumentType as DocumentType;
+      // Generate the document hash using all three pieces of information
+      const documentHash = await createDocumentHash(documentType, documentNumber, fileHash);
       
-      // Using createDocumentHash with all three required parameters
-      return await createDocumentHash(docType, documentNumber, fileHash);
-    } catch (error) {
-      console.error("Error generating document hash:", error);
-      toast.error("Failed to generate document hash");
-      return null;
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!selectedDocumentType || !documentNumber || !fileHash) {
-      toast.error("Please fill all required fields and upload a document");
-      return;
-    }
-
-    if (!validateDocument(selectedDocumentType as DocumentType, documentNumber)) {
-      toast.error("Invalid document number format");
-      return;
-    }
-
-    setIsCheckingUniqueness(true);
-    try {
-      const isDocHashUnique = await checkDocumentHashUniqueness(fileHash);
-      setIsUnique(isDocHashUnique);
-
-      if (!isDocHashUnique) {
-        toast.error("This document hash is already in use. Please upload a different document.");
-        return;
-      }
-
-      const generatedHash = await generateDocumentHash();
-      if (generatedHash) {
-        await submitKYC(generatedHash, selectedDocumentType);
+      // Submit to blockchain
+      const success = await submitKYC(documentHash);
+      
+      if (success) {
+        toast.success("Document submitted successfully for verification!");
+        // Reset form
+        setDocumentNumber("");
+        setFile(null);
+        setFileHash(null);
+      } else {
+        toast.error("Failed to submit document");
       }
     } catch (error) {
-      console.error("Error submitting KYC:", error);
-      toast.error("Failed to submit KYC document");
+      console.error("Error submitting document:", error);
+      toast.error("An error occurred while submitting your document");
     } finally {
-      setIsCheckingUniqueness(false);
+      setIsUploading(false);
     }
   };
-
+  
   return (
-    <div className="space-y-6">
-      <div className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-slate-50 transition-colors" {...getRootProps()}>
-        <input {...getInputProps()} />
-        {selectedFile ? (
-          <div className="flex flex-col items-center justify-center">
-            <File className="h-8 w-8 text-gray-400 mb-2" />
-            <span className="font-medium text-sm">{selectedFile.name}</span>
-            <span className="text-xs text-gray-500 mt-1">
-              {selectedFile.type} - {(selectedFile.size / 1024).toFixed(2)} KB
-            </span>
-            {fileHash && (
-              <div className="mt-2">
-                <span className="text-xs text-gray-500">
-                  File Hash:
-                </span>
-                <span className="font-mono text-xs break-all">
-                  {fileHash}
-                </span>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center">
-            <Upload className="h-8 w-8 text-gray-400 mb-2" />
-            <span className="font-medium text-sm">Click to upload or drag and drop your document</span>
-            <span className="text-xs text-gray-500 mt-1">
-              Accepts .txt, .pdf, .jpeg, and .png files
-            </span>
-          </div>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Shield className="h-5 w-5 text-trustbond-primary" />
+          KYC Document Submission
+        </CardTitle>
+        <CardDescription>
+          Upload your identification documents for verification
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
           <Label htmlFor="document-type">Document Type</Label>
-          <Select onValueChange={handleDocumentTypeChange}>
-            <SelectTrigger className="w-full">
+          <Select value={documentType} onValueChange={handleDocumentTypeChange}>
+            <SelectTrigger id="document-type">
               <SelectValue placeholder="Select document type" />
             </SelectTrigger>
             <SelectContent>
-              {Object.entries(DOCUMENT_TYPES).map(([key, value]) => (
-                <SelectItem key={key} value={value}>
-                  {key}
-                </SelectItem>
-              ))}
+              <SelectItem value={DOCUMENT_TYPES.PAN}>PAN Card</SelectItem>
+              <SelectItem value={DOCUMENT_TYPES.AADHAAR}>Aadhaar Card</SelectItem>
+              <SelectItem value={DOCUMENT_TYPES.VOTER_ID}>Voter ID</SelectItem>
+              <SelectItem value={DOCUMENT_TYPES.DRIVING_LICENSE}>Driving License</SelectItem>
             </SelectContent>
           </Select>
         </div>
-
-        <div>
+        
+        <div className="space-y-2">
           <Label htmlFor="document-number">Document Number</Label>
           <Input
-            type="text"
             id="document-number"
-            placeholder="Enter document number"
+            placeholder={`Enter your ${documentType} number`}
             value={documentNumber}
             onChange={handleDocumentNumberChange}
           />
+          {documentNumber && !isDocumentValid() && (
+            <p className="text-sm text-red-500 mt-1">
+              Invalid format for {documentType}
+            </p>
+          )}
         </div>
-      </div>
-
-      {isUnique === false && (
-        <div className="rounded-md bg-red-50 p-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <AlertTriangle className="h-5 w-5 text-red-400" aria-hidden="true" />
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">
-                Duplicate Document Detected
-              </h3>
-              <div className="mt-2 text-sm text-red-700">
-                <p>This document has already been submitted. Please upload a unique document.</p>
+        
+        <div className="space-y-2">
+          <Label>Upload Document</Label>
+          <div 
+            {...getRootProps()} 
+            className={`border-2 border-dashed rounded-md p-6 text-center cursor-pointer ${
+              isDragActive ? 'border-trustbond-primary bg-trustbond-primary/5' : 'border-gray-300'
+            }`}
+          >
+            <input {...getInputProps()} />
+            {file ? (
+              <div className="flex flex-col items-center">
+                <FileText className="h-8 w-8 text-trustbond-primary mb-2" />
+                <p className="text-sm font-medium">{file.name}</p>
+                <p className="text-xs text-gray-500 mt-1">{(file.size / 1024).toFixed(2)} KB</p>
               </div>
-            </div>
+            ) : isDragActive ? (
+              <div className="flex flex-col items-center">
+                <ArrowUpCircle className="h-8 w-8 text-trustbond-primary animate-bounce mb-2" />
+                <p className="text-sm">Drop the file here...</p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center">
+                <FileText className="h-8 w-8 text-gray-400 mb-2" />
+                <p className="text-sm">Drag and drop a file here, or click to select</p>
+                <p className="text-xs text-gray-500 mt-1">Supports JPG, PNG, PDF (max 5MB)</p>
+              </div>
+            )}
           </div>
         </div>
-      )}
-
-      {hasSubmitted ? (
-        <div className="rounded-md bg-green-50 p-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <CheckCircle className="h-5 w-5 text-green-400" aria-hidden="true" />
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-green-800">
-                Document Submitted
-              </h3>
-              <div className="mt-2 text-sm text-green-700">
-                <p>Your document has been submitted for verification.</p>
-                {documentHash && (
-                  <p>Document Hash: <span className="font-mono">{documentHash}</span></p>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
+      </CardContent>
+      <CardFooter>
         <Button 
           onClick={handleSubmit} 
-          disabled={isSubmitting || isCheckingUniqueness || !selectedFile || !selectedDocumentType || !documentNumber}
+          disabled={!isConnected || !file || !fileHash || !isDocumentValid() || isUploading}
           className="w-full"
         >
-          {isSubmitting ? (
-            <span className="flex items-center gap-2">
-              <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Submitting...
-            </span>
-          ) : (
-            "Submit Document"
-          )}
+          {isUploading ? "Submitting..." : "Submit Document for Verification"}
         </Button>
-      )}
-    </div>
+      </CardFooter>
+    </Card>
   );
-};
+}

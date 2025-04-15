@@ -11,7 +11,7 @@ const PRODUCTION_USERS: AuthUser[] = [
     email: "admin@trustbond.com",
     role: "admin",
     walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
-    mfaEnabled: true
+    mfa_enabled: true
   },
   // Bank user
   {
@@ -20,7 +20,7 @@ const PRODUCTION_USERS: AuthUser[] = [
     email: "bank@trustbond.com",
     role: "bank",
     walletAddress: "0x2234567890abcdef1234567890abcdef12345678",
-    mfaEnabled: false
+    mfa_enabled: false
   },
   // Regular user
   {
@@ -29,7 +29,7 @@ const PRODUCTION_USERS: AuthUser[] = [
     email: "user@trustbond.com",
     role: "user", 
     walletAddress: "0x3234567890abcdef1234567890abcdef12345678",
-    mfaEnabled: false
+    mfa_enabled: false
   }
 ];
 
@@ -45,7 +45,7 @@ export const productionAuthService = {
 
   loginWithWallet: async (walletAddress: string): Promise<AuthUser> => {
     const user = PRODUCTION_USERS.find(
-      (user) => user.walletAddress.toLowerCase() === walletAddress.toLowerCase()
+      (user) => user.walletAddress?.toLowerCase() === walletAddress.toLowerCase()
     );
 
     if (!user) {
@@ -56,7 +56,7 @@ export const productionAuthService = {
     return user;
   },
 
-  register: async (name: string, email: string, password: string, role: UserRole): Promise<AuthUser> => {
+  register: async (name: string, email: string, password: string): Promise<AuthUser> => {
     const emailExists = PRODUCTION_USERS.some(user => user.email === email);
     if (emailExists) {
       throw new Error("Email already registered");
@@ -70,9 +70,9 @@ export const productionAuthService = {
       id: Date.now().toString(),
       name,
       email,
-      role,
+      role: "user",
       walletAddress: randomWalletAddress,
-      mfaEnabled: false,
+      mfa_enabled: false,
     };
 
     PRODUCTION_USERS.push(newUser);
@@ -87,7 +87,7 @@ export const productionAuthService = {
       throw new Error("User not found");
     }
     
-    PRODUCTION_USERS[userIndex].mfaEnabled = true;
+    PRODUCTION_USERS[userIndex].mfa_enabled = true;
     return true;
   },
   
@@ -97,7 +97,7 @@ export const productionAuthService = {
       throw new Error("User not found");
     }
     
-    PRODUCTION_USERS[userIndex].mfaEnabled = false;
+    PRODUCTION_USERS[userIndex].mfa_enabled = false;
     return true;
   }
 };

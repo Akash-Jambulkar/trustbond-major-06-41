@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -35,17 +34,12 @@ const BlockchainTransactionsPage = () => {
   }, [isConnected]);
 
   // Subscribe to real-time updates
-  useRealTimeUpdates(RealTimeEventType.TRANSACTION_UPDATED, (payload) => {
+  useRealTimeUpdates(RealTimeEventType.TRANSACTION_CREATED, (payload) => {
     // Check if this is a new transaction
-    const isNew = !transactions.some(tx => tx.id === payload.new.id);
+    const isNew = !transactions.some(tx => tx.id === payload.id);
     
     if (isNew) {
-      setTransactions(prev => [payload.new, ...prev]);
-    } else {
-      // Update existing transaction
-      setTransactions(prev => 
-        prev.map(tx => tx.id === payload.new.id ? payload.new : tx)
-      );
+      setTransactions(prev => [payload, ...prev]);
     }
   });
 
