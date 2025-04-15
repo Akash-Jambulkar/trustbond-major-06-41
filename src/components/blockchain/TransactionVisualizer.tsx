@@ -1,237 +1,145 @@
 
-import { useState, useEffect, useRef } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useBlockchain } from "@/contexts/BlockchainContext";
-import { RealTimeEventType, useRealTimeUpdates } from "@/utils/realTimeData";
-import { Transaction, TransactionType } from "@/utils/transactions/types";
-import { CheckCircle, AlertCircle, Clock, ArrowRight } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useRealTimeUpdates, RealTimeEventType } from '@/contexts/RealTimeContext';
+import { ArrowRight, CheckCircle, XCircle, Clock } from 'lucide-react';
+
+interface Transaction {
+  id: string;
+  hash: string;
+  from: string;
+  to: string;
+  type: string;
+  status: 'pending' | 'confirmed' | 'failed';
+  timestamp: Date;
+}
 
 export const TransactionVisualizer = () => {
-  const { transactions, isConnected, account } = useBlockchain();
-  const [activeTransactions, setActiveTransactions] = useState<Transaction[]>([]);
-  const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
-  const animationRef = useRef<number | null>(null);
-  const [lastTransactionTime, setLastTransactionTime] = useState<Date | null>(null);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
 
-  // Initialize active transactions from context
-  useEffect(() => {
-    if (transactions && transactions.length > 0) {
-      // Get the 5 most recent transactions
-      const recent = [...transactions]
-        .sort((a, b) => b.timestamp - a.timestamp)
-        .slice(0, 5);
-      
-      setRecentTransactions(recent);
-    }
-  }, [transactions]);
+  // Use the real-time updates hook to get new transactions
+  useRealTimeUpdates(RealTimeEventType.TRANSACTION_UPDATED, (payload) => {
+    // Create a new transaction object from the payload
+    const newTransaction: Transaction = {
+      id: payload.new.id,
+      hash: payload.new.transaction_hash,
+      from: payload.new.from_address || 'Unknown',
+      to: payload.new.to_address || 'Network',
+      type: payload.new.type,
+      status: payload.new.status,
+      timestamp: new Date(payload.new.created_at),
+    };
 
-  // Listen for real-time transaction updates
-  useRealTimeUpdates(RealTimeEventType.TRANSACTION_UPDATED, (data) => {
-    // Add the new transaction to the visualizer
-    if (data && data.hash) {
-      const newTx: Transaction = {
-        hash: data.hash,
-        timestamp: data.timestamp || Date.now(),
-        status: data.status || 'pending',
-        type: data.type || 'other',
-        description: data.description || 'Transaction',
-        account: data.from_address || account || '',
-        network: data.network || '0',
-        blockNumber: data.blockNumber
-      };
-
-      // Add to active transactions for animation
-      setActiveTransactions(prev => [...prev, newTx]);
-      
-      // Update the recent transactions list
-      setRecentTransactions(prev => {
-        const updated = [newTx, ...prev].slice(0, 5);
-        return updated;
-      });
-
-      // Update the last transaction time
-      setLastTransactionTime(new Date());
-
-      // Remove from active after animation
-      setTimeout(() => {
-        setActiveTransactions(prev => prev.filter(tx => tx.hash !== newTx.hash));
-      }, 5000);
-    }
+    // Add the new transaction to the list
+    setTransactions(prev => [newTransaction, ...prev.slice(0, 9)]);
   });
 
-  // Get the status icon based on transaction status
+  // For demo purposes, generate a random transaction every few seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const types = ['kyc', 'loan', 'verification', 'repayment'];
+      const statuses = ['pending', 'confirmed', 'failed'] as const;
+      
+      const randomTransaction: Transaction = {
+        id: Math.random().toString(36).substring(2, 15),
+        hash: `0x${Array.from({ length: 12 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}...`,
+        from: `0x${Array.from({ length: 4 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}...`,
+        to: `0x${Array.from({ length: 4 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}...`,
+        type: types[Math.floor(Math.random() * types.length)],
+        status: statuses[Math.floor(Math.random() * statuses.length)],
+        timestamp: new Date(),
+      };
+
+      setTransactions(prev => [randomTransaction, ...prev.slice(0, 9)]);
+    }, 7000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Get status icon based on transaction status
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'confirmed':
-        return <CheckCircle className="h-4 w-4 text-green-600" />;
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
       case 'failed':
-        return <AlertCircle className="h-4 w-4 text-red-600" />;
+        return <XCircle className="h-4 w-4 text-red-500" />;
+      case 'pending':
       default:
-        return <Clock className="h-4 w-4 text-amber-600" />;
+        return <Clock className="h-4 w-4 text-amber-500" />;
     }
   };
 
-  // Get the transaction type badge
-  const getTypeBadge = (type: TransactionType) => {
-    let color = "";
-    
+  // Get type badge class based on transaction type
+  const getTypeClass = (type: string) => {
     switch (type) {
       case 'kyc':
-        color = "bg-purple-100 text-purple-800 border-purple-200";
-        break;
-      case 'verification':
-        color = "bg-green-100 text-green-800 border-green-200";
-        break;
+        return 'bg-blue-100 text-blue-800';
       case 'loan':
-        color = "bg-blue-100 text-blue-800 border-blue-200";
-        break;
-      case 'registration':
-        color = "bg-amber-100 text-amber-800 border-amber-200";
-        break;
+        return 'bg-purple-100 text-purple-800';
+      case 'verification':
+        return 'bg-green-100 text-green-800';
+      case 'repayment':
+        return 'bg-amber-100 text-amber-800';
       default:
-        color = "bg-gray-100 text-gray-800 border-gray-200";
+        return 'bg-gray-100 text-gray-800';
     }
-    
-    return (
-      <Badge variant="outline" className={`${color} text-xs capitalize`}>
-        {type}
-      </Badge>
-    );
   };
-
-  // Format timestamp relative to now
-  const formatTimestamp = (timestamp: number) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    
-    if (diffMs < 60000) { // less than 1 minute
-      return 'Just now';
-    }
-    
-    if (diffMs < 3600000) { // less than 1 hour
-      const mins = Math.floor(diffMs / 60000);
-      return `${mins} min${mins > 1 ? 's' : ''} ago`;
-    }
-    
-    if (diffMs < 86400000) { // less than 1 day
-      const hours = Math.floor(diffMs / 3600000);
-      return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-    }
-    
-    const days = Math.floor(diffMs / 86400000);
-    return `${days} day${days > 1 ? 's' : ''} ago`;
-  };
-
-  if (!isConnected) {
-    return (
-      <Alert className="bg-amber-50 border-amber-200 mt-4">
-        <AlertCircle className="h-4 w-4 text-amber-600" />
-        <AlertTitle>Wallet not connected</AlertTitle>
-        <AlertDescription>
-          Connect your blockchain wallet to visualize transaction activity.
-        </AlertDescription>
-      </Alert>
-    );
-  }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <span>Real-time Blockchain Activity</span>
-          {lastTransactionTime && (
-            <Badge variant="outline" className="ml-2 text-xs">
-              Last activity: {formatTimestamp(lastTransactionTime.getTime())}
-            </Badge>
-          )}
-        </CardTitle>
-        <CardDescription>
-          Visualize real-time blockchain transactions
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {/* Transactions Activity Stream */}
-        <div className="space-y-4">
-          {/* Active Transactions Animation */}
-          <div className="h-12 relative overflow-hidden border-l-2 border-dashed border-gray-200 pl-4">
-            {activeTransactions.length === 0 && (
-              <div className="text-sm text-gray-500 flex items-center h-full">
-                <span>Waiting for transactions...</span>
-              </div>
-            )}
-            
-            {activeTransactions.map((tx) => (
-              <div 
-                key={tx.hash}
-                className="flex items-center gap-2 absolute left-4 transition-all duration-[3000ms] ease-out"
-                style={{
-                  transform: "translateX(0)",
-                  animation: "slideRight 5s ease-out forwards"
-                }}
-              >
-                {getStatusIcon(tx.status)}
-                <div className="text-sm font-medium truncate max-w-[180px]">
-                  {tx.description}
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div className="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+        <h3 className="font-semibold text-gray-900">Live Blockchain Transactions</h3>
+        <span className="flex items-center gap-1 text-xs px-2 py-1 bg-green-100 text-green-800 rounded-full">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+          </span>
+          Live
+        </span>
+      </div>
+      <div className="p-2 h-[400px] overflow-hidden">
+        <AnimatePresence>
+          {transactions.map((transaction, index) => (
+            <motion.div
+              key={transaction.id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.3 }}
+              className={`p-3 mb-2 rounded-lg ${index === 0 ? 'bg-blue-50' : 'bg-gray-50'} flex items-center`}
+            >
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center mb-1">
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${getTypeClass(transaction.type)} mr-2`}>
+                    {transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    {transaction.timestamp.toLocaleTimeString()}
+                  </span>
                 </div>
-                {getTypeBadge(tx.type)}
+                <div className="flex items-center text-sm text-gray-700">
+                  <span className="block truncate font-mono">{transaction.from}</span>
+                  <ArrowRight className="h-3 w-3 mx-1 text-gray-400" />
+                  <span className="block truncate font-mono">{transaction.to}</span>
+                </div>
+                <div className="text-xs text-gray-500 truncate mt-1 font-mono">
+                  TX: {transaction.hash}
+                </div>
               </div>
-            ))}
-          </div>
-          
-          {/* Recent Transactions List */}
-          <div className="mt-4 space-y-2">
-            <h4 className="text-sm font-medium">Recent Transactions</h4>
-            {recentTransactions.length === 0 ? (
-              <div className="text-sm text-gray-500 py-2">No transactions yet</div>
-            ) : (
-              <div className="space-y-2">
-                {recentTransactions.map((tx) => (
-                  <div 
-                    key={tx.hash}
-                    className="p-2 border rounded-md flex items-center justify-between gap-2 bg-gray-50"
-                  >
-                    <div className="flex items-center gap-2">
-                      {getStatusIcon(tx.status)}
-                      <div>
-                        <div className="text-sm font-medium">{tx.description}</div>
-                        <div className="text-xs text-gray-500 font-mono">
-                          {tx.hash.substring(0, 6)}...{tx.hash.substring(tx.hash.length - 4)}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {getTypeBadge(tx.type)}
-                      <div className="text-xs text-gray-500">
-                        {formatTimestamp(tx.timestamp)}
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <div className="ml-3 flex-shrink-0">
+                {getStatusIcon(transaction.status)}
               </div>
-            )}
+            </motion.div>
+          ))}
+        </AnimatePresence>
+        {transactions.length === 0 && (
+          <div className="h-full flex items-center justify-center text-gray-500">
+            No transactions yet. They will appear here in real-time.
           </div>
-        </div>
-      </CardContent>
-      <style dangerouslySetInnerHTML={{
-        __html: `
-          @keyframes slideRight {
-            0% {
-              transform: translateX(0);
-              opacity: 1;
-            }
-            80% {
-              opacity: 1;
-            }
-            100% {
-              transform: translateX(100%);
-              opacity: 0;
-            }
-          }
-        `
-      }} />
-    </Card>
+        )}
+      </div>
+    </div>
   );
 };
+
+export default TransactionVisualizer;

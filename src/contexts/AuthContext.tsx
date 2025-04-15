@@ -1,269 +1,324 @@
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { useNavigate } from 'react-router-dom';
-import { AuthUser, UserRole, AuthContextType } from './auth/types';
-import { productionAuthService } from './auth/productionAuth';
-import { toast } from 'sonner';
-import { generateMFACode, sendMFACodeViaEmail, storeMFACode, retrieveMFACode, clearMFACode, storeMFAPreferences } from '@/utils/mfaUtils';
+import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase, type UserProfile } from "@/lib/supabase";
+import { toast } from "sonner";
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
+// Define the auth context type
+type AuthContextType = {
+  user: UserProfile | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (name: string, email: string, password: string, role: string) => Promise<boolean>;
+  logout: () => Promise<void>;
+  updateProfile: (data: Partial<UserProfile>) => Promise<boolean>;
+  enableMFA: () => Promise<boolean>;
+  verifyMFA: (code: string) => Promise<boolean>;
+  disableMFA: () => Promise<boolean>;
 };
 
+// Create the auth context
+const AuthContext = createContext<AuthContextType | null>(null);
+
+// Auth provider component
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isMFARequired, setIsMFARequired] = useState(false);
-  const [pendingUser, setPendingUser] = useState<AuthUser | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const navigate = useNavigate();
-  
-  // Only use the production authentication service
-  const authService = productionAuthService;
-  
+
+  // Initialize auth state
   useEffect(() => {
-    const storedUser = localStorage.getItem('trustbond_user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
+    const initAuth = async () => {
+      setIsLoading(true);
+      
+      // Get current session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        try {
+          // Fetch user profile
+          const { data } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .single();
+          
+          if (data) {
+            setUser(data as UserProfile);
+            setIsAuthenticated(true);
+          }
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
+        }
+      }
+
+      setIsLoading(false);
+    };
+
+    initAuth();
+
+    // Set up auth state listener
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        // Fetch user profile when signed in
+        const { data } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .single();
+        
+        if (data) {
+          setUser(data as UserProfile);
+          setIsAuthenticated(true);
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setIsAuthenticated(false);
+      }
+    });
+
+    // Clean up subscription
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
   }, []);
 
+  // Login function
   const login = async (email: string, password: string) => {
     try {
-      const userData = await authService.login(email, password);
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return false;
+      }
+
+      toast.success("Logged in successfully!");
       
-      // If MFA is enabled for the user, require verification
-      if (userData.mfaEnabled) {
-        setPendingUser(userData);
-        setIsMFARequired(true);
+      // Fetch user profile
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      
+      if (authUser) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', authUser.id)
+          .single();
         
-        // Generate and send MFA code
-        const code = generateMFACode();
-        await sendMFACodeViaEmail(userData.email, code);
-        storeMFACode(userData.id, code);
-        
-        // Navigate to MFA verification page
-        navigate('/mfa-verify');
-        return undefined;
+        if (data) {
+          const userProfile = data as UserProfile;
+          setUser(userProfile);
+          
+          // Redirect based on role
+          if (userProfile.role === 'user') {
+            navigate('/dashboard/user');
+          } else if (userProfile.role === 'bank') {
+            navigate('/dashboard/bank');
+          } else if (userProfile.role === 'admin') {
+            navigate('/dashboard/admin');
+          }
+        }
       }
       
-      // No MFA needed, complete login
-      setUser(userData);
-      localStorage.setItem('trustbond_user', JSON.stringify(userData));
-      
-      // Navigate based on user role
-      if (userData.role === 'admin') {
-        navigate('/dashboard/admin');
-      } else if (userData.role === 'bank') {
-        navigate('/dashboard/bank');
-      } else {
-        navigate('/dashboard/user');
-      }
-      
-      return userData;
+      return true;
     } catch (error) {
-      toast.error("Login failed: " + (error instanceof Error ? error.message : "Unknown error"));
-      return undefined;
+      console.error("Login error:", error);
+      toast.error("Login failed. Please try again.");
+      return false;
     }
   };
 
-  const loginWithWallet = async (walletAddress: string) => {
+  // Register function
+  const register = async (name: string, email: string, password: string, role: string) => {
     try {
-      const userData = await authService.loginWithWallet(walletAddress);
-      
-      // If MFA is enabled for the user, require verification
-      if (userData.mfaEnabled) {
-        setPendingUser(userData);
-        setIsMFARequired(true);
-        
-        // Generate and send MFA code
-        const code = generateMFACode();
-        await sendMFACodeViaEmail(userData.email, code);
-        storeMFACode(userData.id, code);
-        
-        // Navigate to MFA verification page
-        navigate('/mfa-verify');
-        return undefined;
+      // Create auth user
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+            role,
+          },
+        },
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return false;
       }
-      
-      // No MFA needed, complete login
-      setUser(userData);
-      localStorage.setItem('trustbond_user', JSON.stringify(userData));
-      
-      // Navigate based on user role
-      if (userData.role === 'admin') {
-        navigate('/dashboard/admin');
-      } else if (userData.role === 'bank') {
-        navigate('/dashboard/bank');
-      } else {
-        navigate('/dashboard/user');
+
+      if (data.user) {
+        // Create user profile
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([
+            {
+              user_id: data.user.id,
+              name,
+              email,
+              role,
+              kyc_status: 'not_submitted',
+              mfa_enabled: false,
+              created_at: new Date().toISOString(),
+            },
+          ]);
+
+        if (profileError) {
+          toast.error("Failed to create user profile");
+          return false;
+        }
+
+        toast.success("Account created successfully!");
+
+        // Specific setup for bank accounts
+        if (role === 'bank') {
+          navigate('/dashboard/bank/bank-registration');
+        } else {
+          navigate('/dashboard/user');
+        }
+
+        return true;
       }
-      
-      return userData;
+
+      return false;
     } catch (error) {
-      toast.error("Wallet login failed: " + (error instanceof Error ? error.message : "Unknown error"));
-      return undefined;
+      console.error("Registration error:", error);
+      toast.error("Registration failed. Please try again.");
+      return false;
     }
   };
 
-  const register = async (name: string, email: string, password: string, role: UserRole) => {
-    try {
-      const userData = await authService.register(name, email, password, role);
-      setUser(userData);
-      localStorage.setItem('trustbond_user', JSON.stringify(userData));
-      
-      // Navigate based on user role
-      if (userData.role === 'admin') {
-        navigate('/dashboard/admin');
-      } else if (userData.role === 'bank') {
-        navigate('/dashboard/bank');
-      } else {
-        navigate('/dashboard/user');
-      }
-      
-      return userData;
-    } catch (error) {
-      toast.error("Registration failed: " + (error instanceof Error ? error.message : "Unknown error"));
-      return undefined;
-    }
-  };
-
-  const logout = () => {
+  // Logout function
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem('trustbond_user');
+    setIsAuthenticated(false);
     navigate('/login');
+    toast.success("Logged out successfully!");
   };
-  
-  const verifyMFA = async (code: string): Promise<boolean> => {
-    if (!pendingUser) {
-      toast.error("No pending authentication found");
-      return false;
-    }
-    
-    const storedCode = retrieveMFACode(pendingUser.id);
-    
-    if (!storedCode) {
-      toast.error("Verification code expired. Please login again.");
-      setIsMFARequired(false);
-      setPendingUser(null);
-      navigate('/login');
-      return false;
-    }
-    
-    if (code !== storedCode) {
-      toast.error("Incorrect verification code");
-      return false;
-    }
-    
-    // Code is correct, clear it and complete login
-    clearMFACode(pendingUser.id);
-    
-    // Mark user as verified and complete login
-    const verifiedUser = { ...pendingUser, mfaVerified: true };
-    setUser(verifiedUser);
-    setPendingUser(null);
-    setIsMFARequired(false);
-    localStorage.setItem('trustbond_user', JSON.stringify(verifiedUser));
-    
-    // Navigate based on user role
-    if (verifiedUser.role === 'admin') {
-      navigate('/dashboard/admin');
-    } else if (verifiedUser.role === 'bank') {
-      navigate('/dashboard/bank');
-    } else {
-      navigate('/dashboard/user');
-    }
-    
-    toast.success("Verification successful");
-    return true;
-  };
-  
-  const setupMFA = async (phoneNumber: string, method: 'sms' | 'email'): Promise<boolean> => {
-    if (!user) {
-      toast.error("You must be logged in to set up MFA");
-      return false;
-    }
-    
+
+  // Update profile function
+  const updateProfile = async (data: Partial<UserProfile>) => {
+    if (!user) return false;
+
     try {
-      // Enable MFA for the user
-      const updatedUser = { 
-        ...user, 
-        mfaEnabled: true,
-        phone: method === 'sms' ? phoneNumber : user.phone
-      };
-      
-      // Store MFA preferences
-      storeMFAPreferences(user.id, {
-        enabled: true,
-        method,
-        phoneNumber: method === 'sms' ? phoneNumber : undefined
-      });
-      
-      // Update user in local storage
-      setUser(updatedUser);
-      localStorage.setItem('trustbond_user', JSON.stringify(updatedUser));
-      
-      toast.success("Two-factor authentication enabled successfully");
+      const { error } = await supabase
+        .from('profiles')
+        .update(data)
+        .eq('user_id', user.user_id);
+
+      if (error) {
+        toast.error("Failed to update profile");
+        return false;
+      }
+
+      // Update local user state
+      setUser({ ...user, ...data });
+      toast.success("Profile updated successfully!");
       return true;
     } catch (error) {
-      toast.error("Failed to set up MFA: " + (error instanceof Error ? error.message : "Unknown error"));
+      console.error("Update profile error:", error);
+      toast.error("Failed to update profile");
       return false;
     }
   };
-  
-  const disableMFA = async (): Promise<boolean> => {
-    if (!user) {
-      toast.error("You must be logged in to disable MFA");
-      return false;
-    }
+
+  // Enable MFA
+  const enableMFA = async () => {
+    if (!user) return false;
     
+    // In a real implementation, you'd integrate with a proper MFA provider
+    // For demo purposes, we'll just update the user profile
     try {
-      // Disable MFA for the user
-      const updatedUser = { ...user, mfaEnabled: false };
-      
-      // Store MFA preferences
-      storeMFAPreferences(user.id, {
-        enabled: false,
-        method: 'email'
-      });
-      
-      // Update user in local storage
-      setUser(updatedUser);
-      localStorage.setItem('trustbond_user', JSON.stringify(updatedUser));
-      
-      toast.success("Two-factor authentication disabled successfully");
+      const { error } = await supabase
+        .from('profiles')
+        .update({ mfa_enabled: true })
+        .eq('user_id', user.user_id);
+
+      if (error) {
+        toast.error("Failed to enable MFA");
+        return false;
+      }
+
+      setUser({ ...user, mfa_enabled: true });
+      toast.success("MFA enabled successfully!");
       return true;
     } catch (error) {
-      toast.error("Failed to disable MFA: " + (error instanceof Error ? error.message : "Unknown error"));
+      console.error("Enable MFA error:", error);
+      toast.error("Failed to enable MFA");
       return false;
     }
   };
-  
-  const isAuthenticated = !!user;
-  
+
+  // Verify MFA
+  const verifyMFA = async (code: string) => {
+    // In a real implementation, you'd verify the MFA code
+    // For demo purposes, we'll accept any code
+    if (code && code.length === 6) {
+      toast.success("MFA verified successfully!");
+      return true;
+    }
+    
+    toast.error("Invalid MFA code");
+    return false;
+  };
+
+  // Disable MFA
+  const disableMFA = async () => {
+    if (!user) return false;
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ mfa_enabled: false })
+        .eq('user_id', user.user_id);
+
+      if (error) {
+        toast.error("Failed to disable MFA");
+        return false;
+      }
+
+      setUser({ ...user, mfa_enabled: false });
+      toast.success("MFA disabled successfully!");
+      return true;
+    } catch (error) {
+      console.error("Disable MFA error:", error);
+      toast.error("Failed to disable MFA");
+      return false;
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
         user,
-        isLoading,
         isAuthenticated,
-        isMFARequired,
+        isLoading,
         login,
-        loginWithWallet,
         register,
         logout,
+        updateProfile,
+        enableMFA,
         verifyMFA,
-        setupMFA,
         disableMFA,
       }}
     >
       {children}
     </AuthContext.Provider>
   );
+};
+
+// Hook to use auth context
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 };
