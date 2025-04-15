@@ -131,6 +131,7 @@ export const useKYCStatus = () => {
     fetchKYCStatus();
   }, [isConnected, account, getKYCStatus, kycContract]);
 
+  // Make sure to include isConnected in the return object
   return { 
     kycStatus, 
     isLoading,
@@ -138,6 +139,7 @@ export const useKYCStatus = () => {
     isVerified: kycStatus === true,
     isPending: isConnected && kycStatus === false && !isRejected,
     isRejected,
-    rejectionReason
+    rejectionReason,
+    isConnected // Add isConnected to the return object
   };
 };

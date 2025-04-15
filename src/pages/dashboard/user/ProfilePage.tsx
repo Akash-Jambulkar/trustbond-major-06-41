@@ -20,8 +20,9 @@ import {
   Calendar, 
   Clock, 
   Check, 
-  Pencil, 
-  Loader2
+  Pencil,
+  Loader2,
+  Shield // Add Shield import here
 } from "lucide-react";
 
 const ProfilePage = () => {
