@@ -155,8 +155,9 @@ const VerifyKYC = () => {
         verified_by: user?.id
       };
       
-      const { error } = await kycSubmissionsTable()
-        .update(updateData as any)
+      const { error } = await supabase
+        .from('kyc_document_submissions')
+        .update(updateData)
         .eq('id', documentIdString);
       
       if (error) {

@@ -20,7 +20,7 @@ export const updateTransactionStatus = async (
       .select('*')
       .eq('hash', hash.toLowerCase())
       .eq('from_address', account.toLowerCase())
-      .single();
+      .maybeSingle();
     
     if (fetchError) {
       console.error("Error fetching transaction:", fetchError);
@@ -38,12 +38,12 @@ export const updateTransactionStatus = async (
       ...(metadata || {})
     };
     
-    // Update transaction in Supabase
+    // Update transaction in Supabase using a simpler approach to avoid deep type instantiation
     const { error } = await supabase
       .from('blockchain_transactions')
       .update({
         metadata: updatedMetadata
-      })
+      } as any)
       .eq('hash', hash.toLowerCase())
       .eq('from_address', account.toLowerCase());
     

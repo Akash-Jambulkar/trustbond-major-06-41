@@ -1,13 +1,13 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { blockchainTransactionsTable } from '../supabase-helper';
 import { Transaction } from './types';
 
 // Get transactions for a specific user or all transactions
 export async function getTransactions(userAddress?: string): Promise<Transaction[]> {
   try {
-    // Use direct supabase query to avoid type issues
-    let query = supabase.from('blockchain_transactions')
+    // Use direct supabase query with type assertions to avoid type issues
+    let query = supabase
+      .from('blockchain_transactions')
       .select('*')
       .order('created_at', { ascending: false });
       
@@ -43,7 +43,7 @@ export async function getTransactions(userAddress?: string): Promise<Transaction
 // Add transaction
 export async function addBlockchainTransaction(transactionData: any) {
   try {
-    // Use direct supabase query to avoid type issues
+    // Use direct supabase query with type assertions to avoid type issues
     const { data, error } = await supabase
       .from('blockchain_transactions')
       .insert(transactionData)

@@ -17,8 +17,8 @@ export async function getBankRegistrations(): Promise<BankRegistrationType[]> {
       return [];
     }
 
-    // Use type assertion to convert the data to the expected type
-    return (data as unknown as BankRegistrationType[]) || [];
+    // Use type assertion for the data to avoid type conversion errors
+    return (data || []) as unknown as BankRegistrationType[];
   } catch (error) {
     console.error("Exception in getBankRegistrations:", error);
     return [];
@@ -40,8 +40,8 @@ export async function getPendingBankRegistrations(): Promise<BankRegistrationTyp
       return [];
     }
 
-    // Use type assertion to convert the data to the expected type
-    return (data as unknown as BankRegistrationType[]) || [];
+    // Use type assertion for the data to avoid type conversion errors
+    return (data || []) as unknown as BankRegistrationType[];
   } catch (error) {
     console.error("Exception in getPendingBankRegistrations:", error);
     return [];
