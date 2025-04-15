@@ -117,6 +117,14 @@ export interface ConsensusVerificationResult {
   finalDecision: boolean | null;
 }
 
+// Users Metadata Type
+export interface UsersMetadataType {
+  id: string;
+  role: string;
+  wallet_address: string;
+  is_verified: boolean;
+}
+
 /**
  * This declaration merges the Supabase Database type definition to include our custom tables
  */
@@ -164,24 +172,9 @@ declare module '@supabase/supabase-js' {
           Update: Partial<BankRegistrationType>;
         };
         users_metadata: {
-          Row: {
-            id: string;
-            role: string;
-            wallet_address: string;
-            is_verified: boolean;
-          };
-          Insert: {
-            id: string;
-            role: string;
-            wallet_address: string;
-            is_verified?: boolean;
-          };
-          Update: Partial<{
-            id: string;
-            role: string;
-            wallet_address: string;
-            is_verified: boolean;
-          }>;
+          Row: UsersMetadataType;
+          Insert: UsersMetadataType;
+          Update: Partial<UsersMetadataType>;
         };
         trust_scores: {
           Row: TrustScoreType;

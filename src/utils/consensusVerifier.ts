@@ -9,6 +9,11 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { KycDocumentSubmissionType, KycVerificationVoteType } from "@/types/supabase-extensions";
+import { 
+  kycSubmissionsTable, 
+  bankRegistrationsTable, 
+  kycVerificationVotesTable 
+} from "@/utils/supabase-helper";
 
 // Consensus threshold - percentage of participating banks required for approval
 export const CONSENSUS_THRESHOLD = 0.66; // 66% of banks need to approve for consensus
@@ -61,8 +66,7 @@ export const getConsensusStatus = async (documentId: string): Promise<ConsensusR
     
     // Get total number of banks from the actual database
     // In a real implementation, this would get active banks from a banks table
-    const { data: banks, error: banksError } = await supabase
-      .from('bank_registrations')
+    const { data: banks, error: banksError } = await bankRegistrationsTable()
       .select('id')
       .eq('status', 'approved');
       
@@ -72,7 +76,7 @@ export const getConsensusStatus = async (documentId: string): Promise<ConsensusR
     }
     
     // Calculate consensus metrics
-    const totalBanks = banks?.length || 0;
+    const totalBanks = Array.isArray(banks) ? banks.length : 0;
     const votesRequired = Math.ceil(totalBanks * CONSENSUS_THRESHOLD);
     const votesReceived = votes.length;
     const approvalVotes = votes.filter(vote => vote.approved).length;
@@ -198,8 +202,7 @@ export const updateDocumentConsensusStatus = async (documentId: string): Promise
     // Only update if consensus is reached
     if (consensus.consensusReached && consensus.finalDecision !== null) {
       // Update document status in database
-      const { error } = await supabase
-        .from('kyc_document_submissions')
+      const { error } = await kycSubmissionsTable()
         .update({
           verification_status: consensus.finalDecision ? 'verified' : 'rejected',
           verified_at: new Date().toISOString()
@@ -240,8 +243,7 @@ export const checkVotingEligibility = async (
 }> => {
   try {
     // Check if bank is registered and approved
-    const { data: bank, error: bankError } = await supabase
-      .from('bank_registrations')
+    const { data: bank, error: bankError } = await bankRegistrationsTable()
       .select('status')
       .eq('id', bankId)
       .maybeSingle();
@@ -264,8 +266,7 @@ export const checkVotingEligibility = async (
     const existingVote = votes.find(vote => vote.bank_id === bankId);
     
     // Check if document has a final status
-    const { data: document, error: docError } = await supabase
-      .from('kyc_document_submissions')
+    const { data: document, error: docError } = await kycSubmissionsTable()
       .select('verification_status')
       .eq('id', documentId)
       .maybeSingle();
@@ -311,8 +312,7 @@ export const checkVotingEligibility = async (
 export const getDocumentsNeedingConsensus = async (): Promise<KycDocumentSubmissionType[]> => {
   try {
     // Get documents that don't have a final status
-    const { data, error } = await supabase
-      .from('kyc_document_submissions')
+    const { data, error } = await kycSubmissionsTable()
       .select('*')
       .in('verification_status', ['pending']);
       
@@ -321,21 +321,7 @@ export const getDocumentsNeedingConsensus = async (): Promise<KycDocumentSubmiss
       throw error;
     }
     
-    // Type cast the result to KycDocumentSubmissionType[]
-    return (data || []).map(doc => ({
-      id: doc.id,
-      user_id: doc.user_id,
-      document_type: doc.document_type,
-      document_number: doc.document_number,
-      document_hash: doc.document_hash,
-      submitted_at: doc.submitted_at,
-      verification_status: doc.verification_status as "pending" | "verified" | "rejected",
-      verified_at: doc.verified_at,
-      verified_by: doc.verified_by,
-      blockchain_tx_hash: doc.blockchain_tx_hash,
-      // Set a default value for consensus_status if it doesn't exist
-      consensus_status: undefined
-    }));
+    return Array.isArray(data) ? data as KycDocumentSubmissionType[] : [];
   } catch (error) {
     console.error("Error in getDocumentsNeedingConsensus:", error);
     throw error;

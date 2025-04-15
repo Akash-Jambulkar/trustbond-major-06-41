@@ -38,6 +38,7 @@ import {
 import { validateDocument, verifyDocumentUniqueness, DOCUMENT_TYPES } from "@/utils/documentHash";
 import { KycDocumentSubmissionType } from "@/types/supabase-extensions";
 import { kycSubmissionsTable, usersMetadataTable } from "@/utils/supabase-helper";
+import { supabase } from "@/integrations/supabase/client";
 
 const MOCK_KYC_REQUESTS = [
   { 

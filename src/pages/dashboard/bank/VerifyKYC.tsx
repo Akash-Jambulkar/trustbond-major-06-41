@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +14,7 @@ import { useBlockchain } from "@/contexts/BlockchainContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { KycDocumentSubmissionType } from "@/types/supabase-extensions";
 import { kycSubmissionsTable, usersMetadataTable } from "@/utils/supabase-helper";
+import { supabase } from "@/integrations/supabase/client";
 
 type KYCDocument = {
   id: number | string;

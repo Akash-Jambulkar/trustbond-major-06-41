@@ -7,7 +7,6 @@ import { FileText, Check, X, Building2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { BankRegistrationType } from "@/types/supabase-extensions";
 import { bankRegistrationsTable } from "@/utils/supabase-helper";
 
@@ -66,7 +65,7 @@ export default function BankApprovals() {
         bank.id === bankId 
           ? { ...bank, status: approved ? 'approved' : 'rejected' } 
           : bank
-      ));
+      ) as BankRegistrationType[]);
       
       toast.success(`Bank ${approved ? 'approved' : 'rejected'} successfully`);
     } catch (error) {
