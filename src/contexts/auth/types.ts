@@ -20,17 +20,33 @@ export interface AuthUser {
   user_id?: string; // For compatibility with components expecting user_id
 }
 
+// Define the User type to match both Supabase User and our custom UserProfile
+export type User = {
+  id: string;
+  user_id: string;
+  email: string;
+  name?: string;
+  role: 'user' | 'bank' | 'admin';
+  mfa_enabled: boolean;
+  kyc_status?: 'pending' | 'verified' | 'rejected' | 'not_submitted';
+  app_metadata?: any;
+  user_metadata?: any;
+  aud?: string;
+  phone?: string;
+  address?: string;
+  walletAddress?: string;
+};
+
 export interface AuthContextType {
-  user: AuthUser | null;
+  user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   isMFARequired?: boolean;
-  login: (email: string, password: string) => Promise<AuthUser | undefined>;
-  loginWithWallet?: (walletAddress: string) => Promise<AuthUser | undefined>;
-  register: (name: string, email: string, password: string) => Promise<AuthUser | undefined>;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<boolean>;
+  loginWithWallet?: (walletAddress: string) => Promise<boolean>;
+  register: (email: string, password: string, name: string) => Promise<boolean>;
+  logout: () => Promise<void>;
   verifyMFA?: (code: string) => Promise<boolean>;
   setupMFA?: (phoneNumber: string, method: 'sms' | 'email') => Promise<boolean>;
-  disableMFA?: () => Promise<boolean>; // Added missing disableMFA function
+  disableMFA?: () => Promise<boolean>;
 }
-
