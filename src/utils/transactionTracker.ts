@@ -5,13 +5,19 @@
 import { 
   Transaction, 
   TransactionStatus, 
-  TransactionType,
+  TransactionType 
+} from './transactions/types';
+
+import {
   trackTransaction,
   updateTransactionStatus,
-  watchTransaction,
+  watchTransaction
+} from './transactions/tracker';
+
+import {
   getTransactions,
   clearTransactionHistory
-} from './transactions';
+} from './transactions/query';
 
 export type { 
   Transaction, 

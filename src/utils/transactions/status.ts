@@ -1,8 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Json } from "@/integrations/supabase/types";
-import { TransactionStatus, getMetadataValue } from "./types";
+import { TransactionStatus } from "./types";
 
 /**
  * Update transaction status
@@ -29,49 +28,43 @@ export const updateTransactionStatus = async (
     }
     
     // Create safe metadata from existing data
-    const existingMetadata = existingTx?.metadata as Record<string, Json> || {};
+    const existingMetadata = existingTx?.metadata || {};
     
     // Update the metadata with new information
-    const updatedMetadata: Record<string, Json> = {
+    const updatedMetadata = {
       ...existingMetadata,
       status: status,
       blockNumber: blockNumber,
-      ...(metadata as Record<string, Json> || {})
+      ...(metadata || {})
     };
     
     // Update transaction in Supabase
-    const { error, data } = await supabase
+    const { error } = await supabase
       .from('blockchain_transactions')
       .update({
         metadata: updatedMetadata
       })
       .eq('hash', hash.toLowerCase())
-      .eq('from_address', account.toLowerCase())
-      .select()
-      .single();
+      .eq('from_address', account.toLowerCase());
     
     if (error) {
       console.error("Error updating transaction:", error);
       return;
     }
     
-    // Safely access metadata
-    const txMetadata = data.metadata as Record<string, Json> || {};
-    const description = getMetadataValue(txMetadata, 'description', "Transaction");
-    
     // Show toast notification based on status
     if (status === 'confirmed') {
-      toast.success(`Transaction confirmed: ${description}`, {
+      toast.success(`Transaction confirmed`, {
         description: `Block: ${blockNumber}`,
         duration: 5000
       });
     } else if (status === 'failed') {
-      toast.error(`Transaction failed: ${description}`, {
-        description: "Please check blockchain explorer for details",
+      toast.error(`Transaction failed`, {
+        description: `Please try again`,
         duration: 5000
       });
     }
-  } catch (err) {
-    console.error("Failed to update transaction in database:", err);
+  } catch (error) {
+    console.error("Error updating transaction status:", error);
   }
 };
