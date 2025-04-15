@@ -50,7 +50,7 @@ export const EnhancedLoanApplicationForm: React.FC<LoanApplicationFormProps> = (
     getLoanSummary
   } = useLoanCalculations(
     trustScore,
-    kyc === 1, // Convert numeric status to boolean for calculations
+    kyc, // Pass kyc directly as a number without conversion
     loanAmount,
     loanDuration,
     isConnected,
