@@ -24,7 +24,8 @@ export const fetchUserProfile = async (userId: string): Promise<any> => {
 export const createUserWithProfile = async (
   email: string, 
   password: string, 
-  name: string
+  name: string,
+  role: 'user' | 'bank' = 'user'
 ): Promise<boolean> => {
   try {
     const { data, error } = await supabase.auth.signUp({
@@ -33,7 +34,7 @@ export const createUserWithProfile = async (
       options: {
         data: {
           name: name,
-          role: 'user',
+          role: role,
           mfa_enabled: false,
           kyc_status: 'not_submitted'
         }
@@ -46,15 +47,22 @@ export const createUserWithProfile = async (
       return false;
     }
 
+    if (!data.user) {
+      console.error("No user returned from signUp");
+      toast.error("Registration failed: No user created");
+      return false;
+    }
+
     // Create a user profile in the profiles table
     const { error: profileError } = await supabase
       .from('profiles')
       .insert([
         {
+          id: data.user.id,
           user_id: data.user.id,
           email: email,
           name: name,
-          role: 'user',
+          role: role,
           mfa_enabled: false,
           kyc_status: 'not_submitted'
         }
@@ -62,7 +70,7 @@ export const createUserWithProfile = async (
 
     if (profileError) {
       console.error("Profile creation error:", profileError);
-      toast.error("Failed to create user profile");
+      toast.error("Failed to create user profile: " + profileError.message);
       return false;
     }
 

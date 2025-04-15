@@ -1,9 +1,8 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { AuthContextType, User } from "./types";
+import { AuthContextType, User, UserRole } from "./types";
 import { fetchUserProfile, createUserWithProfile, mapUserWithProfile, mockWalletUser } from "./authUtils";
 import { setupUserMFA, verifyUserMFA, disableUserMFA } from "./mfaUtils";
 
@@ -43,7 +42,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     loadSession();
   }, []);
 
-  // Implement the login function
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
@@ -65,7 +63,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(userWithProfile);
       setIsAuthenticated(true);
       
-      // Check if MFA is required
       if (userWithProfile.mfa_enabled) {
         setIsMFARequired(true);
         toast.info("Multi-factor authentication required");
@@ -84,18 +81,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Implement the register function
-  const register = async (email: string, password: string, name: string) => {
+  const register = async (email: string, password: string, name: string, role: UserRole = 'user') => {
     setIsLoading(true);
     try {
-      const success = await createUserWithProfile(email, password, name);
+      const success = await createUserWithProfile(email, password, name, role);
       return success;
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Implement the logout function
   const logout = async () => {
     setIsLoading(true);
     try {
@@ -119,9 +114,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Implement the loginWithWallet function
   const loginWithWallet = async (address: string) => {
-    // Mock wallet-based authentication for now
     toast.success(`Logged in with wallet address: ${address}`);
     const mockUser = mockWalletUser(address);
     setUser(mockUser);
@@ -129,18 +122,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return true;
   };
 
-  // Implement setupMFA function
   const setupMFA = async (phoneNumber: string, method: "sms" | "email") => {
     const success = await setupUserMFA(phoneNumber, method);
     if (success && user) {
-      // Update user with MFA enabled
       const updatedUser = { ...user, mfa_enabled: true };
       setUser(updatedUser);
     }
     return success;
   };
 
-  // Implement verifyMFA function
   const verifyMFA = async (code: string) => {
     const success = await verifyUserMFA(code);
     if (success) {
@@ -154,7 +144,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return success;
   };
 
-  // Implement disableMFA method
   const disableMFA = async () => {
     if (!user) {
       toast.error("No user logged in");
@@ -163,7 +152,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     const success = await disableUserMFA(user.id);
     if (success) {
-      // Update the local user state
       setUser(prevUser => prevUser ? { ...prevUser, mfa_enabled: false } : null);
     }
     return success;

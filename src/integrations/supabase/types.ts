@@ -11,29 +11,44 @@ export type Database = {
     Tables: {
       profiles: {
         Row: {
+          address: string | null
           created_at: string
           email: string | null
           id: string
+          kyc_status: string | null
+          mfa_enabled: boolean | null
           name: string | null
+          phone: string | null
           role: string
+          trust_score: number | null
           updated_at: string
           wallet_address: string | null
         }
         Insert: {
+          address?: string | null
           created_at?: string
           email?: string | null
           id: string
+          kyc_status?: string | null
+          mfa_enabled?: boolean | null
           name?: string | null
+          phone?: string | null
           role: string
+          trust_score?: number | null
           updated_at?: string
           wallet_address?: string | null
         }
         Update: {
+          address?: string | null
           created_at?: string
           email?: string | null
           id?: string
+          kyc_status?: string | null
+          mfa_enabled?: boolean | null
           name?: string | null
+          phone?: string | null
           role?: string
+          trust_score?: number | null
           updated_at?: string
           wallet_address?: string | null
         }

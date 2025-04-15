@@ -24,8 +24,8 @@ export const RegisterForm = () => {
   const handleSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true);
     try {
-      // Fix the parameter order to match the expected function signature
-      await register(data.email, data.password, data.name);
+      // Pass the role parameter from the form
+      await register(data.email, data.password, data.name, data.role);
       // Navigation is handled in the register function
     } catch (error) {
       console.error("Registration error:", error);
