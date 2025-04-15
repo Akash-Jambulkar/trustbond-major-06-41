@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -10,7 +9,7 @@ import { useMode } from "@/contexts/ModeContext";
 import { toast } from "sonner";
 
 const AdminSettings = () => {
-  const { mode, toggleMode, enableBlockchain, toggleBlockchain } = useMode();
+  const { mode, enableBlockchain, toggleBlockchain, setProductionMode } = useMode();
 
   const handleSaveNotificationSettings = () => {
     toast.success("Notification settings saved");
@@ -46,17 +45,17 @@ const AdminSettings = () => {
                 <div>
                   <h3 className="text-sm font-medium">System Mode</h3>
                   <p className="text-sm text-muted-foreground">
-                    Toggle between production and demo mode
+                    The application is running in production mode
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Label htmlFor="mode-toggle" className="text-sm">
-                    {mode === "production" ? "Production" : "Demo"}
+                    Production
                   </Label>
                   <Switch 
                     id="mode-toggle" 
-                    checked={mode === "production"}
-                    onCheckedChange={toggleMode}
+                    checked={true}
+                    disabled={true}
                   />
                 </div>
               </div>

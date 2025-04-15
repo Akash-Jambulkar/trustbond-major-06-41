@@ -34,7 +34,7 @@ export const WalletStatus = () => {
     connectionError
   } = useBlockchain();
   
-  const { enableBlockchain, isDemoMode } = useMode();
+  const { enableBlockchain } = useMode();
   const [showError, setShowError] = useState<boolean>(false);
 
   // Networks to display in the dropdown
@@ -131,7 +131,7 @@ export const WalletStatus = () => {
             onClick={handleConnect}
             variant="outline" 
             className="flex items-center gap-2"
-            disabled={isBlockchainLoading || isDemoMode}
+            disabled={isBlockchainLoading}
           >
             <Wallet size={20} />
             <span className="hidden md:inline">
