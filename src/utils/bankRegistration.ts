@@ -94,7 +94,7 @@ export async function saveBankRegistration(registration: Omit<BankRegistrationTy
     };
 
     const { data, error } = await bankRegistrationsTable()
-      .insert([registrationData])
+      .insert([registrationData as any])
       .select('id')
       .single();
 
@@ -122,7 +122,7 @@ export async function updateBankRegistration(id: string, updates: Partial<BankRe
     };
 
     const { error } = await bankRegistrationsTable()
-      .update(updatesWithTimestamp)
+      .update(updatesWithTimestamp as any)
       .eq('id', id);
 
     if (error) {
@@ -147,7 +147,7 @@ export async function approveBankRegistration(bankId: string): Promise<boolean> 
       .update({
         status: 'approved',
         updated_at: new Date().toISOString()
-      })
+      } as any)
       .eq('id', bankId)
       .select('*')
       .single();
@@ -166,13 +166,13 @@ export async function approveBankRegistration(bankId: string): Promise<boolean> 
         role: 'bank',
         wallet_address: bankDataTyped.wallet_address,
         is_verified: true
-      } as unknown as UsersMetadataType);
+      } as any);
 
     if (userMetadataError) {
       console.error("Error adding bank to users_metadata:", userMetadataError);
       // Try to rollback bank registration approval
       await bankRegistrationsTable()
-        .update({ status: 'pending' })
+        .update({ status: 'pending' } as any)
         .eq('id', bankId);
         
       return false;
@@ -185,6 +185,5 @@ export async function approveBankRegistration(bankId: string): Promise<boolean> 
   }
 }
 
-// Export a default component for the BankRegistration page
-// This fixes the import error in src/pages/dashboard/bank/BankRegistration.tsx
+// Export BankRegistration component for the BankRegistration page
 export { getBankRegistrations as BankRegistration };

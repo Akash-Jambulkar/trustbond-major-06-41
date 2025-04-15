@@ -201,11 +201,11 @@ const VerifyKYC = () => {
         .eq('document_hash', hashToVerify)
         .maybeSingle();
       
-      const exists = !result.error && result.data;
+      const exists = !!(!result.error && result.data);
       let documentDetails = exists ? result.data : null;
       
       setHashVerificationResult({
-        exists: exists ? true : false,
+        exists,
         documentDetails,
         isVerifying: false
       });
@@ -230,6 +230,37 @@ const VerifyKYC = () => {
       case 'driving_license': return 'Driving License';
       default: return type;
     }
+  };
+
+  const renderBlockchainVerification = () => {
+    if (!enableBlockchain) return null;
+    
+    return (
+      <div className="space-y-2 sm:col-span-2">
+        <h3 className="text-sm font-medium">Blockchain Verification</h3>
+        <div className="rounded-md border p-3 bg-gray-50">
+          {selectedDocument?.blockchain_tx_hash ? (
+            <div className="space-y-2">
+              <div className="grid grid-cols-4">
+                <div className="text-sm font-medium">Transaction:</div>
+                <div className="text-xs font-mono col-span-3 truncate">
+                  {selectedDocument.blockchain_tx_hash}
+                </div>
+              </div>
+              <div className="flex items-center text-sm text-green-600">
+                <CheckCircle className="h-4 w-4 mr-1" />
+                <span>Verified on blockchain</span>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center text-sm text-amber-600">
+              <AlertTriangle className="h-4 w-4 mr-1" />
+              <span>Not yet verified on blockchain</span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
   };
 
   return (

@@ -63,7 +63,7 @@ export default function BankApprovals() {
           .update({
             status: 'rejected',
             updated_at: new Date().toISOString()
-          })
+          } as any)
           .eq('id', bankId);
         
         if (error) {

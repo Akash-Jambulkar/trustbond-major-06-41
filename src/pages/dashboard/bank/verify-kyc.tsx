@@ -179,6 +179,40 @@ const VerifyKYCPage = () => {
     }
   };
   
+  const handleStatusChange = async (docId: string, newStatus: "verified" | "rejected") => {
+    try {
+      const now = new Date().toISOString();
+      
+      const updateData = { 
+        verification_status: newStatus,
+        verified_at: now
+      };
+      
+      const { error } = await kycSubmissionsTable()
+        .update(updateData as any)
+        .eq('id', docId);
+      
+      if (error) {
+        console.error("Error updating document status:", error);
+        toast.error("Failed to update document status");
+        return;
+      }
+      
+      setKycRequests(prevRequests => 
+        prevRequests.map(req => 
+          req.id === docId 
+            ? { ...req, status: newStatus } 
+            : req
+        )
+      );
+      
+      toast.success(`KYC status updated to ${newStatus}`);
+    } catch (error) {
+      console.error("Error updating status:", error);
+      toast.error("Failed to update document status");
+    }
+  };
+  
   const checkDocumentUniqueness = async (documentType: string, documentNumber: string) => {
     setUniquenessCheck({ isChecking: true, result: null });
     try {
