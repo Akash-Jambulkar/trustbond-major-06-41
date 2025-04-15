@@ -1,145 +1,127 @@
-import { Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
-import { ModeProvider } from './contexts/ModeContext';
-import { BlockchainProvider } from './contexts/BlockchainContext';
-import { Toaster } from './components/ui/toaster';
-import { Toaster as SonnerToaster } from 'sonner';
-import { ProtectedRoute } from './components/ProtectedRoute';
-import { DashboardLayout } from './components/DashboardLayout';
 
-// Pages
-import Index from './pages/Index';
-import About from './pages/About';
-import Contact from './pages/Contact';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import MFAVerify from './pages/MFAVerify';
-import MFASetup from './pages/MFASetup';
-import NotFound from './pages/NotFound';
-import Whitepaper from './pages/Whitepaper';
+import { lazy, Suspense } from "react";
+import { Routes, Route } from "react-router-dom";
+import { Toaster } from "sonner";
+import { Toaster as UIToaster } from "@/components/ui/toaster";
+import { ModeProvider } from "@/contexts/ModeContext";
+import { BlockchainProvider } from "@/contexts/BlockchainContext";
+import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
-// User Dashboard Pages
-import UserDashboard from './pages/dashboard/UserDashboard';
-import UserHome from './pages/dashboard/user/UserHome';
-import KYCPage from './pages/dashboard/user/KYCPage';
-import LoansPage from './pages/dashboard/user/LoansPage';
-import LoanDetailsPage from './pages/dashboard/user/LoanDetailsPage';
-import LoanApplicationPage from './pages/dashboard/user/LoanApplicationPage';
-import ProfilePage from './pages/dashboard/user/ProfilePage';
-import TrustScorePage from './pages/dashboard/user/TrustScorePage';
-import BlockchainTransactionsPage from './pages/dashboard/BlockchainTransactionsPage';
+// Lazy load routes for better performance
+const Index = lazy(() => import("@/pages/Index"));
+const About = lazy(() => import("@/pages/About"));
+const Contact = lazy(() => import("@/pages/Contact"));
+const Login = lazy(() => import("@/pages/Login"));
+const Register = lazy(() => import("@/pages/Register"));
+const MFASetup = lazy(() => import("@/pages/MFASetup"));
+const MFAVerify = lazy(() => import("@/pages/MFAVerify"));
+const Whitepaper = lazy(() => import("@/pages/Whitepaper"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
 
-// Bank Dashboard Pages
-import BankDashboard from './pages/dashboard/BankDashboard';
-import BankHome from './pages/dashboard/bank/BankHome';
-import VerifyKYC from './pages/dashboard/bank/VerifyKYC';
-import ConsensusVerificationPage from './pages/dashboard/bank/ConsensusVerificationPage';
-import BankLoans from './pages/dashboard/bank/BankLoans';
-import ManageLoans from './pages/dashboard/bank/ManageLoans';
-import BankProfile from './pages/dashboard/bank/BankProfile';
-import BankVerification from './pages/dashboard/bank/BankVerification';
-import BankRegistration from './pages/dashboard/bank/BankRegistration';
-import SecureSharing from './pages/dashboard/bank/SecureSharing';
-import BankTrustScores from './pages/dashboard/bank/BankTrustScores';
+// User Dashboard
+const UserDashboard = lazy(() => import("@/pages/dashboard/UserDashboard"));
+const UserHome = lazy(() => import("@/pages/dashboard/user/UserHome"));
+const KYCPage = lazy(() => import("@/pages/dashboard/user/KYCPage"));
+const ProfilePage = lazy(() => import("@/pages/dashboard/user/ProfilePage"));
+const LoansPage = lazy(() => import("@/pages/dashboard/user/LoansPage"));
+const LoanDetailsPage = lazy(() => import("@/pages/dashboard/user/LoanDetailsPage"));
+const LoanApplicationPage = lazy(() => import("@/pages/dashboard/user/LoanApplicationPage"));
+const TrustScorePage = lazy(() => import("@/pages/dashboard/user/TrustScorePage"));
+const AnalyticsPage = lazy(() => import("@/pages/dashboard/user/AnalyticsPage"));
+const SecuritySettingsPage = lazy(() => import("@/pages/dashboard/user/SecuritySettingsPage"));
 
-// Admin Dashboard Pages
-import AdminDashboard from './pages/dashboard/AdminDashboard';
-import AdminHome from './pages/dashboard/admin/AdminHome';
-import AdminUsers from './pages/dashboard/admin/AdminUsers';
-import AdminBanks from './pages/dashboard/admin/BankApprovals';
-import BankRegistrationPage from './pages/dashboard/admin/BankRegistrationPage';
-import AdminProfile from './pages/dashboard/admin/AdminProfile';
-import AdminSettings from './pages/dashboard/admin/AdminSettings';
-import BlockchainSetup from './pages/dashboard/admin/BlockchainSetup';
+// Bank Dashboard
+const BankDashboard = lazy(() => import("@/pages/dashboard/BankDashboard"));
+const BankHome = lazy(() => import("@/pages/dashboard/bank/BankHome"));
+const BankLoans = lazy(() => import("@/pages/dashboard/bank/BankLoans"));
+const BankProfile = lazy(() => import("@/pages/dashboard/bank/BankProfile"));
+const ManageLoans = lazy(() => import("@/pages/dashboard/bank/ManageLoans"));
+const SecureSharing = lazy(() => import("@/pages/dashboard/bank/SecureSharing"));
+const VerifyKYC = lazy(() => import("@/pages/dashboard/bank/VerifyKYC"));
+const BankRegistration = lazy(() => import("@/pages/dashboard/bank/BankRegistration"));
+const BankVerification = lazy(() => import("@/pages/dashboard/bank/BankVerification"));
+const ConsensusVerificationPage = lazy(() => import("@/pages/dashboard/bank/ConsensusVerificationPage"));
+const BankTrustScores = lazy(() => import("@/pages/dashboard/bank/BankTrustScores"));
+
+// Admin Dashboard
+const AdminDashboard = lazy(() => import("@/pages/dashboard/AdminDashboard"));
+const AdminHome = lazy(() => import("@/pages/dashboard/admin/AdminHome"));
+const AdminProfile = lazy(() => import("@/pages/dashboard/admin/AdminProfile"));
+const AdminSettings = lazy(() => import("@/pages/dashboard/admin/AdminSettings"));
+const AdminUsers = lazy(() => import("@/pages/dashboard/admin/AdminUsers"));
+const BankApprovals = lazy(() => import("@/pages/dashboard/admin/BankApprovals"));
+const BankRegistrationPage = lazy(() => import("@/pages/dashboard/admin/BankRegistrationPage"));
+const BlockchainSetup = lazy(() => import("@/pages/dashboard/admin/BlockchainSetup"));
+
+// Blockchain Transactions
+const BlockchainTransactionsPage = lazy(() => import("@/pages/dashboard/BlockchainTransactionsPage"));
 
 function App() {
   return (
     <ModeProvider>
       <BlockchainProvider>
         <AuthProvider>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<Index />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/mfa-verify" element={<MFAVerify />} />
-            <Route path="/whitepaper" element={<Whitepaper />} />
-            
-            {/* Protected Routes */}
-            <Route path="/mfa-setup" element={
-              <ProtectedRoute>
-                <MFASetup />
-              </ProtectedRoute>
-            } />
+          <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading...</div>}>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<Index />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/mfa-setup" element={<MFASetup />} />
+              <Route path="/mfa-verify" element={<MFAVerify />} />
+              <Route path="/whitepaper" element={<Whitepaper />} />
 
-            {/* User Dashboard */}
-            <Route 
-              path="/dashboard/user" 
-              element={
-                <ProtectedRoute allowedRoles={["user"]}>
-                  <DashboardLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<UserHome />} />
-              <Route path="kyc" element={<KYCPage />} />
-              <Route path="loans" element={<LoansPage />} />
-              <Route path="loans/apply" element={<LoanApplicationPage />} />
-              <Route path="loans/:id" element={<LoanDetailsPage />} />
-              <Route path="profile" element={<ProfilePage />} />
-              <Route path="trust-score" element={<TrustScorePage />} />
-              <Route path="transactions" element={<BlockchainTransactionsPage />} />
-            </Route>
+              {/* User Dashboard */}
+              <Route path="/dashboard/user" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>}>
+                <Route index element={<UserHome />} />
+                <Route path="kyc" element={<KYCPage />} />
+                <Route path="profile" element={<ProfilePage />} />
+                <Route path="loans" element={<LoansPage />} />
+                <Route path="loans/:id" element={<LoanDetailsPage />} />
+                <Route path="loan-application" element={<LoanApplicationPage />} />
+                <Route path="trust-score" element={<TrustScorePage />} />
+                <Route path="analytics" element={<AnalyticsPage />} />
+                <Route path="security" element={<SecuritySettingsPage />} />
+                <Route path="transactions" element={<BlockchainTransactionsPage />} />
+              </Route>
 
-            {/* Bank Dashboard */}
-            <Route 
-              path="/dashboard/bank" 
-              element={
-                <ProtectedRoute allowedRoles={["bank"]}>
-                  <DashboardLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<BankHome />} />
-              <Route path="verify-kyc" element={<VerifyKYC />} />
-              <Route path="consensus-verification" element={<ConsensusVerificationPage />} />
-              <Route path="loans" element={<BankLoans />} />
-              <Route path="manage-loans" element={<ManageLoans />} />
-              <Route path="profile" element={<BankProfile />} />
-              <Route path="verification" element={<BankVerification />} />
-              <Route path="registration" element={<BankRegistration />} />
-              <Route path="secure-sharing" element={<SecureSharing />} />
-              <Route path="trust-scores" element={<BankTrustScores />} />
-              <Route path="transactions" element={<BlockchainTransactionsPage />} />
-            </Route>
+              {/* Bank Dashboard */}
+              <Route path="/dashboard/bank" element={<ProtectedRoute role="bank"><BankDashboard /></ProtectedRoute>}>
+                <Route index element={<BankHome />} />
+                <Route path="loans" element={<BankLoans />} />
+                <Route path="profile" element={<BankProfile />} />
+                <Route path="manage-loans" element={<ManageLoans />} />
+                <Route path="secure-sharing" element={<SecureSharing />} />
+                <Route path="verify-kyc" element={<VerifyKYC />} />
+                <Route path="bank-registration" element={<BankRegistration />} />
+                <Route path="bank-verification" element={<BankVerification />} />
+                <Route path="consensus-verification" element={<ConsensusVerificationPage />} />
+                <Route path="trust-scores" element={<BankTrustScores />} />
+                <Route path="transactions" element={<BlockchainTransactionsPage />} />
+              </Route>
 
-            {/* Admin Dashboard */}
-            <Route 
-              path="/dashboard/admin" 
-              element={
-                <ProtectedRoute allowedRoles={["admin"]}>
-                  <DashboardLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<AdminHome />} />
-              <Route path="users" element={<AdminUsers />} />
-              <Route path="banks" element={<AdminBanks />} />
-              <Route path="bank-registrations" element={<BankRegistrationPage />} />
-              <Route path="profile" element={<AdminProfile />} />
-              <Route path="settings" element={<AdminSettings />} />
-              <Route path="blockchain-setup" element={<BlockchainSetup />} />
-              <Route path="transactions" element={<BlockchainTransactionsPage />} />
-            </Route>
+              {/* Admin Dashboard */}
+              <Route path="/dashboard/admin" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>}>
+                <Route index element={<AdminHome />} />
+                <Route path="profile" element={<AdminProfile />} />
+                <Route path="settings" element={<AdminSettings />} />
+                <Route path="users" element={<AdminUsers />} />
+                <Route path="bank-approvals" element={<BankApprovals />} />
+                <Route path="bank-registration" element={<BankRegistrationPage />} />
+                <Route path="blockchain-setup" element={<BlockchainSetup />} />
+                <Route path="transactions" element={<BlockchainTransactionsPage />} />
+              </Route>
 
-            {/* 404 Not Found */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          
-          <Toaster />
-          <SonnerToaster position="top-right" />
+              {/* 404 route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+
+          <Toaster position="top-right" richColors closeButton />
+          <UIToaster />
         </AuthProvider>
       </BlockchainProvider>
     </ModeProvider>

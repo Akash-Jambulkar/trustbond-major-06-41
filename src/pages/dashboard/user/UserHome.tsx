@@ -1,141 +1,196 @@
-import { useAuth } from "@/contexts/AuthContext";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+import React from "react";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; 
-import { NetworkStatus } from "@/components/NetworkStatus";
-import { Shield, CreditCard, LineChart, User, Plus, Calendar, Activity } from "lucide-react";
-import { BlockchainActions } from "@/components/blockchain/BlockchainActions";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from "@/contexts/AuthContext";
+import { useBlockchain } from "@/contexts/BlockchainContext";
+import { Link } from "react-router-dom";
+import { ChevronRight, Shield, ChartBar, Wallet, FileCheck, BarChart } from "lucide-react";
 
 const UserHome = () => {
   const { user } = useAuth();
+  const { isConnected } = useBlockchain();
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-        <NetworkStatus />
+    <div className="container mx-auto px-4 py-6">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Welcome back, {user?.name || user?.email || "User"}</h1>
+          <p className="text-muted-foreground mt-1">
+            Your secure blockchain-based KYC and loan management dashboard
+          </p>
+        </div>
       </div>
-      
-      {/* Dashboard cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Profile Status</CardTitle>
-            <User className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">KYC Status</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">Complete</div>
+            <div className="text-2xl font-bold">Verified</div>
             <p className="text-xs text-muted-foreground">
-              Welcome back, {user?.name || "User"}
+              Documents verified and approved
             </p>
           </CardContent>
+          <CardFooter>
+            <Link to="/dashboard/user/kyc" className="text-sm text-trustbond-primary flex items-center">
+              View details <ChevronRight className="h-4 w-4 ml-1" />
+            </Link>
+          </CardFooter>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Account Type</CardTitle>
-            <Shield className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Trust Score</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold capitalize">{user?.role || "Standard"}</div>
+            <div className="text-2xl font-bold">85/100</div>
             <p className="text-xs text-muted-foreground">
-              Blockchain Enabled
+              Excellent credit rating
             </p>
           </CardContent>
+          <CardFooter>
+            <Link to="/dashboard/user/trust-score" className="text-sm text-trustbond-primary flex items-center">
+              View details <ChevronRight className="h-4 w-4 ml-1" />
+            </Link>
+          </CardFooter>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Last Activity</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Active Loans</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">Today</div>
+            <div className="text-2xl font-bold">2</div>
             <p className="text-xs text-muted-foreground">
-              {new Date().toLocaleDateString()}
+              Currently active loan contracts
             </p>
           </CardContent>
+          <CardFooter>
+            <Link to="/dashboard/user/loans" className="text-sm text-trustbond-primary flex items-center">
+              View loans <ChevronRight className="h-4 w-4 ml-1" />
+            </Link>
+          </CardFooter>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Notifications</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Upcoming Payment</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">0.45 ETH</div>
             <p className="text-xs text-muted-foreground">
-              No pending notifications
+              Due in 8 days (May 23, 2025)
             </p>
           </CardContent>
+          <CardFooter>
+            <Link to="/dashboard/user/loans" className="text-sm text-trustbond-primary flex items-center">
+              View schedule <ChevronRight className="h-4 w-4 ml-1" />
+            </Link>
+          </CardFooter>
         </Card>
       </div>
-      
-      {/* Tabs section */}
-      <Tabs defaultValue="activity">
-        <TabsList>
-          <TabsTrigger value="activity">Recent Activity</TabsTrigger>
-          <TabsTrigger value="actions">Quick Actions</TabsTrigger>
-          <TabsTrigger value="blockchain">Blockchain</TabsTrigger>
-        </TabsList>
-        <TabsContent value="activity" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>Your recent account activity and updates</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between border-b pb-2">
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Account Login</span>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="col-span-2 h-auto">
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+            <CardDescription>
+              Access common tasks and features
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              <Link to="/dashboard/user/loan-application">
+                <Button variant="outline" className="w-full h-auto py-4 px-4 flex flex-col items-center justify-center gap-2 hover:bg-muted/50">
+                  <Wallet className="h-6 w-6 text-trustbond-primary" />
+                  <div className="text-center">
+                    <div className="font-medium">Apply for Loan</div>
+                    <p className="text-xs text-muted-foreground">Create a new loan request</p>
                   </div>
-                  <span className="text-xs text-muted-foreground">Today</span>
-                </div>
-                <div className="flex items-center justify-between border-b pb-2">
-                  <div className="flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Profile Updated</span>
+                </Button>
+              </Link>
+              <Link to="/dashboard/user/kyc">
+                <Button variant="outline" className="w-full h-auto py-4 px-4 flex flex-col items-center justify-center gap-2 hover:bg-muted/50">
+                  <FileCheck className="h-6 w-6 text-trustbond-primary" />
+                  <div className="text-center">
+                    <div className="font-medium">KYC Documents</div>
+                    <p className="text-xs text-muted-foreground">Manage verification docs</p>
                   </div>
-                  <span className="text-xs text-muted-foreground">Yesterday</span>
-                </div>
-                <div className="flex items-center justify-between pb-2">
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Account Created</span>
+                </Button>
+              </Link>
+              <Link to="/dashboard/user/security">
+                <Button variant="outline" className="w-full h-auto py-4 px-4 flex flex-col items-center justify-center gap-2 hover:bg-muted/50 bg-amber-50 border-amber-200">
+                  <Shield className="h-6 w-6 text-amber-600" />
+                  <div className="text-center">
+                    <div className="font-medium">Security Settings</div>
+                    <p className="text-xs text-muted-foreground">Enhance your security</p>
                   </div>
-                  <span className="text-xs text-muted-foreground">Last Week</span>
-                </div>
+                </Button>
+              </Link>
+              <Link to="/dashboard/user/loans">
+                <Button variant="outline" className="w-full h-auto py-4 px-4 flex flex-col items-center justify-center gap-2 hover:bg-muted/50">
+                  <ChartBar className="h-6 w-6 text-trustbond-primary" />
+                  <div className="text-center">
+                    <div className="font-medium">Manage Loans</div>
+                    <p className="text-xs text-muted-foreground">View and manage loans</p>
+                  </div>
+                </Button>
+              </Link>
+              <Link to="/dashboard/user/analytics">
+                <Button variant="outline" className="w-full h-auto py-4 px-4 flex flex-col items-center justify-center gap-2 hover:bg-muted/50 bg-blue-50 border-blue-200">
+                  <BarChart className="h-6 w-6 text-blue-600" />
+                  <div className="text-center">
+                    <div className="font-medium">Analytics Dashboard</div>
+                    <p className="text-xs text-muted-foreground">View loan performance</p>
+                  </div>
+                </Button>
+              </Link>
+              <Link to="/dashboard/user/transactions">
+                <Button variant="outline" className="w-full h-auto py-4 px-4 flex flex-col items-center justify-center gap-2 hover:bg-muted/50">
+                  <Wallet className="h-6 w-6 text-trustbond-primary" />
+                  <div className="text-center">
+                    <div className="font-medium">Transactions</div>
+                    <p className="text-xs text-muted-foreground">View transaction history</p>
+                  </div>
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Blockchain Status</CardTitle>
+            <CardDescription>
+              Connection and transaction status
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium">Wallet Connection</span>
+                <span className={`text-sm ${isConnected ? "text-green-600" : "text-amber-600"}`}>
+                  {isConnected ? "Connected" : "Disconnected"}
+                </span>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="actions" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>Frequently used account actions</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
-                <Button variant="outline" className="h-20 flex flex-col justify-center items-center">
-                  <User className="h-5 w-5 mb-1" />
-                  <span>Update Profile</span>
-                </Button>
-                <Button variant="outline" className="h-20 flex flex-col justify-center items-center">
-                  <Shield className="h-5 w-5 mb-1" />
-                  <span>Security Settings</span>
-                </Button>
-                <Button variant="outline" className="h-20 flex flex-col justify-center items-center">
-                  <CreditCard className="h-5 w-5 mb-1" />
-                  <span>Account Settings</span>
-                </Button>
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium">Mode</span>
+                <span className="text-sm">Production</span>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="blockchain" className="space-y-4">
-          <BlockchainActions />
-        </TabsContent>
-      </Tabs>
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium">Pending Transactions</span>
+                <span className="text-sm">0</span>
+              </div>
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Link to="/dashboard/user/transactions" className="w-full">
+              <Button variant="outline" className="w-full">
+                View Transaction History
+              </Button>
+            </Link>
+          </CardFooter>
+        </Card>
+      </div>
     </div>
   );
 };
