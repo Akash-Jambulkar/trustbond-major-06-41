@@ -26,7 +26,7 @@ export type User = {
   user_id: string;
   email: string;
   name?: string;
-  role: 'user' | 'bank' | 'admin';
+  role: UserRole;
   mfa_enabled: boolean;
   kyc_status?: 'pending' | 'verified' | 'rejected' | 'not_submitted';
   app_metadata?: any;
@@ -44,7 +44,7 @@ export interface AuthContextType {
   isMFARequired?: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   loginWithWallet?: (walletAddress: string) => Promise<boolean>;
-  register: (email: string, password: string, name: string) => Promise<boolean>;
+  register: (email: string, password: string, name: string, role?: UserRole) => Promise<boolean>;
   logout: () => Promise<void>;
   verifyMFA?: (code: string) => Promise<boolean>;
   setupMFA?: (phoneNumber: string, method: 'sms' | 'email') => Promise<boolean>;

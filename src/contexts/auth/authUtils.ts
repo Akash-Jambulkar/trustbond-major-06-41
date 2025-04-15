@@ -1,7 +1,7 @@
 
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import { User } from "../auth/types";
+import { User, UserRole } from "./types";
 
 // Helper function to fetch user profile after login
 export const fetchUserProfile = async (userId: string): Promise<any> => {
@@ -25,7 +25,7 @@ export const createUserWithProfile = async (
   email: string, 
   password: string, 
   name: string,
-  role: 'user' | 'bank' = 'user'
+  role: UserRole = 'user'
 ): Promise<boolean> => {
   try {
     const { data, error } = await supabase.auth.signUp({

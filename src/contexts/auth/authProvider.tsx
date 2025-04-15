@@ -144,7 +144,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return success;
   };
 
-  const disableMFA = async () => {
+  const disableMFA = async (userId: string) => {
     if (!user) {
       toast.error("No user logged in");
       return false;
