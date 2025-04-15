@@ -1,8 +1,11 @@
-// This is a partial fix for the most critical errors
+
+// Fix the ConsensusStatus enum and related type issues
+
 import { kycSubmissionsTable, kycVerificationVotesTable, usersMetadataTable } from './supabase-helper';
 import { KycDocumentSubmissionType, KycVerificationVoteType } from '@/types/supabase-extensions';
 import { supabase } from '@/integrations/supabase/client';
 
+// Define the ConsensusStatus as a string enum to match the string literals used in the code
 export enum ConsensusStatus {
   APPROVED = "approved",
   REJECTED = "rejected",
@@ -36,7 +39,7 @@ export async function getDocumentsNeedingConsensus(): Promise<KycDocumentSubmiss
   try {
     const { data, error } = await kycSubmissionsTable()
       .select('*')
-      .eq('consensus_status', 'in_progress')
+      .eq('consensus_status', ConsensusStatus.IN_PROGRESS)
       .order('submitted_at', { ascending: false });
       
     if (error) {
@@ -94,13 +97,18 @@ export async function getConsensusStatus(documentId: string): Promise<ConsensusR
     const consensusReached = votesReceived >= votesRequired;
     const finalDecision = consensusReached ? approvalsReceived > rejectionsReceived : null;
     
-    let status: ConsensusStatus = document.consensus_status || 'pending';
+    // Convert string status to ConsensusStatus enum value
+    let status = document.consensus_status ? 
+      (document.consensus_status as unknown as ConsensusStatus) : 
+      ConsensusStatus.PENDING;
+      
+    // Update status based on consensus
     if (consensusReached) {
-      status = finalDecision ? 'approved' : 'rejected';
+      status = finalDecision ? ConsensusStatus.APPROVED : ConsensusStatus.REJECTED;
     }
     
     // Calculate progress
-    const progress = Math.min(votesReceived / votesRequired, 1);
+    const progress = Math.min((votesReceived / votesRequired) * 100, 100);
     
     return {
       documentId: document.id,
@@ -237,7 +245,7 @@ export async function updateDocumentConsensusStatus(documentId: string): Promise
     // Update the document's consensus status in the database
     const { error } = await kycSubmissionsTable()
       .update({
-        consensus_status: consensus.status, // Using type assertion to fix the error
+        consensus_status: consensus.status as string, // Using type assertion to fix the error
         updated_at: new Date().toISOString()
       } as any)
       .eq('id', documentId);

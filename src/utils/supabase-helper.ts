@@ -6,41 +6,45 @@ import { supabase } from '@/integrations/supabase/client';
  * These functions provide type safety when querying Supabase tables
  */
 
-// Casting the types to resolve TypeScript issues with the table references
-// Instead of using the unknown casting, we'll use a direct approach
-// with the 'any' type but with proper function typing for better code quality
+// Use a more generic approach to avoid TypeScript errors with table references
+// We're using type assertions to bypass TypeScript limitations while maintaining code quality
 
 // KYC document submissions
 export function kycSubmissionsTable() {
-  return supabase.from('kyc_document_submissions') as any;
+  return supabase.from('kyc_document_submissions') as unknown as ReturnType<typeof supabase.from>;
 }
 
 // Bank registrations
 export function bankRegistrationsTable() {
-  return supabase.from('bank_registrations') as any;
+  return supabase.from('bank_registrations') as unknown as ReturnType<typeof supabase.from>;
 }
 
 // KYC verification votes
 export function kycVerificationVotesTable() {
-  return supabase.from('kyc_verification_votes') as any;
+  return supabase.from('kyc_verification_votes') as unknown as ReturnType<typeof supabase.from>;
 }
 
 // Blockchain transactions
 export function blockchainTransactionsTable() {
-  return supabase.from('blockchain_transactions') as any;
+  return supabase.from('blockchain_transactions') as unknown as ReturnType<typeof supabase.from>;
 }
 
 // Trust scores
 export function trustScoresTable() {
-  return supabase.from('trust_scores') as any;
+  return supabase.from('trust_scores') as unknown as ReturnType<typeof supabase.from>;
 }
 
 // Loans
 export function loansTable() {
-  return supabase.from('loans') as any;
+  return supabase.from('loans') as unknown as ReturnType<typeof supabase.from>;
 }
 
 // Users metadata
 export function usersMetadataTable() {
-  return supabase.from('users_metadata') as any;
+  return supabase.from('users_metadata') as unknown as ReturnType<typeof supabase.from>;
+}
+
+// Profiles
+export function profilesTable() {
+  return supabase.from('profiles') as unknown as ReturnType<typeof supabase.from>;
 }
