@@ -9,6 +9,7 @@ import { ComplianceAndRisk } from "@/components/bank/dashboard/ComplianceAndRisk
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { NetworkStatus } from "@/components/NetworkStatus";
 import { useEffect, useState } from "react";
+import { DashboardStats } from "@/components/dashboard/DashboardStats";
 import { toast } from "sonner";
 
 const BankHome = () => {
@@ -202,16 +203,8 @@ const BankHome = () => {
           <NetworkStatus />
         </div>
         
-        {/* Metrics Cards */}
-        <MetricsCards 
-          kycPendingCount={kycPendingCount}
-          activeLoansCount={activeLoansCount}
-          activeLoanAmount={activeLoanAmount}
-          trustScoreCount={trustScoreCount}
-          isConnected={isConnected}
-          networkId={networkId ? networkId.toString() : undefined}
-          isLoading={isLoading}
-        />
+        {/* Real-time dashboard metrics */}
+        <DashboardStats userRole="bank" />
         
         {/* Tabs for Activities and Actions */}
         <Tabs defaultValue="requests">

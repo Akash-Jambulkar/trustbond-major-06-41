@@ -2,6 +2,7 @@
 import React, { useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { TransactionHistory } from "@/components/blockchain/TransactionHistory";
+import { TransactionVisualizer } from "@/components/blockchain/TransactionVisualizer";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { Shield, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -36,17 +37,25 @@ const BlockchainTransactionsPage = () => {
         </Alert>
       )}
       
-      <Card className="bg-white">
-        <CardHeader>
-          <CardTitle>Transaction History</CardTitle>
-          <CardDescription>
-            View and audit all blockchain transactions
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <TransactionHistory />
-        </CardContent>
-      </Card>
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <Card className="bg-white">
+            <CardHeader>
+              <CardTitle>Transaction History</CardTitle>
+              <CardDescription>
+                View and audit all blockchain transactions
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TransactionHistory />
+            </CardContent>
+          </Card>
+        </div>
+        
+        <div className="lg:col-span-1">
+          <TransactionVisualizer />
+        </div>
+      </div>
     </div>
   );
 };

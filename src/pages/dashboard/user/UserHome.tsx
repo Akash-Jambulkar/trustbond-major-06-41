@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { Link } from "react-router-dom";
 import { ChevronRight, Shield, ChartBar, Wallet, FileCheck, BarChart, CreditCard, BookOpen } from "lucide-react";
+import { DashboardStats } from "@/components/dashboard/DashboardStats";
 
 const UserHome = () => {
   const { user } = useAuth();
@@ -104,98 +105,8 @@ const UserHome = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">KYC Status</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="animate-pulse h-6 bg-gray-200 rounded"></div>
-            ) : (
-              <>
-                <div className="text-2xl font-bold">{kycVerified ? "Verified" : "Not Verified"}</div>
-                <p className="text-xs text-muted-foreground">
-                  {kycVerified ? "Documents verified and approved" : "Submit your documents for verification"}
-                </p>
-              </>
-            )}
-          </CardContent>
-          <CardFooter>
-            <Link to="/dashboard/user/kyc" className="text-sm text-trustbond-primary flex items-center">
-              View details <ChevronRight className="h-4 w-4 ml-1" />
-            </Link>
-          </CardFooter>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Trust Score</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="animate-pulse h-6 bg-gray-200 rounded"></div>
-            ) : (
-              <>
-                <div className="text-2xl font-bold">{trustScore !== null ? `${trustScore}/100` : "N/A"}</div>
-                <p className="text-xs text-muted-foreground">
-                  {trustScore && trustScore > 80 ? "Excellent credit rating" : 
-                   trustScore && trustScore > 60 ? "Good credit rating" : 
-                   trustScore ? "Fair credit rating" : "Not calculated yet"}
-                </p>
-              </>
-            )}
-          </CardContent>
-          <CardFooter>
-            <Link to="/dashboard/user/trust-score" className="text-sm text-trustbond-primary flex items-center">
-              View details <ChevronRight className="h-4 w-4 ml-1" />
-            </Link>
-          </CardFooter>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Active Loans</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="animate-pulse h-6 bg-gray-200 rounded"></div>
-            ) : (
-              <>
-                <div className="text-2xl font-bold">{activeLoans?.length || 0}</div>
-                <p className="text-xs text-muted-foreground">
-                  Currently active loan contracts
-                </p>
-              </>
-            )}
-          </CardContent>
-          <CardFooter>
-            <Link to="/dashboard/user/loans" className="text-sm text-trustbond-primary flex items-center">
-              View loans <ChevronRight className="h-4 w-4 ml-1" />
-            </Link>
-          </CardFooter>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Upcoming Payment</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="animate-pulse h-6 bg-gray-200 rounded"></div>
-            ) : (
-              <>
-                <div className="text-2xl font-bold">{nextPayment ? nextPayment.amount : "N/A"} ETH</div>
-                <p className="text-xs text-muted-foreground">
-                  {nextPayment ? `Due on ${nextPayment.date}` : "No upcoming payments"}
-                </p>
-              </>
-            )}
-          </CardContent>
-          <CardFooter>
-            <Link to="/dashboard/user/loans" className="text-sm text-trustbond-primary flex items-center">
-              View schedule <ChevronRight className="h-4 w-4 ml-1" />
-            </Link>
-          </CardFooter>
-        </Card>
-      </div>
+      {/* Real-time dashboard metrics */}
+      <DashboardStats userRole="user" />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="col-span-2 h-auto">
