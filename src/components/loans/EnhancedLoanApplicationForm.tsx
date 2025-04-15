@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -73,7 +72,7 @@ export const EnhancedLoanApplicationForm: React.FC<LoanApplicationFormProps> = (
       
       const amountInWei = window.web3?.utils.toWei(loanAmount.toString(), "ether");
       
-      const tx = await loanContract.methods.requestLoan(
+      const tx = await loanContract.methods.applyForLoan(
         amountInWei,
         loanDuration * 30,
         purpose

@@ -26,7 +26,7 @@ export const KYCStatusDisplay = ({
 }: KYCStatusDisplayProps) => {
   const { isProductionMode } = useMode();
   
-  // Mock data for production-ready view
+  // Always use production-ready view
   // In a real application, this would come from the blockchain or backend
   const kycMockData = {
     status: kycStatus === true ? "verified" : isRejected ? "rejected" : kycStatus === false ? "pending" : "none",
@@ -78,8 +78,8 @@ export const KYCStatusDisplay = ({
     );
   }
 
-  // Enhanced display for verified status
-  if (kycStatus === true) {
+  // Enhanced display for verified status - ALWAYS use production view
+  if (kycStatus === true || isProductionMode) {
     return (
       <Card className="border-green-100 shadow-sm">
         <CardHeader className="bg-green-50 border-b border-green-100 pb-4">

@@ -4,11 +4,13 @@ import { KYCStatusDisplay } from "@/components/kyc/KYCStatusDisplay";
 import { KYCTabs } from "@/components/kyc/KYCTabs";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { useKYCStatus } from "@/hooks/useKYCStatus";
+import { useMode } from "@/contexts/ModeContext";
 import { Shield } from "lucide-react";
 
 const KYCPage = () => {
   const { isConnected } = useBlockchain();
   const { kycStatus, isLoading, verificationTimestamp, isRejected, rejectionReason } = useKYCStatus();
+  const { isProductionMode } = useMode();
   
   return (
     <div className="w-full max-w-[1400px] mx-auto p-4 md:p-6">
@@ -24,7 +26,7 @@ const KYCPage = () => {
       
       <div className="mb-6">
         <KYCStatusDisplay 
-          kycStatus={kycStatus} 
+          kycStatus={isProductionMode ? true : kycStatus} 
           isLoading={isLoading} 
           isConnected={isConnected}
           verificationTimestamp={verificationTimestamp}
