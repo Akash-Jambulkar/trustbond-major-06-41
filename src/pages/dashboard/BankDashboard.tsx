@@ -180,7 +180,7 @@ const BankDashboard = () => {
         activeLoanAmount={activeLoanAmount}
         trustScoreCount={trustScoreCount}
         isConnected={isConnected}
-        networkId={networkId}
+        networkId={networkId ? networkId.toString() : undefined}
         isLoading={isLoading}
       />
       
