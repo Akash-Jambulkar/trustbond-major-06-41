@@ -1,15 +1,14 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { BankRegistrationType } from '@/types/supabase-extensions';
+import { bankRegistrationsTable } from '@/utils/supabase-helper';
 
 /**
  * Get bank registrations
  */
 export async function getBankRegistrations(): Promise<BankRegistrationType[]> {
   try {
-    // Using type casting as a workaround for the Supabase types
-    const { data, error } = await supabase
-      .from('bank_registrations' as any)
+    const { data, error } = await bankRegistrationsTable()
       .select('*')
       .order('created_at', { ascending: false });
 
@@ -18,7 +17,7 @@ export async function getBankRegistrations(): Promise<BankRegistrationType[]> {
       return [];
     }
 
-    return data as unknown as BankRegistrationType[];
+    return data as BankRegistrationType[];
   } catch (error) {
     console.error("Exception in getBankRegistrations:", error);
     return [];
@@ -30,9 +29,7 @@ export async function getBankRegistrations(): Promise<BankRegistrationType[]> {
  */
 export async function getPendingBankRegistrations(): Promise<BankRegistrationType[]> {
   try {
-    // Using type casting as a workaround for the Supabase types
-    const { data, error } = await supabase
-      .from('bank_registrations' as any)
+    const { data, error } = await bankRegistrationsTable()
       .select('*')
       .eq('status', 'pending')
       .order('created_at', { ascending: true });
@@ -42,7 +39,7 @@ export async function getPendingBankRegistrations(): Promise<BankRegistrationTyp
       return [];
     }
 
-    return data as unknown as BankRegistrationType[];
+    return data as BankRegistrationType[];
   } catch (error) {
     console.error("Exception in getPendingBankRegistrations:", error);
     return [];
@@ -54,9 +51,7 @@ export async function getPendingBankRegistrations(): Promise<BankRegistrationTyp
  */
 export async function saveBankRegistration(registration: Omit<BankRegistrationType, 'id' | 'created_at' | 'updated_at'>): Promise<string | null> {
   try {
-    // Using type casting as a workaround for the Supabase types
-    const { data, error } = await supabase
-      .from('bank_registrations' as any)
+    const { data, error } = await bankRegistrationsTable()
       .insert([{
         ...registration,
         created_at: new Date().toISOString(),
@@ -88,9 +83,7 @@ export async function updateBankRegistration(id: string, updates: Partial<BankRe
       updated_at: new Date().toISOString()
     };
 
-    // Using type casting as a workaround for the Supabase types
-    const { error } = await supabase
-      .from('bank_registrations' as any)
+    const { error } = await bankRegistrationsTable()
       .update(updatesWithTimestamp)
       .eq('id', id);
 

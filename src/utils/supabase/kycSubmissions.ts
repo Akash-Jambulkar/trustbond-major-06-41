@@ -1,15 +1,14 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { KycDocumentSubmissionType } from '@/types/supabase-extensions';
+import { kycSubmissionsTable } from '@/utils/supabase-helper';
 
 /**
  * Get KYC document submissions for a user
  */
 export async function getUserKycSubmissions(userId: string): Promise<KycDocumentSubmissionType[]> {
   try {
-    // Using type casting as a workaround for the Supabase types
-    const { data, error } = await supabase
-      .from('kyc_document_submissions' as any)
+    const { data, error } = await kycSubmissionsTable()
       .select('*')
       .eq('user_id', userId)
       .order('submitted_at', { ascending: false });
@@ -19,7 +18,7 @@ export async function getUserKycSubmissions(userId: string): Promise<KycDocument
       return [];
     }
 
-    return data as unknown as KycDocumentSubmissionType[];
+    return data as KycDocumentSubmissionType[];
   } catch (error) {
     console.error("Exception in getUserKycSubmissions:", error);
     return [];
@@ -31,9 +30,7 @@ export async function getUserKycSubmissions(userId: string): Promise<KycDocument
  */
 export async function saveKycSubmission(submission: Omit<KycDocumentSubmissionType, 'id'>): Promise<string | null> {
   try {
-    // Using type casting as a workaround for the Supabase types
-    const { data, error } = await supabase
-      .from('kyc_document_submissions' as any)
+    const { data, error } = await kycSubmissionsTable()
       .insert([submission])
       .select('id')
       .single();
@@ -55,9 +52,7 @@ export async function saveKycSubmission(submission: Omit<KycDocumentSubmissionTy
  */
 export async function updateKycSubmission(id: string, updates: Partial<KycDocumentSubmissionType>): Promise<boolean> {
   try {
-    // Using type casting as a workaround for the Supabase types
-    const { error } = await supabase
-      .from('kyc_document_submissions' as any)
+    const { error } = await kycSubmissionsTable()
       .update(updates)
       .eq('id', id);
 
@@ -78,9 +73,7 @@ export async function updateKycSubmission(id: string, updates: Partial<KycDocume
  */
 export async function getPendingKycSubmissions(): Promise<KycDocumentSubmissionType[]> {
   try {
-    // Using type casting as a workaround for the Supabase types
-    const { data, error } = await supabase
-      .from('kyc_document_submissions' as any)
+    const { data, error } = await kycSubmissionsTable()
       .select('*')
       .eq('verification_status', 'pending')
       .order('submitted_at', { ascending: true });
@@ -90,7 +83,7 @@ export async function getPendingKycSubmissions(): Promise<KycDocumentSubmissionT
       return [];
     }
 
-    return data as unknown as KycDocumentSubmissionType[];
+    return data as KycDocumentSubmissionType[];
   } catch (error) {
     console.error("Exception in getPendingKycSubmissions:", error);
     return [];

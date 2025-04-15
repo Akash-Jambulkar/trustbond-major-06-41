@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { trackTransaction, watchTransaction } from "@/utils/transactionTracker";
 import { toast } from "sonner";
 import { BankRegistrationType } from "@/types/supabase-extensions";
+import { bankRegistrationsTable, usersMetadataTable } from "@/utils/supabase-helper";
 
 export interface BankRegistration {
   id: string;
@@ -24,14 +25,15 @@ export async function submitBankRegistration(
 ) {
   try {
     // Store bank registration in Supabase
-    const { data, error } = await supabase
-      .from('bank_registrations')
+    const { data, error } = await bankRegistrationsTable()
       .insert({
         name,
         registration_number: registrationNumber,
         wallet_address: walletAddress.toLowerCase(),
         document_url: documentId,
-        status: 'pending'
+        status: 'pending',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       })
       .select()
       .single();
@@ -39,8 +41,7 @@ export async function submitBankRegistration(
     if (error) throw error;
     
     // Create user metadata entry if it doesn't exist
-    await supabase
-      .from('users_metadata')
+    await usersMetadataTable()
       .upsert({
         id: `bank_${Date.now()}`,
         role: 'bank',
@@ -68,8 +69,7 @@ export async function submitBankRegistration(
 export async function getBankRegistrationStatus(walletAddress: string) {
   try {
     // Check if the bank exists in bank_registrations
-    const { data, error } = await supabase
-      .from('bank_registrations')
+    const { data, error } = await bankRegistrationsTable()
       .select('*')
       .eq('wallet_address', walletAddress.toLowerCase())
       .order('created_at', { ascending: false })
@@ -110,8 +110,7 @@ export async function updateBankRegistrationWithTransaction(
 ) {
   try {
     // Update in Supabase
-    const { error } = await supabase
-      .from('bank_registrations')
+    const { error } = await bankRegistrationsTable()
       .update({
         blockchain_tx_hash: txHash,
         updated_at: new Date().toISOString()
@@ -130,8 +129,7 @@ export async function updateBankRegistrationWithTransaction(
 export async function approveBankRegistration(walletAddress: string) {
   try {
     // Update users_metadata to mark the bank as verified
-    const { error: metadataError } = await supabase
-      .from('users_metadata')
+    const { error: metadataError } = await usersMetadataTable()
       .update({
         is_verified: true
       })
@@ -141,8 +139,7 @@ export async function approveBankRegistration(walletAddress: string) {
     if (metadataError) throw metadataError;
     
     // Update bank_registrations status
-    const { error: registrationError } = await supabase
-      .from('bank_registrations')
+    const { error: registrationError } = await bankRegistrationsTable()
       .update({
         status: 'approved',
         updated_at: new Date().toISOString()

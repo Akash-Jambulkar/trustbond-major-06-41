@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,10 +11,10 @@ import { FileText, Search, CheckCircle, XCircle, Eye, AlertTriangle, Download, U
 import { toast } from "sonner";
 import { useMode } from "@/contexts/ModeContext";
 import { verifyHashInDatabase, verifyDocumentUniqueness, DOCUMENT_TYPES } from "@/utils/documentHash";
-import { supabase } from "@/integrations/supabase/client";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { KycDocumentSubmissionType } from "@/types/supabase-extensions";
+import { kycSubmissionsTable, usersMetadataTable } from "@/utils/supabase-helper";
 
 type KYCDocument = {
   id: number | string;
@@ -53,8 +54,7 @@ const VerifyKYC = () => {
   const fetchKYCDocuments = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('kyc_document_submissions' as any)
+      const { data, error } = await kycSubmissionsTable()
         .select(`
           id, 
           user_id,
@@ -75,29 +75,44 @@ const VerifyKYC = () => {
         if (data && data.length > 0) {
           const formattedDocuments = await Promise.all(
             data.map(async (doc: KycDocumentSubmissionType) => {
-              const { data: userData, error: userError } = await supabase
-                .from('users_metadata' as any)
-                .select('id')
-                .eq('id', doc.user_id)
-                .single();
+              try {
+                const { data: userData, error: userError } = await usersMetadataTable()
+                  .select('id')
+                  .eq('id', doc.user_id)
+                  .single();
 
-              let userName = "Unknown User";
-              if (!userError && userData) {
-                userName = `User ${doc.user_id.substring(0, 8)}`;
+                let userName = "Unknown User";
+                if (!userError && userData) {
+                  userName = `User ${doc.user_id.substring(0, 8)}`;
+                }
+
+                return {
+                  id: doc.id,
+                  userId: doc.user_id,
+                  userName: userName,
+                  documentType: getDocumentTypeName(doc.document_type),
+                  documentId: doc.document_number,
+                  status: doc.verification_status,
+                  submissionDate: new Date(doc.submitted_at).toLocaleDateString(),
+                  verificationDate: doc.verified_at ? new Date(doc.verified_at).toLocaleDateString() : undefined,
+                  documentHash: doc.document_hash,
+                  documentFiles: ["document.jpg"]
+                };
+              } catch (err) {
+                console.error("Error processing document:", err);
+                return {
+                  id: doc.id,
+                  userId: doc.user_id,
+                  userName: "Unknown User",
+                  documentType: getDocumentTypeName(doc.document_type),
+                  documentId: doc.document_number,
+                  status: doc.verification_status,
+                  submissionDate: new Date(doc.submitted_at).toLocaleDateString(),
+                  verificationDate: doc.verified_at ? new Date(doc.verified_at).toLocaleDateString() : undefined,
+                  documentHash: doc.document_hash,
+                  documentFiles: ["document.jpg"]
+                };
               }
-
-              return {
-                id: doc.id,
-                userId: doc.user_id,
-                userName: userName,
-                documentType: getDocumentTypeName(doc.document_type),
-                documentId: doc.document_number,
-                status: doc.verification_status,
-                submissionDate: new Date(doc.submitted_at).toLocaleDateString(),
-                verificationDate: doc.verified_at ? new Date(doc.verified_at).toLocaleDateString() : undefined,
-                documentHash: doc.document_hash,
-                documentFiles: ["document.jpg"]
-              };
             })
           );
 
@@ -129,8 +144,7 @@ const VerifyKYC = () => {
       
       const documentIdString = String(docId);
       
-      const { error } = await supabase
-        .from('kyc_document_submissions' as any)
+      const { error } = await kycSubmissionsTable()
         .update({ 
           verification_status: newStatus,
           verified_at: now,
@@ -178,12 +192,11 @@ const VerifyKYC = () => {
     setHashVerificationResult({ exists: false, isVerifying: true });
     
     try {
-      const exists = await verifyHashInDatabase(hashToVerify, supabase);
+      const exists = await verifyHashInDatabase(hashToVerify, kycSubmissionsTable());
       
       let documentDetails = null;
       if (exists) {
-        const { data, error } = await supabase
-          .from('kyc_document_submissions' as any)
+        const { data, error } = await kycSubmissionsTable()
           .select('*')
           .eq('document_hash', hashToVerify)
           .maybeSingle();

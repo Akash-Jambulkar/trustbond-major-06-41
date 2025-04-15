@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +9,7 @@ import { useBlockchain } from "@/contexts/BlockchainContext";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { BankRegistrationType } from "@/types/supabase-extensions";
+import { bankRegistrationsTable } from "@/utils/supabase-helper";
 
 export default function BankApprovals() {
   const { isConnected } = useBlockchain();
@@ -21,9 +21,7 @@ export default function BankApprovals() {
     const fetchBanks = async () => {
       setIsLoading(true);
       try {
-        // Using type casting as a workaround for the Supabase types
-        const { data, error } = await supabase
-          .from('bank_registrations' as any)
+        const { data, error } = await bankRegistrationsTable()
           .select('*')
           .order('created_at', { ascending: false });
         
@@ -31,7 +29,7 @@ export default function BankApprovals() {
           throw error;
         }
         
-        setBanks(data as unknown as BankRegistrationType[]);
+        setBanks(data as BankRegistrationType[]);
       } catch (error) {
         console.error("Error fetching banks:", error);
         toast.error("Failed to fetch bank registrations");
@@ -52,9 +50,7 @@ export default function BankApprovals() {
     setIsProcessing(bankId);
     try {
       // Update bank status in the database
-      // Using type casting as a workaround for the Supabase types
-      const { error } = await supabase
-        .from('bank_registrations' as any)
+      const { error } = await bankRegistrationsTable()
         .update({
           status: approved ? 'approved' : 'rejected',
           updated_at: new Date().toISOString()

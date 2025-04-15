@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useBlockchain } from "@/contexts/BlockchainContext";
@@ -24,7 +23,6 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { 
   Search, 
   CheckCircle2, 
@@ -38,9 +36,9 @@ import {
   FileX 
 } from "lucide-react";
 import { validateDocument, verifyDocumentUniqueness, DOCUMENT_TYPES } from "@/utils/documentHash";
+import { KycDocumentSubmissionType } from "@/types/supabase-extensions";
+import { kycSubmissionsTable, usersMetadataTable } from "@/utils/supabase-helper";
 
-// Mock data for pending KYC verifications if needed
-// In a real app, this would come from the blockchain or a backend
 const MOCK_KYC_REQUESTS = [
   { 
     id: "1", 
@@ -73,7 +71,7 @@ const MOCK_KYC_REQUESTS = [
 
 const VerifyKYCPage = () => {
   const { verifyKYC, isConnected, kycContract } = useBlockchain();
-  const [kycRequests, setKycRequests] = useState(MOCK_KYC_REQUESTS);
+  const [kycRequests, setKycRequests] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
@@ -87,22 +85,19 @@ const VerifyKYCPage = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
   
-  // Fetch KYC requests from the database or blockchain
   useEffect(() => {
     const fetchKycRequests = async () => {
       setIsLoading(true);
       try {
-        // Try to fetch from database first
         let requests = [];
         
         try {
-          const { data, error } = await supabase
-            .from('kyc_document_submissions')
+          const { data, error } = await kycSubmissionsTable()
             .select('*')
             .order('submitted_at', { ascending: false });
             
           if (!error && data) {
-            requests = data.map(item => ({
+            requests = data.map((item: KycDocumentSubmissionType) => ({
               id: item.id,
               userAddress: item.blockchain_tx_hash ? item.blockchain_tx_hash : "0x0000000000000000000000000000000000000000",
               documentType: item.document_type,
@@ -112,7 +107,6 @@ const VerifyKYCPage = () => {
               documentNumber: item.document_number
             }));
           } else {
-            // If database fetch fails, use mock data
             requests = MOCK_KYC_REQUESTS;
           }
         } catch (err) {
@@ -120,9 +114,7 @@ const VerifyKYCPage = () => {
           requests = MOCK_KYC_REQUESTS;
         }
         
-        // Try to augment with blockchain data if needed
         if (isConnected && kycContract) {
-          // Could add blockchain verification status here if implemented
         }
         
         setKycRequests(requests);
@@ -145,13 +137,10 @@ const VerifyKYCPage = () => {
     
     setIsVerifying(true);
     try {
-      // Submit to blockchain
       await verifyKYC(userAddress, status);
       
-      // Update database if possible
       try {
-        const { error } = await supabase
-          .from('kyc_document_submissions')
+        const { error } = await kycSubmissionsTable()
           .update({ 
             verification_status: status ? "verified" : "rejected",
             verified_at: new Date().toISOString()
@@ -160,13 +149,11 @@ const VerifyKYCPage = () => {
           
         if (error) {
           console.error("Error updating database:", error);
-          // Continue despite database error
         }
       } catch (err) {
         console.error("Database update error:", err);
       }
       
-      // Update local state to reflect the change
       setKycRequests(prevRequests => 
         prevRequests.map(req => 
           req.id === requestId 
@@ -177,7 +164,6 @@ const VerifyKYCPage = () => {
       
       toast.success(`KYC ${status ? 'approved' : 'rejected'} for user`);
       
-      // Close details modal if open
       if (isDetailsOpen) {
         setIsDetailsOpen(false);
       }
@@ -189,11 +175,9 @@ const VerifyKYCPage = () => {
     }
   };
   
-  // Check document uniqueness
   const checkDocumentUniqueness = async (documentType: string, documentNumber: string) => {
     setUniquenessCheck({ isChecking: true, result: null });
     try {
-      // Convert document type from display name to system name
       let systemDocType;
       
       if (documentType.toLowerCase().includes("aadhaar")) {
@@ -232,14 +216,12 @@ const VerifyKYCPage = () => {
     }
   };
   
-  // View KYC request details
   const viewRequestDetails = (request: any) => {
     setSelectedRequest(request);
     setIsDetailsOpen(true);
     setUniquenessCheck({ isChecking: false, result: null });
   };
   
-  // Filter requests based on search term
   const filteredRequests = kycRequests.filter(req => 
     req.userAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
     req.documentType.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -247,7 +229,6 @@ const VerifyKYCPage = () => {
     (req.documentNumber && req.documentNumber.toLowerCase().includes(searchTerm.toLowerCase()))
   );
   
-  // Group requests by status
   const pendingRequests = filteredRequests.filter(req => req.status === "pending");
   const verifiedRequests = filteredRequests.filter(req => req.status === "verified");
   const rejectedRequests = filteredRequests.filter(req => req.status === "rejected");
@@ -304,7 +285,6 @@ const VerifyKYCPage = () => {
                   </TabsTrigger>
                 </TabsList>
                 
-                {/* Pending Requests */}
                 <TabsContent value="pending" className="mt-4">
                   {pendingRequests.length > 0 ? (
                     <Table>
@@ -379,7 +359,6 @@ const VerifyKYCPage = () => {
                   )}
                 </TabsContent>
                 
-                {/* Verified Requests */}
                 <TabsContent value="verified" className="mt-4">
                   {verifiedRequests.length > 0 ? (
                     <Table>
@@ -426,7 +405,6 @@ const VerifyKYCPage = () => {
                   )}
                 </TabsContent>
                 
-                {/* Rejected Requests */}
                 <TabsContent value="rejected" className="mt-4">
                   {rejectedRequests.length > 0 ? (
                     <Table>
@@ -485,7 +463,6 @@ const VerifyKYCPage = () => {
           </CardFooter>
         </Card>
         
-        {/* KYC Request Details Dialog */}
         <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
@@ -497,7 +474,6 @@ const VerifyKYCPage = () => {
             
             {selectedRequest && (
               <div className="space-y-6">
-                {/* Basic Info */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <p className="text-sm font-medium text-gray-500">Document Type</p>
@@ -520,7 +496,6 @@ const VerifyKYCPage = () => {
                   </div>
                 </div>
                 
-                {/* Document Number (if available) */}
                 {selectedRequest.documentNumber && (
                   <div className="space-y-2 pb-2 border-b">
                     <div className="flex justify-between items-center">
@@ -541,7 +516,6 @@ const VerifyKYCPage = () => {
                       </Button>
                     </div>
                     
-                    {/* Uniqueness Check Results */}
                     {uniquenessCheck.result && (
                       <div className={`p-3 rounded-md mt-2 ${
                         uniquenessCheck.result.isUnique 
@@ -570,7 +544,6 @@ const VerifyKYCPage = () => {
                   </div>
                 )}
                 
-                {/* Verification Actions */}
                 <div className="pt-2">
                   <p className="font-medium mb-3">Verification Decision</p>
                   <div className="flex flex-col sm:flex-row gap-3">
