@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,7 +9,89 @@ import { ChevronRight, Shield, ChartBar, Wallet, FileCheck, BarChart, CreditCard
 
 const UserHome = () => {
   const { user } = useAuth();
-  const { isConnected } = useBlockchain();
+  const { 
+    isConnected, 
+    account, 
+    getKYCStatus, 
+    trustScoreContract, 
+    loanContract,
+    web3
+  } = useBlockchain();
+  
+  // Real-time blockchain data states
+  const [kycVerified, setKycVerified] = useState<boolean | null>(null);
+  const [trustScore, setTrustScore] = useState<number | null>(null);
+  const [activeLoans, setActiveLoans] = useState<any[]>([]);
+  const [nextPayment, setNextPayment] = useState<{amount: string, date: string} | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch real data from blockchain
+  useEffect(() => {
+    const fetchBlockchainData = async () => {
+      if (!isConnected || !account) {
+        setIsLoading(false);
+        return;
+      }
+      
+      setIsLoading(true);
+      try {
+        // Get KYC status
+        const kyc = await getKYCStatus(account);
+        setKycVerified(kyc);
+        
+        // Get trust score
+        if (trustScoreContract) {
+          const score = await trustScoreContract.methods.calculateScore(account).call();
+          setTrustScore(Number(score));
+        }
+        
+        // Get active loans
+        if (loanContract && web3) {
+          const loanIds = await loanContract.methods.getUserLoans(account).call();
+          
+          const loanPromises = loanIds.map((id: string) => 
+            loanContract.methods.getLoan(id).call()
+          );
+          
+          const loanDetails = await Promise.all(loanPromises);
+          
+          // Filter active loans
+          const active = loanDetails.filter((loan: any) => loan.status === "2");
+          setActiveLoans(active);
+          
+          // Calculate next payment
+          if (active.length > 0) {
+            // Find the nearest payment date
+            const nearest = active.reduce((nearest: any, loan: any) => {
+              const nextPaymentDate = new Date();
+              nextPaymentDate.setDate(nextPaymentDate.getDate() + 30); // Assuming monthly payments
+              
+              if (!nearest || new Date(nearest.nextPayment) > nextPaymentDate) {
+                return {
+                  amount: web3.utils.fromWei(loan.monthlyPayment || "450000000000000000", "ether"),
+                  nextPayment: nextPaymentDate
+                };
+              }
+              return nearest;
+            }, null);
+            
+            if (nearest) {
+              setNextPayment({
+                amount: nearest.amount,
+                date: nearest.nextPayment.toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' })
+              });
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching blockchain data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchBlockchainData();
+  }, [isConnected, account, getKYCStatus, trustScoreContract, loanContract, web3]);
 
   return (
     <div className="container mx-auto px-4 py-6">
@@ -28,10 +110,16 @@ const UserHome = () => {
             <CardTitle className="text-sm font-medium">KYC Status</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">Verified</div>
-            <p className="text-xs text-muted-foreground">
-              Documents verified and approved
-            </p>
+            {isLoading ? (
+              <div className="animate-pulse h-6 bg-gray-200 rounded"></div>
+            ) : (
+              <>
+                <div className="text-2xl font-bold">{kycVerified ? "Verified" : "Not Verified"}</div>
+                <p className="text-xs text-muted-foreground">
+                  {kycVerified ? "Documents verified and approved" : "Submit your documents for verification"}
+                </p>
+              </>
+            )}
           </CardContent>
           <CardFooter>
             <Link to="/dashboard/user/kyc" className="text-sm text-trustbond-primary flex items-center">
@@ -44,10 +132,18 @@ const UserHome = () => {
             <CardTitle className="text-sm font-medium">Trust Score</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">85/100</div>
-            <p className="text-xs text-muted-foreground">
-              Excellent credit rating
-            </p>
+            {isLoading ? (
+              <div className="animate-pulse h-6 bg-gray-200 rounded"></div>
+            ) : (
+              <>
+                <div className="text-2xl font-bold">{trustScore !== null ? `${trustScore}/100` : "N/A"}</div>
+                <p className="text-xs text-muted-foreground">
+                  {trustScore && trustScore > 80 ? "Excellent credit rating" : 
+                   trustScore && trustScore > 60 ? "Good credit rating" : 
+                   trustScore ? "Fair credit rating" : "Not calculated yet"}
+                </p>
+              </>
+            )}
           </CardContent>
           <CardFooter>
             <Link to="/dashboard/user/trust-score" className="text-sm text-trustbond-primary flex items-center">
@@ -60,10 +156,16 @@ const UserHome = () => {
             <CardTitle className="text-sm font-medium">Active Loans</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">2</div>
-            <p className="text-xs text-muted-foreground">
-              Currently active loan contracts
-            </p>
+            {isLoading ? (
+              <div className="animate-pulse h-6 bg-gray-200 rounded"></div>
+            ) : (
+              <>
+                <div className="text-2xl font-bold">{activeLoans?.length || 0}</div>
+                <p className="text-xs text-muted-foreground">
+                  Currently active loan contracts
+                </p>
+              </>
+            )}
           </CardContent>
           <CardFooter>
             <Link to="/dashboard/user/loans" className="text-sm text-trustbond-primary flex items-center">
@@ -76,10 +178,16 @@ const UserHome = () => {
             <CardTitle className="text-sm font-medium">Upcoming Payment</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0.45 ETH</div>
-            <p className="text-xs text-muted-foreground">
-              Due in 8 days (May 23, 2025)
-            </p>
+            {isLoading ? (
+              <div className="animate-pulse h-6 bg-gray-200 rounded"></div>
+            ) : (
+              <>
+                <div className="text-2xl font-bold">{nextPayment ? nextPayment.amount : "N/A"} ETH</div>
+                <p className="text-xs text-muted-foreground">
+                  {nextPayment ? `Due on ${nextPayment.date}` : "No upcoming payments"}
+                </p>
+              </>
+            )}
           </CardContent>
           <CardFooter>
             <Link to="/dashboard/user/loans" className="text-sm text-trustbond-primary flex items-center">
@@ -187,6 +295,12 @@ const UserHome = () => {
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium">Mode</span>
                 <span className="text-sm">Production</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium">Wallet Address</span>
+                <span className="text-sm font-mono text-xs">
+                  {account ? `${account.substring(0, 6)}...${account.substring(account.length - 4)}` : "Not connected"}
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium">Pending Transactions</span>

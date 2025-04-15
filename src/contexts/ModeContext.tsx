@@ -21,6 +21,7 @@ export const ModeProvider = ({ children }: { children: ReactNode }) => {
     if (savedBlockchainPref) {
       setEnableBlockchain(savedBlockchainPref === "true");
     } else {
+      // Default to enabled
       localStorage.setItem("trustbond_blockchain", "true");
     }
     
