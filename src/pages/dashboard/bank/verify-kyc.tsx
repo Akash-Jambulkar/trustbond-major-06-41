@@ -98,7 +98,7 @@ const VerifyKYCPage = () => {
             .order('submitted_at', { ascending: false });
             
           if (!error && data) {
-            requests = data.map((item: KycDocumentSubmissionType) => ({
+            requests = data.map((item: any) => ({
               id: item.id,
               userAddress: item.blockchain_tx_hash ? item.blockchain_tx_hash : "0x0000000000000000000000000000000000000000",
               documentType: item.document_type,
@@ -116,6 +116,7 @@ const VerifyKYCPage = () => {
         }
         
         if (isConnected && kycContract) {
+          // Future blockchain integration can go here
         }
         
         setKycRequests(requests);

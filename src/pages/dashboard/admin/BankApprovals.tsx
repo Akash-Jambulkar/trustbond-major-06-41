@@ -10,6 +10,7 @@ import { useBlockchain } from "@/contexts/BlockchainContext";
 import { toast } from "sonner";
 import { BankRegistrationType } from "@/types/supabase-extensions";
 import { bankRegistrationsTable } from "@/utils/supabase-helper";
+import { approveBankRegistration } from "@/utils/bankRegistration";
 
 export default function BankApprovals() {
   const { isConnected } = useBlockchain();
@@ -29,7 +30,8 @@ export default function BankApprovals() {
           throw error;
         }
         
-        setBanks(data || []);
+        // Type assertion to help TypeScript understand the data type
+        setBanks(data as BankRegistrationType[] || []);
       } catch (error) {
         console.error("Error fetching banks:", error);
         toast.error("Failed to fetch bank registrations");
@@ -51,16 +53,23 @@ export default function BankApprovals() {
     
     setIsProcessing(bankId);
     try {
-      // Update bank status in the database
-      const { error } = await bankRegistrationsTable()
-        .update({
-          status: approved ? 'approved' : 'rejected',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', bankId);
-      
-      if (error) {
-        throw error;
+      if (approved) {
+        const success = await approveBankRegistration(bankId);
+        if (!success) {
+          throw new Error("Failed to approve bank registration");
+        }
+      } else {
+        // Update bank status in the database for rejection
+        const { error } = await bankRegistrationsTable()
+          .update({
+            status: 'rejected',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', bankId);
+        
+        if (error) {
+          throw error;
+        }
       }
       
       // Update local state

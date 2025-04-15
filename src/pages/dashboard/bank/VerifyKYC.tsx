@@ -12,7 +12,6 @@ import { useMode } from "@/contexts/ModeContext";
 import { verifyHashInDatabase, verifyDocumentUniqueness, DOCUMENT_TYPES } from "@/utils/documentHash";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { KycDocumentSubmissionType } from "@/types/supabase-extensions";
 import { kycSubmissionsTable, usersMetadataTable } from "@/utils/supabase-helper";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -74,7 +73,7 @@ const VerifyKYC = () => {
       } else {
         if (data && data.length > 0) {
           const formattedDocuments = await Promise.all(
-            data.map(async (doc: KycDocumentSubmissionType) => {
+            data.map(async (doc: any) => {
               try {
                 const { data: userData, error: userError } = await usersMetadataTable()
                   .select('id')
@@ -192,19 +191,13 @@ const VerifyKYC = () => {
     setHashVerificationResult({ exists: false, isVerifying: true });
     
     try {
-      const exists = await verifyHashInDatabase(hashToVerify, kycSubmissionsTable());
+      const result = await kycSubmissionsTable()
+        .select('*')
+        .eq('document_hash', hashToVerify)
+        .maybeSingle();
       
-      let documentDetails = null;
-      if (exists) {
-        const { data, error } = await kycSubmissionsTable()
-          .select('*')
-          .eq('document_hash', hashToVerify)
-          .maybeSingle();
-          
-        if (!error && data) {
-          documentDetails = data;
-        }
-      }
+      const exists = !result.error && result.data;
+      let documentDetails = exists ? result.data : null;
       
       setHashVerificationResult({
         exists,
