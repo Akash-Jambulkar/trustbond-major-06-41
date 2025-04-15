@@ -24,13 +24,16 @@ export const MultifactorAuth = ({ onComplete, email }: MultifactorAuthProps) => 
   };
 
   const handleDisableMFA = async () => {
+    if (!user) {
+      toast.error("You must be logged in to disable two-factor authentication");
+      return;
+    }
+    
     if (confirm("Are you sure you want to disable two-factor authentication? This will reduce the security of your account.")) {
       setIsDisabling(true);
       try {
-        // Since disableMFA might not exist in the context, use a conditional call
         if (disableMFA) {
-          await disableMFA();
-          toast.success("Two-factor authentication has been disabled");
+          await disableMFA(user.id);
         } else {
           toast.success("Two-factor authentication has been disabled (mock)");
         }
