@@ -78,23 +78,21 @@ export const useKYCStatus = () => {
         // Try to also get data from Supabase if available
         try {
           if (supabase) {
-            // Fix: Use explicit types for the query to avoid excessive type instantiation
-            type SubmissionResponse = {
-              data: Record<string, any>[] | null;
+            // Simplify the type to avoid deep instantiation
+            interface SimpleSubmissionResponse {
+              data: any[] | null;
               error: Error | null;
-            };
+            }
             
-            const response = await supabase
+            // Use a simple type assertion to avoid complex type inference
+            const { data, error } = await supabase
               .from('kyc_document_submissions')
               .select('*')
               .eq('wallet_address', account)
               .order('submitted_at', { ascending: false })
-              .limit(1) as unknown as SubmissionResponse;
-            
-            const { data, error } = response;
+              .limit(1) as unknown as SimpleSubmissionResponse;
               
             if (!error && data && data.length > 0) {
-              // Use a simpler type assertion approach
               const submission = data[0];
               
               // Check if we have a rejected status from database
