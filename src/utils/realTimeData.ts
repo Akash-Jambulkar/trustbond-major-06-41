@@ -1,11 +1,10 @@
 
-import { TransactionType } from './transactions/types';
+import { BrowserEventEmitter } from './BrowserEventEmitter';
 import { supabase } from '@/integrations/supabase/client';
-import { EventEmitter } from 'events';
 import { useEffect } from 'react';
 
 // Event emitter for real-time updates across the app
-export const realTimeEvents = new EventEmitter();
+export const realTimeEvents = new BrowserEventEmitter();
 
 // Event types
 export enum RealTimeEventType {

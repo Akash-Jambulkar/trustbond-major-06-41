@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,9 +9,9 @@ import { CheckCircle2, AlertCircle, Upload, FileUp, Loader2 } from "lucide-react
 import { calculateDocumentHash } from "@/utils/documentHash";
 import { useKYCBlockchain } from "@/hooks/useKYCBlockchain";
 import { useBlockchain } from "@/contexts/BlockchainContext";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useMode } from "@/contexts/ModeContext";
+import { saveKycSubmission } from "@/utils/supabase/kycSubmissions";
 
 export const KYCDocumentUpload = () => {
   const { isConnected, account } = useBlockchain();
@@ -32,61 +31,30 @@ export const KYCDocumentUpload = () => {
   };
 
   const uploadFileToStorage = async (file: File) => {
-    if (!supabase) {
-      // For demo purposes, return a mock URL
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      return `https://mock-storage.example.com/${file.name}`;
-    }
-
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-      const filePath = `kyc_documents/${account}/${fileName}`;
-
-      const { data, error } = await supabase.storage
-        .from('kyc_documents')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (error) throw error;
-
-      // Get the public URL
-      const { data: urlData } = supabase.storage
-        .from('kyc_documents')
-        .getPublicUrl(data.path);
-
-      return urlData.publicUrl;
-    } catch (error) {
-      console.error("Error uploading file:", error);
-      throw error;
-    }
+    // For demo purposes, return a mock URL
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    return `https://mock-storage.example.com/${file.name}`;
   };
 
   const saveSubmissionToDatabase = async (
     documentHash: string, 
     documentUrl: string
   ) => {
-    if (!supabase) {
-      return true; // Mock success in demo mode
-    }
-
+    if (!account) return false;
+    
     try {
-      const { error } = await supabase
-        .from('kyc_document_submissions')
-        .insert({
-          user_id: account,
-          document_type: documentType,
-          document_number: documentNumber,
-          document_hash: documentHash,
-          document_url: documentUrl,
-          submitted_at: new Date().toISOString(),
-          verification_status: 'pending',
-        });
-
-      if (error) throw error;
-      return true;
+      const submission = {
+        user_id: account,
+        document_type: documentType,
+        document_number: documentNumber,
+        document_hash: documentHash,
+        document_url: documentUrl,
+        submitted_at: new Date().toISOString(),
+        verification_status: 'pending' as const,
+      };
+      
+      const id = await saveKycSubmission(submission);
+      return !!id;
     } catch (error) {
       console.error("Error saving to database:", error);
       return false;

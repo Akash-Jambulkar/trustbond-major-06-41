@@ -1,13 +1,12 @@
-
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { FileCheck, FileX, Clock, FileQuestion } from "lucide-react";
 import { useBlockchain } from "@/contexts/BlockchainContext";
-import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 import { KycDocumentSubmissionType } from "@/types/supabase-extensions";
+import { getUserKycSubmissions } from "@/utils/supabase/kycSubmissions";
 
 export const KYCHistory = () => {
   const { account } = useBlockchain();
@@ -23,21 +22,12 @@ export const KYCHistory = () => {
 
       setIsLoading(true);
       try {
-        // Try to fetch from Supabase
-        if (supabase) {
-          const { data, error } = await supabase
-            .from('kyc_document_submissions')
-            .select('*')
-            .eq('user_id', account)
-            .order('submitted_at', { ascending: false });
-
-          if (!error && data) {
-            setSubmissions(data as KycDocumentSubmissionType[]);
-          } else {
-            // If error or no data, use mock data
-            setSubmissions(getMockSubmissions());
-          }
+        // Fetch submissions using our utility function
+        const data = await getUserKycSubmissions(account);
+        if (data && data.length > 0) {
+          setSubmissions(data);
         } else {
+          // If no data, use mock data
           setSubmissions(getMockSubmissions());
         }
       } catch (error) {
