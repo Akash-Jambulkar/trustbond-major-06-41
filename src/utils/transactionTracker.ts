@@ -3,8 +3,9 @@
 import { getTransactions, clearTransactionHistory } from "./transactions/query";
 import { trackTransaction, watchTransaction } from "./transactions/tracker";
 import { updateTransactionStatus } from "./transactions/status";
-import { TransactionStatus, TransactionType, Transaction } from "./transactions/types";
+import type { TransactionStatus, TransactionType, Transaction } from "./transactions/types";
 
+// Export functions
 export { 
   getTransactions, 
   clearTransactionHistory, 
