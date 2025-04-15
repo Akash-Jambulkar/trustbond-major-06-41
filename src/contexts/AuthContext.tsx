@@ -32,6 +32,7 @@ export type AuthContextType = {
   setupMFA: (phoneNumber: string, method: "sms" | "email") => Promise<boolean>;
   verifyMFA: (code: string) => Promise<boolean>;
   isMFARequired: boolean;
+  disableMFA: () => Promise<boolean>;
 };
 
 // Create auth context
@@ -298,6 +299,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return false;
   };
 
+  // New implementation of disableMFA method
+  const disableMFA = async () => {
+    try {
+      if (!user) {
+        toast.error("No user logged in");
+        return false;
+      }
+
+      // Update the profiles table to disable MFA
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ mfa_enabled: false })
+        .eq('user_id', user.id);
+
+      if (updateError) {
+        console.error("Error updating MFA status:", updateError);
+        toast.error("Failed to disable two-factor authentication");
+        return false;
+      }
+
+      // Update the local user state
+      setUser(prevUser => prevUser ? { ...prevUser, mfa_enabled: false } : null);
+      toast.success("Two-factor authentication has been disabled");
+      return true;
+    } catch (error) {
+      console.error("Unexpected error disabling MFA:", error);
+      toast.error("An unexpected error occurred");
+      return false;
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -310,7 +342,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         logout,
         setupMFA,
         verifyMFA,
-        isMFARequired
+        isMFARequired,
+        disableMFA
       }}
     >
       {children}
