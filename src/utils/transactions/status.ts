@@ -16,7 +16,7 @@ export const updateTransactionStatus = async (
   try {
     // First get the existing transaction to access its metadata
     const { data: existingTx, error: fetchError } = await supabase
-      .from('blockchain_transactions')
+      .from('blockchain_transactions' as any)
       .select('*')
       .eq('hash', hash.toLowerCase())
       .eq('from_address', account.toLowerCase())
@@ -38,12 +38,12 @@ export const updateTransactionStatus = async (
       ...(metadata || {})
     };
     
-    // Update transaction in Supabase using a simpler approach to avoid deep type instantiation
+    // Update transaction in Supabase using type assertion
     const { error } = await supabase
-      .from('blockchain_transactions')
+      .from('blockchain_transactions' as any)
       .update({
         metadata: updatedMetadata
-      } as any)
+      })
       .eq('hash', hash.toLowerCase())
       .eq('from_address', account.toLowerCase());
     

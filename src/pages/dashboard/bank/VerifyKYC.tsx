@@ -153,7 +153,7 @@ const VerifyKYC = () => {
         verification_status: newStatus,
         verified_at: now,
         verified_by: user?.id
-      };
+      } as any;
       
       const { error } = await supabase
         .from('kyc_document_submissions')
