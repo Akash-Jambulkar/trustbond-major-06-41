@@ -78,21 +78,29 @@ export const useKYCStatus = () => {
         // Try to also get data from Supabase if available
         try {
           if (supabase) {
-            // Fix: Define explicit typing for the query
-            const { data, error } = await supabase
+            // Fix: Use explicit types for the query to avoid excessive type instantiation
+            type SubmissionResponse = {
+              data: Record<string, any>[] | null;
+              error: Error | null;
+            };
+            
+            const response = await supabase
               .from('kyc_document_submissions')
               .select('*')
               .eq('wallet_address', account)
               .order('submitted_at', { ascending: false })
-              .limit(1);
+              .limit(1) as unknown as SubmissionResponse;
+            
+            const { data, error } = response;
               
             if (!error && data && data.length > 0) {
-              // Fix: Type assertion with safety checks
-              const submission = data[0] as unknown as KycDocumentSubmissionType;
+              // Use a simpler type assertion approach
+              const submission = data[0];
               
               // Check if we have a rejected status from database
               if (!status && 
-                  submission?.verification_status === 'rejected' && 
+                  submission && 
+                  submission.verification_status === 'rejected' && 
                   !isRejected) {
                 setIsRejected(true);
                 if (submission.rejection_reason) {
@@ -102,7 +110,8 @@ export const useKYCStatus = () => {
               
               // Set verification timestamp if available
               if (status && 
-                  submission?.verified_at && 
+                  submission && 
+                  submission.verified_at && 
                   !verificationTimestamp) {
                 setVerificationTimestamp(new Date(submission.verified_at).getTime());
               }
