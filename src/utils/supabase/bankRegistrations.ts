@@ -4,9 +4,9 @@ import { BankRegistrationType } from '@/types/supabase-extensions';
 import { bankRegistrationsTable } from '@/utils/supabase-helper';
 
 /**
- * Get bank registrations
+ * Get all bank registrations
  */
-export async function getBankRegistrations(): Promise<BankRegistrationType[]> {
+export async function getAllBankRegistrations(): Promise<BankRegistrationType[]> {
   try {
     const { data, error } = await bankRegistrationsTable()
       .select('*')
@@ -17,9 +17,9 @@ export async function getBankRegistrations(): Promise<BankRegistrationType[]> {
       return [];
     }
 
-    return data as BankRegistrationType[];
+    return (data || []) as BankRegistrationType[];
   } catch (error) {
-    console.error("Exception in getBankRegistrations:", error);
+    console.error("Exception in getAllBankRegistrations:", error);
     return [];
   }
 }
@@ -39,7 +39,7 @@ export async function getPendingBankRegistrations(): Promise<BankRegistrationTyp
       return [];
     }
 
-    return data as BankRegistrationType[];
+    return (data || []) as BankRegistrationType[];
   } catch (error) {
     console.error("Exception in getPendingBankRegistrations:", error);
     return [];
@@ -47,9 +47,9 @@ export async function getPendingBankRegistrations(): Promise<BankRegistrationTyp
 }
 
 /**
- * Save a new bank registration
+ * Register a new bank
  */
-export async function saveBankRegistration(registration: Omit<BankRegistrationType, 'id' | 'created_at' | 'updated_at'>): Promise<string | null> {
+export async function registerBank(registration: Omit<BankRegistrationType, 'id' | 'created_at' | 'updated_at'>): Promise<string | null> {
   try {
     const { data, error } = await bankRegistrationsTable()
       .insert([{
@@ -61,40 +61,13 @@ export async function saveBankRegistration(registration: Omit<BankRegistrationTy
       .single();
 
     if (error) {
-      console.error("Error saving bank registration:", error);
+      console.error("Error registering bank:", error);
       return null;
     }
 
-    return data.id;
+    return (data as any)?.id || null;
   } catch (error) {
-    console.error("Exception in saveBankRegistration:", error);
+    console.error("Exception in registerBank:", error);
     return null;
-  }
-}
-
-/**
- * Update a bank registration
- */
-export async function updateBankRegistration(id: string, updates: Partial<BankRegistrationType>): Promise<boolean> {
-  try {
-    // Include updated_at time
-    const updatesWithTimestamp = {
-      ...updates,
-      updated_at: new Date().toISOString()
-    };
-
-    const { error } = await bankRegistrationsTable()
-      .update(updatesWithTimestamp)
-      .eq('id', id);
-
-    if (error) {
-      console.error("Error updating bank registration:", error);
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    console.error("Exception in updateBankRegistration:", error);
-    return false;
   }
 }

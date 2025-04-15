@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { KycDocumentSubmissionType, KycVerificationVoteType } from '@/types/supabase-extensions';
 import { kycSubmissionsTable, kycVerificationVotesTable } from './supabase-helper';
@@ -281,54 +280,97 @@ export async function checkVotingEligibility(
  */
 export async function updateDocumentConsensusStatus(documentId: string): Promise<boolean> {
   try {
-    // Get consensus status
-    const consensus = await getConsensusStatus(documentId);
+    // Get current status
+    const { data: document, error: fetchError } = await kycSubmissionsTable()
+      .select('*')
+      .eq('id', documentId)
+      .single();
+
+    if (fetchError || !document) {
+      console.error("Error fetching document:", fetchError);
+      return false;
+    }
+
+    const consensusStatus = (document as any).consensus_status || "pending";
     
-    // Only update if consensus is reached
-    if (consensus.consensusReached) {
-      // Determine new status
-      const newStatus = consensus.finalDecision 
-        ? ConsensusStatus.APPROVED 
-        : ConsensusStatus.REJECTED;
-      
-      // Update document status
-      const { error } = await kycSubmissionsTable()
-        .update({ 
-          consensus_status: newStatus,
-          // If approved, also update verification status
-          ...(newStatus === ConsensusStatus.APPROVED ? {
-            verification_status: 'verified',
-            verified_at: new Date().toISOString()
-          } : {})
-        } as any)
-        .eq('id', documentId);
-        
-      if (error) {
-        console.error("Error updating document consensus status:", error);
-        return false;
-      }
-      
-      // Show notification
-      toast.success(
-        `Document ${consensus.finalDecision ? 'approved' : 'rejected'} by consensus`,
-        { description: `${consensus.approvalsReceived} of ${consensus.votesReceived} banks approved` }
-      );
-      
+    // If already approved or rejected, no need to update
+    if (consensusStatus === "approved" || consensusStatus === "rejected") {
       return true;
     }
-    
-    // If not enough votes yet, update to in_progress
-    if (consensus.votesReceived > 0 && consensus.status === ConsensusStatus.PENDING) {
-      const { error } = await kycSubmissionsTable()
-        .update({ consensus_status: ConsensusStatus.IN_PROGRESS } as any)
-        .eq('id', documentId);
-        
-      if (error) {
-        console.error("Error updating document to in_progress:", error);
-      }
+
+    // Get votes for this document
+    const { data: votesData, error: votesError } = await kycVerificationVotesTable()
+      .select('*')
+      .eq('document_id', documentId)
+      .order('created_at', { ascending: false });
+      
+    if (votesError) {
+      console.error("Error fetching votes:", votesError);
+      throw new Error("Failed to fetch document votes");
     }
     
-    return false;
+    const votes = votesData as any[] || [];
+    
+    // Calculate consensus metrics
+    const votesReceived = votes.length;
+    const approvalsReceived = votes.filter(vote => vote.approved).length;
+    const rejectionsReceived = votes.filter(vote => !vote.approved).length;
+    
+    // Calculate progress as percentage of required votes
+    const progress = Math.min(100, (votesReceived / REQUIRED_VOTES) * 100);
+    
+    // Determine if consensus is reached
+    const consensusReached = votesReceived >= REQUIRED_VOTES;
+    
+    // If consensus reached, determine final decision
+    let finalDecision = null;
+    if (consensusReached) {
+      const approvalRate = approvalsReceived / votesReceived;
+      finalDecision = approvalRate >= APPROVAL_THRESHOLD;
+    }
+    
+    // Determine status based on votes and consensus
+    let status: ConsensusStatus;
+    
+    if (document.consensus_status === "approved") {
+      status = ConsensusStatus.APPROVED;
+    } else if (document.consensus_status === "rejected") {
+      status = ConsensusStatus.REJECTED;
+    } else if (votesReceived > 0) {
+      status = ConsensusStatus.IN_PROGRESS;
+    } else {
+      status = ConsensusStatus.PENDING;
+    }
+    
+    // Format votes for the result
+    const formattedVotes: VerificationVote[] = votes.map(vote => ({
+      bankId: vote.bank_id,
+      bankName: vote.bank_name,
+      approved: vote.approved,
+      timestamp: vote.created_at,
+      notes: vote.notes
+    }));
+    
+    // Update document with new status
+    const { error: updateError } = await kycSubmissionsTable()
+      .update({
+        consensus_status: status,
+        // Add more fields as needed based on consensus result
+      } as any)
+      .eq('id', documentId);
+
+    if (updateError) {
+      console.error("Error updating document consensus status:", updateError);
+      return false;
+    }
+
+    // Show notification
+    toast.success(
+      `Document ${finalDecision ? 'approved' : 'rejected'} by consensus`,
+      { description: `${approvalsReceived} of ${votesReceived} banks approved` }
+    );
+    
+    return true;
   } catch (error) {
     console.error("Exception in updateDocumentConsensusStatus:", error);
     return false;

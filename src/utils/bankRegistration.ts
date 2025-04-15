@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { BankRegistrationType, UsersMetadataType } from '@/types/supabase-extensions';
 import { bankRegistrationsTable, usersMetadataTable } from '@/utils/supabase-helper';
@@ -181,6 +180,42 @@ export async function approveBankRegistration(bankId: string): Promise<boolean> 
     return true;
   } catch (error) {
     console.error("Exception in approveBankRegistration:", error);
+    return false;
+  }
+}
+
+/**
+ * Process bank registration 
+ */
+export async function processBankRegistration(registrationId: string, approve: boolean): Promise<boolean> {
+  try {
+    // Get the registration details
+    const { data: registration, error: fetchError } = await bankRegistrationsTable()
+      .select('*')
+      .eq('id', registrationId)
+      .single();
+
+    if (fetchError || !registration) {
+      console.error("Error fetching bank registration:", fetchError);
+      return false;
+    }
+
+    // Update the registration status
+    const { error: updateError } = await bankRegistrationsTable()
+      .update({
+        status: approve ? 'approved' : 'rejected',
+        updated_at: new Date().toISOString()
+      } as any)
+      .eq('id', registrationId);
+
+    if (updateError) {
+      console.error("Error updating bank registration:", updateError);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error in processBankRegistration:", error);
     return false;
   }
 }

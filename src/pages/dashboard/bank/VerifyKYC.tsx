@@ -149,15 +149,13 @@ const VerifyKYC = () => {
       
       const documentIdString = String(docId);
       
-      const updateData = { 
-        verification_status: newStatus,
-        verified_at: now,
-        verified_by: user?.id
-      } as any;
-      
       const { error } = await supabase
-        .from('kyc_document_submissions')
-        .update(updateData)
+        .from('kyc_document_submissions' as any)
+        .update({
+          verification_status: newStatus,
+          verified_at: now,
+          verified_by: user?.id
+        })
         .eq('id', documentIdString);
       
       if (error) {

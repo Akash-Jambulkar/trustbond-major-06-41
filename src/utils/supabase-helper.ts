@@ -6,42 +6,42 @@ import { supabase } from '@/integrations/supabase/client';
  * These functions provide type safety when querying Supabase tables
  */
 
-// Using type assertion to bypass TypeScript strict typing for tables
-// that aren't fully defined in the generated types
+// Type assertion function for uniform handling
+const fromTable = (tableName: string) => supabase.from(tableName as any) as any;
 
 // KYC document submissions
 export function kycSubmissionsTable() {
-  return supabase.from('kyc_document_submissions' as any);
+  return fromTable('kyc_document_submissions');
 }
 
 // Bank registrations
 export function bankRegistrationsTable() {
-  return supabase.from('bank_registrations' as any);
+  return fromTable('bank_registrations');
 }
 
 // KYC verification votes
 export function kycVerificationVotesTable() {
-  return supabase.from('kyc_verification_votes' as any);
+  return fromTable('kyc_verification_votes');
 }
 
 // Blockchain transactions
 export function blockchainTransactionsTable() {
-  return supabase.from('blockchain_transactions' as any);
+  return fromTable('blockchain_transactions');
 }
 
 // Trust scores
 export function trustScoresTable() {
-  return supabase.from('trust_scores' as any);
+  return fromTable('trust_scores');
 }
 
 // Loans
 export function loansTable() {
-  return supabase.from('loans' as any);
+  return fromTable('loans');
 }
 
 // Users metadata
 export function usersMetadataTable() {
-  return supabase.from('users_metadata' as any);
+  return fromTable('users_metadata');
 }
 
 // Profiles

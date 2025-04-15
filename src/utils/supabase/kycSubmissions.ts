@@ -18,7 +18,7 @@ export async function getUserKycSubmissions(userId: string): Promise<KycDocument
       return [];
     }
 
-    return data as KycDocumentSubmissionType[];
+    return (data || []) as KycDocumentSubmissionType[];
   } catch (error) {
     console.error("Exception in getUserKycSubmissions:", error);
     return [];
@@ -40,7 +40,7 @@ export async function saveKycSubmission(submission: Omit<KycDocumentSubmissionTy
       return null;
     }
 
-    return data.id;
+    return (data as any)?.id || null;
   } catch (error) {
     console.error("Exception in saveKycSubmission:", error);
     return null;
@@ -83,7 +83,7 @@ export async function getPendingKycSubmissions(): Promise<KycDocumentSubmissionT
       return [];
     }
 
-    return data as KycDocumentSubmissionType[];
+    return (data || []) as KycDocumentSubmissionType[];
   } catch (error) {
     console.error("Exception in getPendingKycSubmissions:", error);
     return [];

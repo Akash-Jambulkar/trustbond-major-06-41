@@ -7,7 +7,7 @@ export async function getTransactions(userAddress?: string): Promise<Transaction
   try {
     // Use direct supabase query with type assertions to avoid type issues
     let query = supabase
-      .from('blockchain_transactions')
+      .from('blockchain_transactions' as any)
       .select('*')
       .order('created_at', { ascending: false });
       
@@ -22,8 +22,8 @@ export async function getTransactions(userAddress?: string): Promise<Transaction
       return [];
     }
     
-    // Transform the raw data into Transaction objects
-    return (data || []).map(tx => ({
+    // Transform the raw data into Transaction objects with type safety
+    return (data || []).map((tx: any) => ({
       hash: tx.hash,
       timestamp: new Date(tx.created_at).getTime(),
       status: tx.metadata?.status || 'pending',
@@ -45,7 +45,7 @@ export async function addBlockchainTransaction(transactionData: any) {
   try {
     // Use direct supabase query with type assertions to avoid type issues
     const { data, error } = await supabase
-      .from('blockchain_transactions')
+      .from('blockchain_transactions' as any)
       .insert(transactionData)
       .select()
       .single();
@@ -66,7 +66,7 @@ export async function addBlockchainTransaction(transactionData: any) {
 export async function clearTransactionHistory(userAddress: string): Promise<boolean> {
   try {
     const { error } = await supabase
-      .from('blockchain_transactions')
+      .from('blockchain_transactions' as any)
       .delete()
       .eq('from_address', userAddress.toLowerCase());
       
