@@ -27,16 +27,13 @@ const BankVerificationPage = () => {
     bankId: user?.id || ''
   });
 
-  // Mock function to simulate fetching loans
   const loadLoans = async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      // Mock loan data
       const mockLoans = [
         {
           id: 1,
@@ -118,21 +115,28 @@ const BankVerificationPage = () => {
     }
   };
 
-  const handleApproveLoan = (loanId: number) => {
-    approveLoan(loanId.toString()).then((success) => {
+  const handleApproveLoan = async (loanId: number) => {
+    try {
+      const success = await approveLoan(loanId.toString());
       if (success) {
         loadLoans();
       }
-    });
+    } catch (error) {
+      console.error("Error approving loan:", error);
+      toast.error("Failed to approve loan");
+    }
   };
 
-  const handleRejectLoan = (loanId: number) => {
-    rejectLoan(loanId.toString()).then((success) => {
+  const handleRejectLoan = async (loanId: number) => {
+    try {
+      const success = await rejectLoan(loanId.toString());
       if (success) {
         loadLoans();
       }
+    } catch (error) {
+      console.error("Error rejecting loan:", error);
+      toast.error("Failed to reject loan");
     }
-    );
   };
 
   const getStatusBadge = (status: string) => {
@@ -172,7 +176,6 @@ const BankVerificationPage = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Loan Application Form */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -236,7 +239,6 @@ const BankVerificationPage = () => {
           </CardContent>
         </Card>
 
-        {/* Loan List */}
         <Card>
           <CardHeader>
             <CardTitle>Loan Applications</CardTitle>

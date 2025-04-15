@@ -1,6 +1,6 @@
 
 import { NetworkName } from "./types";
-import { NETWORK_IDS } from "@/contexts/blockchain/types";
+import { NETWORK_IDS } from "./types";
 
 // Map network IDs to names
 export const getNetworkName = (networkId?: number): NetworkName => {
@@ -17,11 +17,11 @@ export const getNetworkName = (networkId?: number): NetworkName => {
     case NETWORK_IDS.LOCALHOST:
       return "Local Network";
     // Handle legacy networks that might appear in old code
-    case 3: // ROPSTEN (deprecated)
+    case NETWORK_IDS.ROPSTEN:
       return "Ropsten Testnet (Deprecated)";
-    case 4: // RINKEBY (deprecated)
+    case NETWORK_IDS.RINKEBY:
       return "Rinkeby Testnet (Deprecated)";
-    case 42: // KOVAN (deprecated)
+    case NETWORK_IDS.KOVAN:
       return "Kovan Testnet (Deprecated)";
     default:
       return "Unknown Network";
@@ -38,7 +38,7 @@ export const isSupportedNetwork = (networkId?: number): boolean => {
     NETWORK_IDS.SEPOLIA,
     NETWORK_IDS.GANACHE,
     NETWORK_IDS.LOCALHOST
-  ].includes(networkId);
+  ].includes(networkId as any);
 };
 
 // Get the chain ID to switch to for development
@@ -49,4 +49,11 @@ export const getPreferredDevChainId = (): number => {
 // Format chain ID for MetaMask
 export const formatChainIdForMetaMask = (chainId: number): string => {
   return `0x${chainId.toString(16)}`;
+};
+
+// Contract addresses by network
+export const CONTRACT_ADDRESSES = {
+  KYC_VERIFIER: '0x0000000000000000000000000000000000000000',
+  TRUST_SCORE: '0x0000000000000000000000000000000000000000',
+  LOAN_MANAGER: '0x0000000000000000000000000000000000000000'
 };

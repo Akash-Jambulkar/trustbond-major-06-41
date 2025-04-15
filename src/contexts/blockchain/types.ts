@@ -5,7 +5,11 @@ export const NETWORK_IDS = {
   GOERLI: 5,
   SEPOLIA: 11155111,
   GANACHE: 1337,
-  LOCALHOST: 31337
+  LOCALHOST: 31337,
+  // Legacy networks (deprecated but might be referenced in old code)
+  ROPSTEN: 3,
+  RINKEBY: 4,
+  KOVAN: 42
 } as const;
 
 export type NetworkName = 
@@ -14,6 +18,7 @@ export type NetworkName =
   | "Sepolia Testnet"
   | "Local Network"
   | "Unknown Network"
+  | "Unknown"
   | "Ropsten Testnet (Deprecated)"
   | "Rinkeby Testnet (Deprecated)"
   | "Kovan Testnet (Deprecated)";
@@ -60,5 +65,5 @@ export interface BlockchainContextType {
   transactions?: any[];
   
   // Development functions
-  simulateBlockchainEvent: () => void;
+  simulateBlockchainEvent: () => Promise<void>;
 }

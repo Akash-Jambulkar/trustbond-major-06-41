@@ -10,6 +10,7 @@ export interface AuthUser {
   phone?: string;
   address?: string;
   mfa_enabled?: boolean;
+  mfaEnabled?: boolean; // For compatibility with components expecting mfaEnabled
   mfaVerified?: boolean;
   created_at?: string;
   updated_at?: string;

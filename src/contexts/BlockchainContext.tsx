@@ -45,7 +45,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
   }, [enableBlockchain]);
 
   // Connect wallet function
-  const connectWallet = async () => {
+  const connectWallet = async (): Promise<string | false> => {
     if (!enableBlockchain) {
       toast.error("Blockchain features are disabled");
       return false;
@@ -70,7 +70,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('blockchain_account', mockAccount);
       
       toast.success("Wallet connected successfully!");
-      return true;
+      return mockAccount;
     } catch (error: any) {
       console.error("Wallet connection error:", error);
       setConnectionError(error.message || "Failed to connect wallet");
@@ -553,7 +553,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Simulate blockchain event
-  const simulateBlockchainEvent = () => {
+  const simulateBlockchainEvent = async () => {
     if (!enableBlockchain || !isConnected || !user) {
       toast.error("Wallet not connected");
       return;
