@@ -10,8 +10,11 @@ export {
   clearTransactionHistory, 
   trackTransaction, 
   watchTransaction, 
-  updateTransactionStatus,
-  // Export types
+  updateTransactionStatus
+}
+
+// Use export type for type re-exports
+export type { 
   TransactionStatus, 
   TransactionType,
   Transaction
