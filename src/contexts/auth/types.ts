@@ -31,5 +31,6 @@ export interface AuthContextType {
   logout: () => void;
   verifyMFA?: (code: string) => Promise<boolean>;
   setupMFA?: (phoneNumber: string, method: 'sms' | 'email') => Promise<boolean>;
-  disableMFA?: () => Promise<boolean>; // Added the missing disableMFA function
+  disableMFA?: () => Promise<boolean>; // Added missing disableMFA function
 }
+
