@@ -1,13 +1,12 @@
 
 import React from "react";
 import { Outlet } from "react-router-dom";
-import { DashboardShell } from "@/components/bank/dashboard/DashboardShell";
 
 const BankDashboard = () => {
   return (
-    <DashboardShell>
+    <div className="flex-1 overflow-auto">
       <Outlet />
-    </DashboardShell>
+    </div>
   );
 };
 
