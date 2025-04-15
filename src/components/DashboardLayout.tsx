@@ -3,7 +3,6 @@ import { ReactNode } from "react";
 import { Link, useNavigate, useLocation, Outlet } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { WalletStatus } from "@/components/WalletStatus";
-import { ModeToggle } from "@/components/ModeToggle";
 import { Button } from "@/components/ui/button";
 import { 
   Home, 
@@ -17,7 +16,12 @@ import {
   ShieldCheck,
   Shield,
   Users,
-  Server
+  Server,
+  BarChart3,
+  Lock,
+  Wallet,
+  LineChart,
+  BookOpen
 } from "lucide-react";
 import {
   SidebarProvider,
@@ -29,6 +33,10 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarInset,
+  SidebarMenuBadge,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent,
 } from "@/components/ui/sidebar";
 
 interface DashboardLayoutProps {
@@ -42,42 +50,141 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   // Get navigation items based on user role
   const getNavItems = () => {
-    const baseItems = [
+    // Common items for all user types
+    const commonItems = [
       { label: "Dashboard", icon: <Home size={20} />, href: `/dashboard/${user?.role}` },
       { label: "Profile", icon: <User size={20} />, href: `/dashboard/${user?.role}/profile` },
     ];
 
-    // Role-specific items
+    // User specific items
+    const userItems = [
+      { 
+        label: "Identity", 
+        icon: <FileText size={20} />, 
+        href: "/dashboard/user/kyc",
+        badge: "Verified" 
+      },
+      { 
+        label: "Loans", 
+        icon: <CreditCard size={20} />, 
+        href: "/dashboard/user/loans" 
+      },
+      { 
+        label: "Credit Score", 
+        icon: <PieChart size={20} />, 
+        href: "/dashboard/user/credit-score" 
+      },
+      { 
+        label: "Trust Score", 
+        icon: <LineChart size={20} />, 
+        href: "/dashboard/user/trust-score" 
+      },
+      { 
+        label: "Analytics", 
+        icon: <BarChart3 size={20} />, 
+        href: "/dashboard/user/analytics" 
+      },
+      { 
+        label: "Compliance & Market", 
+        icon: <BookOpen size={20} />, 
+        href: "/dashboard/user/compliance-market" 
+      },
+      { 
+        label: "Security", 
+        icon: <Lock size={20} />, 
+        href: "/dashboard/user/security" 
+      },
+      { 
+        label: "Blockchain", 
+        icon: <Wallet size={20} />, 
+        href: "/dashboard/user/transactions" 
+      },
+    ];
+
+    // Bank specific items
+    const bankItems = [
+      { 
+        label: "KYC Verification", 
+        icon: <ShieldCheck size={20} />, 
+        href: "/dashboard/bank/verify-kyc",
+        badge: "12" 
+      },
+      { 
+        label: "Enhanced Verification", 
+        icon: <Shield size={20} />, 
+        href: "/dashboard/bank/verification" 
+      },
+      { 
+        label: "Consensus Verification", 
+        icon: <Users size={20} />, 
+        href: "/dashboard/bank/consensus-verification" 
+      },
+      { 
+        label: "Loans", 
+        icon: <CreditCard size={20} />, 
+        href: "/dashboard/bank/loans", 
+        badge: "5" 
+      },
+      { 
+        label: "Trust Scores", 
+        icon: <PieChart size={20} />, 
+        href: "/dashboard/bank/trust-scores" 
+      },
+      { 
+        label: "Secure Sharing", 
+        icon: <Lock size={20} />, 
+        href: "/dashboard/bank/secure-sharing" 
+      },
+      { 
+        label: "Blockchain", 
+        icon: <Wallet size={20} />, 
+        href: "/dashboard/bank/transactions" 
+      },
+    ];
+
+    // Admin specific items
+    const adminItems = [
+      { 
+        label: "Bank Approvals", 
+        icon: <Building2 size={20} />, 
+        href: "/dashboard/admin/bank-approvals",
+        badge: "3" 
+      },
+      { 
+        label: "User Management", 
+        icon: <Users size={20} />, 
+        href: "/dashboard/admin/users" 
+      },
+      { 
+        label: "Blockchain Setup", 
+        icon: <Server size={20} />, 
+        href: "/dashboard/admin/blockchain-setup" 
+      },
+      { 
+        label: "System Settings", 
+        icon: <Settings size={20} />, 
+        href: "/dashboard/admin/settings" 
+      },
+      { 
+        label: "Transactions", 
+        icon: <Wallet size={20} />, 
+        href: "/dashboard/admin/transactions" 
+      },
+    ];
+
+    // Return navigation items based on user role
     if (user?.role === "user") {
-      return [
-        ...baseItems,
-        { label: "KYC Documents", icon: <FileText size={20} />, href: "/dashboard/user/kyc" },
-        { label: "Loans", icon: <CreditCard size={20} />, href: "/dashboard/user/loans" },
-        { label: "Trust Score", icon: <PieChart size={20} />, href: "/dashboard/user/trust-score" },
-      ];
+      return { main: commonItems, roleSpecific: userItems };
     } else if (user?.role === "bank") {
-      return [
-        ...baseItems,
-        { label: "Verify KYC", icon: <ShieldCheck size={20} />, href: "/dashboard/bank/verify-kyc" },
-        { label: "Enhanced Verification", icon: <Shield size={20} />, href: "/dashboard/bank/verification" },
-        { label: "Consensus Verification", icon: <Users size={20} />, href: "/dashboard/bank/consensus-verification" },
-        { label: "Loan Requests", icon: <CreditCard size={20} />, href: "/dashboard/bank/loans" },
-        { label: "Trust Scores", icon: <PieChart size={20} />, href: "/dashboard/bank/trust-scores" },
-      ];
+      return { main: commonItems, roleSpecific: bankItems };
     } else if (user?.role === "admin") {
-      return [
-        ...baseItems,
-        { label: "Banks", icon: <Building2 size={20} />, href: "/dashboard/admin/banks" },
-        { label: "Users", icon: <Users size={20} />, href: "/dashboard/admin/users" },
-        { label: "Blockchain Setup", icon: <Server size={20} />, href: "/dashboard/admin/blockchain-setup" },
-        { label: "Settings", icon: <Settings size={20} />, href: "/dashboard/admin/settings" },
-      ];
+      return { main: commonItems, roleSpecific: adminItems };
     }
 
-    return baseItems;
+    return { main: commonItems, roleSpecific: [] };
   };
 
-  const navItems = getNavItems();
+  const { main: mainNavItems, roleSpecific: roleNavItems } = getNavItems();
 
   // Check if a nav item is active
   const isActive = (href: string) => {
@@ -88,42 +195,79 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen w-full bg-gray-100">
+      <div className="flex h-screen w-full bg-gray-50">
         {/* Main Sidebar */}
-        <Sidebar className="bg-trustbond-primary text-white">
+        <Sidebar className="border-r border-gray-200">
           <SidebarHeader>
             <div className="flex flex-col space-y-1 p-4">
-              <h1 className="text-2xl font-bold">TrustBond</h1>
-              <p className="text-sm text-white/70">{user?.role?.toUpperCase()} Dashboard</p>
+              <h1 className="text-2xl font-bold text-trustbond-primary">TrustBond</h1>
+              <p className="text-sm text-gray-500">{user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1)} Portal</p>
             </div>
           </SidebarHeader>
           <SidebarContent>
-            <SidebarMenu>
-              {navItems.map((item, index) => (
-                <SidebarMenuItem key={index}>
-                  <SidebarMenuButton 
-                    asChild 
-                    isActive={isActive(item.href)}
-                    tooltip={item.label}
-                  >
-                    <Link to={item.href} className="flex items-center gap-3 px-4 py-2">
-                      {item.icon}
-                      <span>{item.label}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
+            {/* Main navigation */}
+            <SidebarGroup>
+              <SidebarGroupLabel>Main</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {mainNavItems.map((item, index) => (
+                    <SidebarMenuItem key={index}>
+                      <SidebarMenuButton 
+                        asChild 
+                        isActive={isActive(item.href)}
+                        tooltip={item.label}
+                      >
+                        <Link to={item.href} className="flex items-center gap-3">
+                          {item.icon}
+                          <span>{item.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+            
+            {/* Role-specific navigation */}
+            <SidebarGroup>
+              <SidebarGroupLabel>Features</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {roleNavItems.map((item, index) => (
+                    <SidebarMenuItem key={index}>
+                      <SidebarMenuButton 
+                        asChild 
+                        isActive={isActive(item.href)}
+                        tooltip={item.label}
+                      >
+                        <Link to={item.href} className="flex items-center gap-3">
+                          {item.icon}
+                          <span>{item.label}</span>
+                          {item.badge && (
+                            <SidebarMenuBadge>
+                              {item.badge}
+                            </SidebarMenuBadge>
+                          )}
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
           </SidebarContent>
-          <SidebarFooter className="p-4">
-            <Button 
-              onClick={() => logout()} 
-              variant="ghost" 
-              className="w-full text-white hover:bg-trustbond-primary/80 justify-start"
-            >
-              <LogOut size={20} className="mr-2" />
-              <span>Logout</span>
-            </Button>
+          <SidebarFooter className="border-t border-gray-200 p-4">
+            <div className="flex flex-col gap-2">
+              <WalletStatus />
+              <Button 
+                onClick={() => logout()} 
+                variant="outline"
+                className="w-full justify-start gap-2"
+              >
+                <LogOut size={18} />
+                <span>Logout</span>
+              </Button>
+            </div>
           </SidebarFooter>
         </Sidebar>
 
@@ -132,17 +276,25 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           <div className="flex flex-col h-full overflow-hidden">
             {/* Header */}
             <header className="bg-white border-b border-gray-200 p-4 flex justify-between items-center shadow-sm">
-              <h2 className="text-xl font-semibold text-trustbond-dark">
+              <h2 className="text-xl font-semibold text-gray-800">
                 Welcome, {user?.name}
               </h2>
-              <div className="flex items-center gap-4">
-                <Button variant="outline" className="flex items-center gap-2" asChild>
-                  <Link to="#">Blockchain Settings</Link>
+              <div className="flex items-center gap-3">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => navigate(`/dashboard/${user?.role}/transactions`)}
+                  className="flex items-center gap-2"
+                >
+                  <Wallet size={18} />
+                  <span>Blockchain Transactions</span>
                 </Button>
-                <Button className="flex items-center gap-2">
+                <Button 
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
                   <span>Connect MetaMask</span>
                 </Button>
-                <WalletStatus />
               </div>
             </header>
 

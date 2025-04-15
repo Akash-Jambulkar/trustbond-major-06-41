@@ -1,19 +1,11 @@
 
 import React from "react";
 import { Outlet } from "react-router-dom";
-import { useMode } from "@/contexts/ModeContext";
+import { DashboardLayout } from "@/components/DashboardLayout";
 
-// This component should only contain the Outlet for nested routes
-// since DashboardLayout is already wrapped around it in App.tsx
+// This component now simply renders the DashboardLayout with the Outlet for nested routes
 const UserDashboard = () => {
-  const { setProductionMode } = useMode();
-  
-  // Always set to production mode for user dashboard
-  React.useEffect(() => {
-    setProductionMode(true);
-  }, [setProductionMode]);
-  
-  return <Outlet />;
+  return <DashboardLayout />;
 };
 
 export default UserDashboard;
