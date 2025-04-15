@@ -1,7 +1,8 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { useMode } from "./ModeContext";
+import { useMode } from "@/contexts/ModeContext";
 import { supabase } from "@/lib/supabase";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { generateMockTransactionHash } from "@/utils/mockBlockchain";
 import { BlockchainContextType } from "@/contexts/blockchain/types";
