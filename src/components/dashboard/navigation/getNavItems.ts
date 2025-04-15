@@ -105,7 +105,7 @@ export const getNavItems = (role: UserRole): NavItems => {
         {
           title: "Banks",
           href: "/dashboard/admin/banks",
-          icon: BuildingIcon, // Changed from Bank to BuildingIcon
+          icon: BuildingIcon, // Use BuildingIcon instead of Bank
         },
         {
           title: "Bank Approvals",

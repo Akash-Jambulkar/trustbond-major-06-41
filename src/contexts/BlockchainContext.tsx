@@ -553,7 +553,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Simulate blockchain event
-  const simulateBlockchainEvent = async (): Promise<void> => {
+  const simulateBlockchainEvent = async () => {
     if (!enableBlockchain || !isConnected || !user) {
       toast.error("Wallet not connected");
       return;

@@ -6,11 +6,12 @@ import { AuthUser } from "@/contexts/auth/types";
 import { getNavItems } from "./getNavItems";
 import { useSidebar } from "@/components/ui/sidebar";
 
-interface SidebarNavProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface SidebarNavProps extends React.HTMLAttributes<HTMLDivElement> {
   user: AuthUser | null;
+  onLogout?: () => void;
 }
 
-export function SidebarNav({ className, user, ...props }: SidebarNavProps) {
+export function SidebarNav({ className, user, onLogout, ...props }: SidebarNavProps) {
   const { collapsed } = useSidebar();
   
   // If user is not authenticated or has no role, use default items
@@ -74,6 +75,17 @@ export function SidebarNav({ className, user, ...props }: SidebarNavProps) {
             </NavLink>
           ))}
         </nav>
+      )}
+      
+      {onLogout && (
+        <div className="mt-auto px-4 pb-4">
+          <button
+            onClick={onLogout}
+            className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"
+          >
+            {!collapsed && <span>Logout</span>}
+          </button>
+        </div>
       )}
     </div>
   );

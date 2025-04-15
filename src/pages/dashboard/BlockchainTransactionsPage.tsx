@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -8,8 +9,9 @@ import { useRealTimeUpdates, RealTimeEventType } from "@/contexts/RealTimeContex
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { CheckCircle, XCircle, Clock, RefreshCw, Wallet } from "lucide-react";
-import TransactionVisualizer from "@/components/blockchain/TransactionVisualizer";
+import { TransactionVisualizer } from "@/components/blockchain/TransactionVisualizer";
 
+// Update to use the correct event type from RealTimeEventType
 const TRANSACTION_UPDATED = RealTimeEventType.TRANSACTION_CREATED;
 
 const BlockchainTransactionsPage = () => {

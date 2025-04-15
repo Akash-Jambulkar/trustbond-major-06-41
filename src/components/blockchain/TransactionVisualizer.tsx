@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useBlockchain } from "@/contexts/BlockchainContext";
@@ -6,16 +7,13 @@ import { TransactionBadge } from "./TransactionBadge";
 import { TransactionItem } from "./TransactionItem";
 import { SkeletonTransactionList } from "./SkeletonTransactionList";
 
-// Define TRANSACTION_UPDATED if it doesn't exist in RealTimeEventType
-const TRANSACTION_UPDATED = RealTimeEventType.TRANSACTION_CREATED;
-
 export const TransactionVisualizer = () => {
   const { getTransactionHistory } = useBlockchain();
   const [transactions, setTransactions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Handle the missing TRANSACTION_UPDATED by using TRANSACTION_CREATED
-  useRealTimeUpdates(TRANSACTION_UPDATED, (data) => {
+  // Use TRANSACTION_CREATED from RealTimeEventType
+  useRealTimeUpdates(RealTimeEventType.TRANSACTION_CREATED, () => {
     loadTransactions();
   });
   
@@ -29,6 +27,11 @@ export const TransactionVisualizer = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleViewDetails = (tx: any) => {
+    console.log("View transaction details:", tx);
+    // Implement transaction details view functionality here
   };
 
   useEffect(() => {
@@ -46,7 +49,11 @@ export const TransactionVisualizer = () => {
         ) : transactions.length > 0 ? (
           <ul className="divide-y divide-border">
             {transactions.map((transaction) => (
-              <TransactionItem key={transaction.id} transaction={transaction} />
+              <TransactionItem 
+                key={transaction.id} 
+                transaction={transaction} 
+                onViewDetails={handleViewDetails}
+              />
             ))}
           </ul>
         ) : (
