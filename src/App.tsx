@@ -30,6 +30,7 @@ const LoanApplicationPage = lazy(() => import("@/pages/dashboard/user/LoanApplic
 const TrustScorePage = lazy(() => import("@/pages/dashboard/user/TrustScorePage"));
 const AnalyticsPage = lazy(() => import("@/pages/dashboard/user/AnalyticsPage"));
 const SecuritySettingsPage = lazy(() => import("@/pages/dashboard/user/SecuritySettingsPage"));
+const CreditScorePage = lazy(() => import("@/pages/dashboard/user/CreditScorePage"));
 
 // Bank Dashboard
 const BankDashboard = lazy(() => import("@/pages/dashboard/BankDashboard"));
@@ -85,6 +86,7 @@ function App() {
                 <Route path="trust-score" element={<TrustScorePage />} />
                 <Route path="analytics" element={<AnalyticsPage />} />
                 <Route path="security" element={<SecuritySettingsPage />} />
+                <Route path="credit-score" element={<CreditScorePage />} />
                 <Route path="transactions" element={<BlockchainTransactionsPage />} />
               </Route>
 

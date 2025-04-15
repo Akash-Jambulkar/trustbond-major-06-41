@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useAuth } from "@/contexts/AuthContext";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { Link } from "react-router-dom";
-import { ChevronRight, Shield, ChartBar, Wallet, FileCheck, BarChart } from "lucide-react";
+import { ChevronRight, Shield, ChartBar, Wallet, FileCheck, BarChart, CreditCard } from "lucide-react";
 
 const UserHome = () => {
   const { user } = useAuth();
@@ -144,12 +144,12 @@ const UserHome = () => {
                   </div>
                 </Button>
               </Link>
-              <Link to="/dashboard/user/transactions">
-                <Button variant="outline" className="w-full h-auto py-4 px-4 flex flex-col items-center justify-center gap-2 hover:bg-muted/50">
-                  <Wallet className="h-6 w-6 text-trustbond-primary" />
+              <Link to="/dashboard/user/credit-score">
+                <Button variant="outline" className="w-full h-auto py-4 px-4 flex flex-col items-center justify-center gap-2 hover:bg-muted/50 bg-green-50 border-green-200">
+                  <CreditCard className="h-6 w-6 text-green-600" />
                   <div className="text-center">
-                    <div className="font-medium">Transactions</div>
-                    <p className="text-xs text-muted-foreground">View transaction history</p>
+                    <div className="font-medium">Credit Score</div>
+                    <p className="text-xs text-muted-foreground">External credit reports</p>
                   </div>
                 </Button>
               </Link>
