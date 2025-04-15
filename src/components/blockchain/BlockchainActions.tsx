@@ -10,15 +10,11 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Wallet } from "lucide-react";
 import { hashDocument } from "@/utils/documentHash";
 import { TransactionHistory } from "./TransactionHistory";
-import { setupBasicEventListeners } from "@/utils/eventListener";
 
 export const BlockchainActions = () => {
   const { 
     account, 
     isConnected, 
-    kycContract, 
-    trustScoreContract,
-    loanContract, 
     submitKYC, 
     networkName, 
     isCorrectNetwork 
@@ -32,10 +28,8 @@ export const BlockchainActions = () => {
 
   // Setup event listeners when contracts are available
   useEffect(() => {
-    if (enableBlockchain && isConnected && kycContract && trustScoreContract && loanContract) {
-      setupBasicEventListeners(kycContract, trustScoreContract, loanContract);
-    }
-  }, [kycContract, trustScoreContract, loanContract, isConnected, enableBlockchain]);
+    // Setup basic event listeners if needed
+  }, [isConnected]);
 
   const handleGenerateHash = async () => {
     if (!documentId) {

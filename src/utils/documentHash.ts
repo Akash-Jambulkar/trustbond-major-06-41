@@ -36,7 +36,7 @@ export const validateDocument = (
   return pattern.test(documentNumber);
 };
 
-// Create a secure document hash
+// Create a secure document hash (alias for compatibility)
 export const createDocumentHash = async (
   documentType: DocumentType,
   documentNumber: string,
@@ -45,4 +45,20 @@ export const createDocumentHash = async (
   // Combine all three elements for a comprehensive hash
   const combinedString = `${documentType}:${documentNumber}:${fileHash}`;
   return await hashDocument(combinedString);
+};
+
+// Alias for backward compatibility
+export const calculateDocumentHash = createDocumentHash;
+
+// Additional utility functions needed by components
+export const verifyHashInDatabase = async (hash: string): Promise<boolean> => {
+  // This would check the hash against the database
+  // For demo, assume valid
+  return true;
+};
+
+export const verifyDocumentUniqueness = async (hash: string): Promise<boolean> => {
+  // This would check if the document hash is unique in the system
+  // For demo, assume unique
+  return true;
 };

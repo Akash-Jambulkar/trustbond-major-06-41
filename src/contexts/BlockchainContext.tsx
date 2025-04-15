@@ -1,31 +1,10 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useMode } from "./ModeContext";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "./AuthContext";
 import { toast } from "sonner";
 import { generateMockTransactionHash } from "@/utils/mockBlockchain";
-
-// Define blockchain context type
-type BlockchainContextType = {
-  account: string | null;
-  isConnected: boolean;
-  networkName: string;
-  isCorrectNetwork: boolean;
-  isGanache: boolean;
-  isBlockchainLoading: boolean;
-  connectionError: string | null;
-  connectWallet: () => Promise<boolean>;
-  disconnectWallet: () => void;
-  switchNetwork: (chainId: number) => Promise<boolean>;
-  submitKYC: (documentHash: string) => Promise<boolean>;
-  verifyKYC: (kycId: string, verificationStatus: 'verified' | 'rejected') => Promise<boolean>;
-  submitLoanApplication: (loanData: any) => Promise<string | null>;
-  approveLoan: (loanId: string) => Promise<boolean>;
-  rejectLoan: (loanId: string) => Promise<boolean>;
-  getTransactionHistory: () => Promise<any[]>;
-  simulateBlockchainEvent: () => void;
-};
+import { BlockchainContextType } from "@/contexts/blockchain/types";
 
 // Create blockchain context
 const BlockchainContext = createContext<BlockchainContextType | null>(null);
@@ -541,7 +520,33 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Simulate blockchain event function (for development)
+  // Get KYC status for a user
+  const getKYCStatus = async (address: string) => {
+    if (!enableBlockchain || !isConnected) {
+      return false;
+    }
+
+    try {
+      // In a real implementation, this would check the blockchain
+      // For demo purposes, we'll check the database
+      if (user) {
+        const { data, error } = await supabase
+          .from('kyc_documents')
+          .select('verification_status')
+          .eq('user_id', user.user_id)
+          .single();
+
+        if (error) throw error;
+        return data?.verification_status === 'verified';
+      }
+      return false;
+    } catch (error) {
+      console.error("KYC status check error:", error);
+      return false;
+    }
+  };
+
+  // Simulate blockchain event
   const simulateBlockchainEvent = () => {
     if (!enableBlockchain || !isConnected || !user) {
       toast.error("Wallet not connected");
@@ -593,6 +598,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         switchNetwork,
         submitKYC,
         verifyKYC,
+        getKYCStatus,
         submitLoanApplication,
         approveLoan,
         rejectLoan,

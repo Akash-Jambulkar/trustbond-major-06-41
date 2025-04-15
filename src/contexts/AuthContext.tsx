@@ -1,297 +1,287 @@
-
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase, type UserProfile } from "@/lib/supabase";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+
+// Define the user type to match both Supabase User and our custom UserProfile
+export type User = {
+  user_id: string;
+  email: string;
+  name?: string;
+  role: 'user' | 'bank' | 'admin';
+  mfa_enabled: boolean;
+  kyc_status?: 'pending' | 'verified' | 'rejected' | 'not_submitted';
+  app_metadata?: any;
+  user_metadata?: any;
+  aud?: string;
+};
 
 // Define the auth context type
-type AuthContextType = {
-  user: UserProfile | null;
+export type AuthContextType = {
+  user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
-  register: (name: string, email: string, password: string, role: string) => Promise<boolean>;
+  loginWithWallet: (address: string) => Promise<boolean>;
+  register: (email: string, password: string, name: string) => Promise<boolean>;
   logout: () => Promise<void>;
-  updateProfile: (data: Partial<UserProfile>) => Promise<boolean>;
-  enableMFA: () => Promise<boolean>;
+  setupMFA: (phoneNumber: string, method: "sms" | "email") => Promise<boolean>;
   verifyMFA: (code: string) => Promise<boolean>;
-  disableMFA: () => Promise<boolean>;
+  isMFARequired: boolean;
 };
 
-// Create the auth context
+// Create auth context
 const AuthContext = createContext<AuthContextType | null>(null);
 
 // Auth provider component
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isMFARequired, setIsMFARequired] = useState<boolean>(false);
   const navigate = useNavigate();
 
-  // Initialize auth state
   useEffect(() => {
-    const initAuth = async () => {
+    const loadSession = async () => {
       setIsLoading(true);
-      
-      // Get current session
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session) {
-        try {
-          // Fetch user profile
-          const { data } = await supabase
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (session) {
+          const { data: profile, error } = await supabase
             .from('profiles')
             .select('*')
             .eq('user_id', session.user.id)
             .single();
-          
-          if (data) {
-            setUser(data as UserProfile);
-            setIsAuthenticated(true);
+
+          if (error) {
+            console.error("Error fetching profile:", error);
+            toast.error("Failed to load user profile");
+            return;
           }
-        } catch (error) {
-          console.error("Error fetching user profile:", error);
-        }
-      }
 
-      setIsLoading(false);
-    };
+          const userWithProfile: User = {
+            ...session.user,
+            user_id: session.user.id,
+            email: session.user.email || '',
+            name: profile?.name,
+            role: profile?.role || 'user',
+            mfa_enabled: profile?.mfa_enabled || false,
+            kyc_status: profile?.kyc_status || 'not_submitted',
+            app_metadata: session.user.app_metadata,
+            user_metadata: session.user.user_metadata,
+            aud: session.user.aud
+          };
 
-    initAuth();
-
-    // Set up auth state listener
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        // Fetch user profile when signed in
-        const { data } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .single();
-        
-        if (data) {
-          setUser(data as UserProfile);
+          setUser(userWithProfile);
           setIsAuthenticated(true);
         }
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-        setIsAuthenticated(false);
+      } catch (error) {
+        console.error("Session loading error:", error);
+        toast.error("Failed to load session");
+      } finally {
+        setIsLoading(false);
       }
-    });
-
-    // Clean up subscription
-    return () => {
-      authListener?.subscription.unsubscribe();
     };
+
+    loadSession();
   }, []);
 
-  // Login function
+  // Implement the login function
   const login = async (email: string, password: string) => {
+    setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
       });
 
       if (error) {
-        toast.error(error.message);
+        console.error("Login error:", error);
+        toast.error("Login failed: " + error.message);
         return false;
       }
 
-      toast.success("Logged in successfully!");
-      
-      // Fetch user profile
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      
-      if (authUser) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('user_id', authUser.id)
-          .single();
-        
-        if (data) {
-          const userProfile = data as UserProfile;
-          setUser(userProfile);
-          
-          // Redirect based on role
-          if (userProfile.role === 'user') {
-            navigate('/dashboard/user');
-          } else if (userProfile.role === 'bank') {
-            navigate('/dashboard/bank');
-          } else if (userProfile.role === 'admin') {
-            navigate('/dashboard/admin');
-          }
-        }
+      // Fetch the user profile after successful login
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', data.user.id)
+        .single();
+
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+        toast.error("Failed to load user profile");
+        return false;
       }
+
+      const userWithProfile: User = {
+        ...data.user,
+        user_id: data.user.id,
+        email: data.user.email || '',
+        name: profile?.name,
+        role: profile?.role || 'user',
+        mfa_enabled: profile?.mfa_enabled || false,
+        kyc_status: profile?.kyc_status || 'not_submitted',
+        app_metadata: data.user.app_metadata,
+        user_metadata: data.user.user_metadata,
+        aud: data.user.aud
+      };
+
+      setUser(userWithProfile);
+      setIsAuthenticated(true);
       
+      // Check if MFA is required
+      if (userWithProfile.mfa_enabled) {
+        setIsMFARequired(true);
+        toast.info("Multi-factor authentication required");
+        navigate("/mfa-verify");
+      } else {
+        navigate(`/dashboard/${userWithProfile.role}`);
+      }
+
       return true;
     } catch (error) {
-      console.error("Login error:", error);
-      toast.error("Login failed. Please try again.");
+      console.error("Login submission error:", error);
+      toast.error("Login failed: " + (error instanceof Error ? error.message : "Unknown error"));
       return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Register function
-  const register = async (name: string, email: string, password: string, role: string) => {
+  // Implement the register function
+  const register = async (email: string, password: string, name: string) => {
+    setIsLoading(true);
     try {
-      // Create auth user
       const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
+        email: email,
+        password: password,
         options: {
           data: {
-            name,
-            role,
-          },
-        },
+            name: name,
+            role: 'user',
+            mfa_enabled: false,
+            kyc_status: 'not_submitted'
+          }
+        }
       });
 
       if (error) {
-        toast.error(error.message);
+        console.error("Registration error:", error);
+        toast.error("Registration failed: " + error.message);
         return false;
       }
 
-      if (data.user) {
-        // Create user profile
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([
-            {
-              user_id: data.user.id,
-              name,
-              email,
-              role,
-              kyc_status: 'not_submitted',
-              mfa_enabled: false,
-              created_at: new Date().toISOString(),
-            },
-          ]);
+      // Create a user profile in the profiles table
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert([
+          {
+            user_id: data.user.id,
+            email: email,
+            name: name,
+            role: 'user',
+            mfa_enabled: false,
+            kyc_status: 'not_submitted'
+          }
+        ]);
 
-        if (profileError) {
-          toast.error("Failed to create user profile");
-          return false;
-        }
-
-        toast.success("Account created successfully!");
-
-        // Specific setup for bank accounts
-        if (role === 'bank') {
-          navigate('/dashboard/bank/bank-registration');
-        } else {
-          navigate('/dashboard/user');
-        }
-
-        return true;
+      if (profileError) {
+        console.error("Profile creation error:", profileError);
+        toast.error("Failed to create user profile");
+        return false;
       }
 
-      return false;
+      toast.success("Registration successful! Please check your email to verify your account.");
+      return true;
     } catch (error) {
-      console.error("Registration error:", error);
-      toast.error("Registration failed. Please try again.");
+      console.error("Registration submission error:", error);
+      toast.error("Registration failed: " + (error instanceof Error ? error.message : "Unknown error"));
       return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Logout function
+  // Implement the logout function
   const logout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setIsAuthenticated(false);
-    navigate('/login');
-    toast.success("Logged out successfully!");
-  };
-
-  // Update profile function
-  const updateProfile = async (data: Partial<UserProfile>) => {
-    if (!user) return false;
-
+    setIsLoading(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update(data)
-        .eq('user_id', user.user_id);
+      const { error } = await supabase.auth.signOut();
 
       if (error) {
-        toast.error("Failed to update profile");
-        return false;
+        console.error("Logout error:", error);
+        toast.error("Logout failed");
+        return;
       }
 
-      // Update local user state
-      setUser({ ...user, ...data });
-      toast.success("Profile updated successfully!");
-      return true;
+      setUser(null);
+      setIsAuthenticated(false);
+      navigate("/login");
+      toast.success("Logged out successfully");
     } catch (error) {
-      console.error("Update profile error:", error);
-      toast.error("Failed to update profile");
-      return false;
+      console.error("Logout submission error:", error);
+      toast.error("Logout failed: " + (error instanceof Error ? error.message : "Unknown error"));
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Enable MFA
-  const enableMFA = async () => {
-    if (!user) return false;
-    
-    // In a real implementation, you'd integrate with a proper MFA provider
-    // For demo purposes, we'll just update the user profile
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ mfa_enabled: true })
-        .eq('user_id', user.user_id);
-
-      if (error) {
-        toast.error("Failed to enable MFA");
-        return false;
-      }
-
-      setUser({ ...user, mfa_enabled: true });
-      toast.success("MFA enabled successfully!");
-      return true;
-    } catch (error) {
-      console.error("Enable MFA error:", error);
-      toast.error("Failed to enable MFA");
-      return false;
-    }
+  // Implement the loginWithWallet function
+  const loginWithWallet = async (address: string) => {
+    // This would implement wallet-based authentication
+    // For now, simulate it with a toast message
+    toast.success(`Logged in with wallet address: ${address}`);
+    // Set a mock user for now
+    const mockUser: User = {
+      user_id: address,
+      email: `wallet-${address.substring(0, 8)}@example.com`,
+      name: `Wallet User ${address.substring(0, 6)}`,
+      role: 'user',
+      mfa_enabled: false,
+      kyc_status: 'not_submitted',
+      app_metadata: {},
+      user_metadata: {},
+      aud: 'authenticated'
+    };
+    setUser(mockUser);
+    setIsAuthenticated(true);
+    return true;
   };
 
-  // Verify MFA
+  // Implement setupMFA function
+  const setupMFA = async (phoneNumber: string, method: "sms" | "email") => {
+    // This would implement MFA setup with a real service
+    // For now, simulate it
+    toast.success(`MFA set up with ${method} verification`);
+    if (user) {
+      // Update user with MFA enabled
+      const updatedUser = { ...user, mfa_enabled: true };
+      setUser(updatedUser);
+      // In a real implementation, we would update the database too
+    }
+    return true;
+  };
+
+  // Implement verifyMFA function
   const verifyMFA = async (code: string) => {
-    // In a real implementation, you'd verify the MFA code
-    // For demo purposes, we'll accept any code
+    // This would implement MFA verification
+    // For now, accept any code
     if (code && code.length === 6) {
-      toast.success("MFA verified successfully!");
-      return true;
-    }
-    
-    toast.error("Invalid MFA code");
-    return false;
-  };
-
-  // Disable MFA
-  const disableMFA = async () => {
-    if (!user) return false;
-    
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ mfa_enabled: false })
-        .eq('user_id', user.user_id);
-
-      if (error) {
-        toast.error("Failed to disable MFA");
-        return false;
+      setIsMFARequired(false);
+      toast.success("MFA verified successfully");
+      
+      if (user) {
+        navigate(`/dashboard/${user.role}`);
+      } else {
+        navigate("/login");
       }
-
-      setUser({ ...user, mfa_enabled: false });
-      toast.success("MFA disabled successfully!");
+      
       return true;
-    } catch (error) {
-      console.error("Disable MFA error:", error);
-      toast.error("Failed to disable MFA");
-      return false;
     }
+    toast.error("Invalid verification code");
+    return false;
   };
 
   return (
@@ -301,12 +291,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAuthenticated,
         isLoading,
         login,
+        loginWithWallet,
         register,
         logout,
-        updateProfile,
-        enableMFA,
+        setupMFA,
         verifyMFA,
-        disableMFA,
+        isMFARequired
       }}
     >
       {children}
