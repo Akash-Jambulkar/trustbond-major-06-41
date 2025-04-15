@@ -26,7 +26,7 @@ const KYCPage = () => {
       
       <div className="mb-6">
         <KYCStatusDisplay 
-          kycStatus={isProductionMode ? true : kycStatus} 
+          kycStatus={kycStatus} 
           isLoading={isLoading} 
           isConnected={isConnected}
           verificationTimestamp={verificationTimestamp}

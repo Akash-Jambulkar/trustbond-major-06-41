@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -49,7 +50,7 @@ export const EnhancedLoanApplicationForm: React.FC<LoanApplicationFormProps> = (
     getLoanSummary
   } = useLoanCalculations(
     trustScore,
-    kyc,
+    kyc === 1, // Convert numeric status to boolean for calculations
     loanAmount,
     loanDuration,
     isConnected,
@@ -70,11 +71,15 @@ export const EnhancedLoanApplicationForm: React.FC<LoanApplicationFormProps> = (
         throw new Error("Loan contract or account not available");
       }
       
+      // Convert ETH amount to Wei for the smart contract
       const amountInWei = window.web3?.utils.toWei(loanAmount.toString(), "ether");
+      
+      // Convert months to days for the smart contract
+      const durationInDays = loanDuration * 30;
       
       const tx = await loanContract.methods.applyForLoan(
         amountInWei,
-        loanDuration * 30,
+        durationInDays,
         purpose
       ).send({ from: account });
       
