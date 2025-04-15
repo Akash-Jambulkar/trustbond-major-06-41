@@ -31,6 +31,7 @@ const TrustScorePage = lazy(() => import("@/pages/dashboard/user/TrustScorePage"
 const AnalyticsPage = lazy(() => import("@/pages/dashboard/user/AnalyticsPage"));
 const SecuritySettingsPage = lazy(() => import("@/pages/dashboard/user/SecuritySettingsPage"));
 const CreditScorePage = lazy(() => import("@/pages/dashboard/user/CreditScorePage"));
+const ComplianceAndMarketPage = lazy(() => import("@/pages/dashboard/user/ComplianceAndMarketPage"));
 
 // Bank Dashboard
 const BankDashboard = lazy(() => import("@/pages/dashboard/BankDashboard"));
@@ -87,6 +88,7 @@ function App() {
                 <Route path="analytics" element={<AnalyticsPage />} />
                 <Route path="security" element={<SecuritySettingsPage />} />
                 <Route path="credit-score" element={<CreditScorePage />} />
+                <Route path="compliance-market" element={<ComplianceAndMarketPage />} />
                 <Route path="transactions" element={<BlockchainTransactionsPage />} />
               </Route>
 
