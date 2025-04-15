@@ -1,4 +1,13 @@
 
+// Network IDs
+export const NETWORK_IDS = {
+  MAINNET: 1,
+  GOERLI: 5,
+  SEPOLIA: 11155111,
+  GANACHE: 1337,
+  LOCALHOST: 31337
+} as const;
+
 export interface BlockchainContextType {
   // Connection state
   account: string | null;

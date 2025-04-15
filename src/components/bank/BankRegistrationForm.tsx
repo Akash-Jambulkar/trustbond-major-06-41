@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,16 +11,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { Upload, Building2, CheckCircle } from "lucide-react";
 import { useBlockchain } from "@/contexts/BlockchainContext";
+import { useNavigate } from "react-router-dom";
 
 // Form validation schema
 const bankRegistrationSchema = z.object({
-  name: z.string().min(3, { message: "Bank name must be at least 3 characters" }),
-  regNumber: z.string().min(5, { message: "Registration number must be at least 5 characters" }),
-  address: z.string().min(10, { message: "Address must be at least 10 characters" }),
-  contactEmail: z.string().email({ message: "Please enter a valid email address" }),
-  contactPhone: z.string().min(10, { message: "Please enter a valid phone number" }),
-  bankType: z.enum(["commercial", "cooperative", "investment", "central", "specialized"]),
-  description: z.string().optional(),
+  bankName: z.string().min(3, { message: "Bank name must be at least 3 characters" }),
+  registrationNumber: z.string().min(5, { message: "Registration number must be at least 5 characters" }),
+  documentHash: z.string().min(10, { message: "Document hash must be at least 10 characters" }),
 });
 
 type BankRegistrationFormValues = z.infer<typeof bankRegistrationSchema>;
@@ -29,66 +25,48 @@ type BankRegistrationFormValues = z.infer<typeof bankRegistrationSchema>;
 export function BankRegistrationForm() {
   const { account, isConnected, registerBank } = useBlockchain();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [verificationFile, setVerificationFile] = useState<File | null>(null);
+  const navigate = useNavigate();
 
   const form = useForm<BankRegistrationFormValues>({
     resolver: zodResolver(bankRegistrationSchema),
     defaultValues: {
-      name: "",
-      regNumber: "",
-      address: "",
-      contactEmail: "",
-      contactPhone: "",
-      bankType: "commercial",
-      description: "",
+      bankName: "",
+      registrationNumber: "",
+      documentHash: "",
     },
   });
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setVerificationFile(e.target.files[0]);
-    }
-  };
-
-  const onSubmit = async (data: BankRegistrationFormValues) => {
-    if (!verificationFile) {
-      toast.error("Please upload verification document");
+  const handleRegister = async () => {
+    if (!form.formState.isValid) {
+      toast.error("Please fill all required fields correctly");
       return;
     }
-
-    if (!isConnected) {
-      toast.error("Please connect your wallet to register");
-      return;
-    }
-
+    
     setIsSubmitting(true);
-
+    
     try {
-      // 1. Upload verification document to storage
-      // This would typically involve a call to upload the file to Supabase or similar
-      const documentUploadResponse = { documentId: "sample-doc-id-" + Date.now() }; // Placeholder
+      const values = form.getValues();
       
-      // 2. Register on blockchain if document upload successful
-      if (documentUploadResponse.documentId) {
-        // Call blockchain registration function (implemented in BlockchainContext)
-        if (registerBank) {
-          await registerBank(data.name, data.regNumber, account);
-          
-          // 3. Save additional details to database
-          // This would typically involve a call to save data to your database
-          
-          toast.success("Bank registration submitted successfully", {
-            description: "Your application is now pending review",
-          });
-          
-          form.reset();
-          setVerificationFile(null);
-        }
-      }
+      // Convert to a single bankData object as expected by the API
+      const bankData = {
+        name: values.bankName,
+        registrationNumber: values.registrationNumber,
+        walletAddress: account,
+        documentHash: values.documentHash
+      };
+      
+      // Call registerBank with just the bankData object
+      await registerBank?.(bankData);
+      
+      toast.success("Bank registration submitted successfully", {
+        description: "Your application is pending approval",
+      });
+      
+      navigate("/dashboard/bank");
     } catch (error) {
-      console.error("Registration error:", error);
+      console.error("Error registering bank:", error);
       toast.error("Failed to register bank", {
-        description: "Please try again later",
+        description: "Please try again or contact support",
       });
     } finally {
       setIsSubmitting(false);
@@ -108,152 +86,46 @@ export function BankRegistrationForm() {
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Bank Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter bank name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="regNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Registration Number</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Official registration number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
+          <form onSubmit={form.handleSubmit(handleRegister)} className="space-y-6">
             <FormField
               control={form.control}
-              name="address"
+              name="bankName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Registered Address</FormLabel>
+                  <FormLabel>Bank Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Full registered address" {...field} />
+                    <Input placeholder="Enter bank name" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="contactEmail"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Contact Email</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Official email address" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="contactPhone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Contact Phone</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Official phone number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
             <FormField
               control={form.control}
-              name="bankType"
+              name="registrationNumber"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Bank Type</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select bank type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="commercial">Commercial Bank</SelectItem>
-                      <SelectItem value="cooperative">Cooperative Bank</SelectItem>
-                      <SelectItem value="investment">Investment Bank</SelectItem>
-                      <SelectItem value="central">Central Bank</SelectItem>
-                      <SelectItem value="specialized">Specialized Bank</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>Registration Number</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Brief description of your institution" 
-                      className="resize-none" 
-                      {...field} 
-                    />
+                    <Input placeholder="Official registration number" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
-            <div className="space-y-2">
-              <FormLabel>Verification Document</FormLabel>
-              <div className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-slate-50 transition-colors">
-                <input 
-                  type="file" 
-                  id="verification-doc" 
-                  className="hidden" 
-                  onChange={handleFileChange}
-                  accept="application/pdf,image/png,image/jpeg"
-                />
-                <label htmlFor="verification-doc" className="cursor-pointer flex flex-col items-center justify-center">
-                  <Upload className="h-8 w-8 text-gray-400 mb-2" />
-                  <span className="font-medium text-sm">
-                    {verificationFile ? verificationFile.name : "Click to upload verification document"}
-                  </span>
-                  <span className="text-xs text-gray-500 mt-1">
-                    Banking license or regulatory approval document (PDF, PNG, JPEG)
-                  </span>
-                </label>
-              </div>
-              {verificationFile && (
-                <p className="text-xs flex items-center gap-1 text-green-600">
-                  <CheckCircle className="h-3 w-3" />
-                  Document selected: {verificationFile.name}
-                </p>
+            <FormField
+              control={form.control}
+              name="documentHash"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Document Hash</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter document hash" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
-            </div>
-
+            />
             <Button 
               type="submit" 
               className="w-full" 

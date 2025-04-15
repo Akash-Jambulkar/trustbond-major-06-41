@@ -36,7 +36,7 @@ export const validateDocument = (
   return pattern.test(documentNumber);
 };
 
-// Create a secure document hash (alias for compatibility)
+// Create a secure document hash
 export const createDocumentHash = async (
   documentType: DocumentType,
   documentNumber: string,
@@ -50,15 +50,21 @@ export const createDocumentHash = async (
 // Alias for backward compatibility
 export const calculateDocumentHash = createDocumentHash;
 
-// Additional utility functions needed by components
+// Check if a document hash is in the database
 export const verifyHashInDatabase = async (hash: string): Promise<boolean> => {
   // This would check the hash against the database
   // For demo, assume valid
   return true;
 };
 
-export const verifyDocumentUniqueness = async (hash: string): Promise<boolean> => {
+// Check if a document is unique in the system
+export const verifyDocumentUniqueness = async (
+  documentType: string, 
+  documentNumber: string,
+  supabaseClient?: any
+): Promise<{ isUnique: boolean; existingStatus?: string }> => {
   // This would check if the document hash is unique in the system
   // For demo, assume unique
-  return true;
+  return { isUnique: true };
 };
+

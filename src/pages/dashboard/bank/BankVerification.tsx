@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { VerificationSteps } from "@/components/verification/VerificationSteps";
 import { DocumentViewer } from "@/components/verification/DocumentViewer";
@@ -29,7 +28,7 @@ export default function BankVerification() {
 
     setIsProcessing(true);
     try {
-      await approveLoan(parseInt(loanId));
+      await approveLoan(loanId);
       toast.success(`Loan #${loanId} has been approved successfully`);
       setLoanId("");
     } catch (error) {
@@ -48,7 +47,7 @@ export default function BankVerification() {
 
     setIsProcessing(true);
     try {
-      await rejectLoan(parseInt(loanId));
+      await rejectLoan(loanId);
       toast.success(`Loan #${loanId} has been rejected`);
       setLoanId("");
     } catch (error) {

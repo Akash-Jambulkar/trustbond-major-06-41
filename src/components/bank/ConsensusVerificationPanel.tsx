@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,7 +17,6 @@ import {
 } from "@/utils/consensusVerifier";
 import { KycDocumentSubmissionType } from "@/types/supabase-extensions";
 
-// Import the new modular components
 import { DocumentList } from "./consensus/DocumentList";
 import { VerificationDialog } from "./consensus/VerificationDialog";
 
@@ -42,7 +40,6 @@ export function ConsensusVerificationPanel() {
     }
   } | null>(null);
   
-  // Load documents needing consensus verification
   useEffect(() => {
     const loadDocuments = async () => {
       setLoadingDocuments(true);
@@ -60,20 +57,18 @@ export function ConsensusVerificationPanel() {
     loadDocuments();
   }, []);
   
-  // Check eligibility and consensus status when opening a document
   const handleOpenDocument = async (document: KycDocumentSubmissionType) => {
     setSelectedDocument(document);
     setLoadingConsensus(true);
     setIsDialogOpen(true);
     
     try {
-      // Load consensus status for this document
       const consensus = await getConsensusStatus(document.id);
       setConsensusData(consensus);
       
-      // Check if bank is eligible to vote
-      if (user?.id) {
-        const eligibilityResult = await checkVotingEligibility(user.id, document.id);
+      if (user?.email) {
+        const userId = user.id || user.email;
+        const eligibilityResult = await checkVotingEligibility(userId, document.id);
         setEligibility(eligibilityResult);
       }
     } catch (error) {
@@ -84,33 +79,31 @@ export function ConsensusVerificationPanel() {
     }
   };
   
-  // Submit vote
   const handleSubmitVote = async (approved: boolean, notes: string) => {
-    if (!selectedDocument || !user?.id || !user?.name) {
+    if (!selectedDocument || !user) {
       toast.error('Please select approve or reject');
       return;
     }
     
+    const userId = user.id || user.email || 'unknown';
+    const userName = user.name || user.email || 'Unknown User';
+    
     setIsSubmitting(true);
     try {
-      // Submit vote
       await submitVerificationVote(
         selectedDocument.id,
-        user.id,
-        user.name,
+        userId,
+        userName,
         approved,
         notes
       );
       
-      // Update consensus status
       await updateDocumentConsensusStatus(selectedDocument.id);
       
-      // Reload consensus data
       const consensus = await getConsensusStatus(selectedDocument.id);
       setConsensusData(consensus);
       
-      // Update eligibility
-      const eligibilityResult = await checkVotingEligibility(user.id, selectedDocument.id);
+      const eligibilityResult = await checkVotingEligibility(userId, selectedDocument.id);
       setEligibility(eligibilityResult);
       
       toast.success(
@@ -119,7 +112,6 @@ export function ConsensusVerificationPanel() {
           : 'Document rejected successfully'
       );
       
-      // If consensus is reached, refresh document list
       if (consensus.consensusReached) {
         const docs = await getDocumentsNeedingConsensus();
         setDocuments(docs);
@@ -159,7 +151,6 @@ export function ConsensusVerificationPanel() {
         </p>
       </CardFooter>
       
-      {/* Document Verification Dialog */}
       <VerificationDialog 
         isOpen={isDialogOpen}
         onOpenChange={setIsDialogOpen}

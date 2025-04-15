@@ -1,115 +1,91 @@
 
+import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LogOut } from "lucide-react";
-import { User } from "@supabase/supabase-js";
+import { AuthUser } from "@/contexts/auth/types";
 import { Button } from "@/components/ui/button";
-import { WalletStatus } from "@/components/WalletStatus";
-import {
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarMenuBadge,
-} from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
+import { Separator } from "@/components/ui/separator";
 import { getNavItems } from "./getNavItems";
+import { LogOut, User } from "lucide-react";
 
 interface SidebarNavProps {
-  user: User | null;
+  user: AuthUser | null;
   onLogout: () => void;
 }
 
-export function SidebarNav({ user, onLogout }: SidebarNavProps) {
+export const SidebarNav = ({ user, onLogout }: SidebarNavProps) => {
   const location = useLocation();
-
-  const { main: mainNavItems, roleSpecific: roleNavItems } = getNavItems(user);
-
-  // Check if a nav item is active
-  const isActive = (href: string) => {
-    if (location.pathname === href) return true;
-    if (href.endsWith('home') && location.pathname === href.replace('/home', '')) return true;
-    return location.pathname.startsWith(href) && href !== `/dashboard/${user?.role}`;
-  };
+  
+  // Get navigation items based on user role
+  const role = user?.role || 'user';
+  const navItems = getNavItems(role as 'user' | 'bank' | 'admin');
 
   return (
-    <>
-      <SidebarHeader>
-        <div className="flex flex-col space-y-1 p-4">
-          <h1 className="text-2xl font-bold text-trustbond-primary">TrustBond</h1>
-          <p className="text-sm text-gray-500">{user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1)} Portal</p>
-        </div>
-      </SidebarHeader>
-      
-      <SidebarContent>
-        {/* Main navigation */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Main</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {mainNavItems.map((item, index) => (
-                <SidebarMenuItem key={index}>
-                  <SidebarMenuButton 
-                    asChild 
-                    isActive={isActive(item.href)}
-                    tooltip={item.label}
-                  >
-                    <Link to={item.href} className="flex items-center gap-3">
-                      {item.icon}
-                      <span>{item.label}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        
-        {/* Role-specific navigation */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Features</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {roleNavItems.map((item, index) => (
-                <SidebarMenuItem key={index}>
-                  <SidebarMenuButton 
-                    asChild 
-                    isActive={isActive(item.href)}
-                    tooltip={item.label}
-                  >
-                    <Link to={item.href} className="flex items-center gap-3">
-                      {item.icon}
-                      <span>{item.label}</span>
-                      {item.badge && (
-                        <SidebarMenuBadge>
-                          {item.badge}
-                        </SidebarMenuBadge>
-                      )}
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-
-      <SidebarFooter className="border-t border-gray-200 p-4">
-        <div className="flex flex-col gap-2">
-          <WalletStatus />
-          <Button 
-            onClick={onLogout} 
-            variant="outline"
-            className="w-full justify-start gap-2"
+    <div className="flex h-full flex-col overflow-y-auto bg-white">
+      <div className="px-3 py-4">
+        <Link
+          to="/"
+          className="flex h-10 items-center px-2 text-lg font-semibold tracking-tight"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="mr-2 h-6 w-6"
           >
-            <LogOut size={18} />
-            <span>Logout</span>
-          </Button>
+            <path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" />
+          </svg>
+          TrustBond
+        </Link>
+        <div className="mt-2">
+          <p className="px-2 text-xs font-medium text-muted-foreground">
+            {user ? `${role.charAt(0).toUpperCase() + role.slice(1)} Portal` : 'Guest'}
+          </p>
         </div>
-      </SidebarFooter>
-    </>
+      </div>
+      <div className="flex-1 px-3 py-2">
+        <div className="space-y-1">
+          {navItems.map((item, index) => (
+            <Button
+              key={index}
+              variant="ghost"
+              asChild
+              className={cn(
+                "w-full justify-start",
+                location.pathname === item.href && "bg-secondary"
+              )}
+            >
+              <Link to={item.href}>
+                <item.icon className="mr-2 h-4 w-4" />
+                {item.title}
+              </Link>
+            </Button>
+          ))}
+        </div>
+      </div>
+      <div className="px-3 py-2">
+        <div className="space-y-1">
+          <Separator className="my-2" />
+          {user && (
+            <Button onClick={onLogout} variant="ghost" className="w-full justify-start text-red-500 hover:bg-red-50 hover:text-red-600">
+              <LogOut className="mr-2 h-4 w-4" />
+              Log out
+            </Button>
+          )}
+          <div className="px-2 py-2">
+            <div className="flex items-center">
+              <User className="h-4 w-4 mr-1 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground truncate">
+                {user?.email || 'Not logged in'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
-}
+};

@@ -12,6 +12,14 @@ export type RealTimeEvent = {
   createdAt: Date;
 };
 
+// Real-time event types enum
+export enum RealTimeEventType {
+  KYC_UPDATED = 'kyc-updated',
+  LOAN_UPDATED = 'loan-updated',
+  TRUST_SCORE_UPDATED = 'trust-score-updated',
+  TRANSACTION_CREATED = 'transaction-created'
+}
+
 // Context type
 type RealTimeContextType = {
   events: RealTimeEvent[];
@@ -41,7 +49,7 @@ export const RealTimeProvider = ({ children }: { children: ReactNode }) => {
       const kycSubscription = supabase
         .channel('kyc-updates')
         .on('broadcast', { event: 'kyc-verified' }, (payload) => {
-          if (payload.payload.user_id === user.user_id) {
+          if (payload.payload.user_id === user.id) {
             const newEvent: RealTimeEvent = {
               id: `kyc-${Date.now()}`,
               type: 'kyc-verification',
@@ -71,7 +79,7 @@ export const RealTimeProvider = ({ children }: { children: ReactNode }) => {
       const loanSubscription = supabase
         .channel('loan-updates')
         .on('broadcast', { event: 'loan-status-change' }, (payload) => {
-          if (payload.payload.user_id === user.user_id) {
+          if (payload.payload.user_id === user.id) {
             const newEvent: RealTimeEvent = {
               id: `loan-${Date.now()}`,
               type: 'loan-update',
@@ -151,4 +159,15 @@ export const useRealTime = () => {
     throw new Error('useRealTime must be used within a RealTimeProvider');
   }
   return context;
+};
+
+// Additional hook for more specific real-time updates
+export const useRealTimeUpdates = (eventType?: RealTimeEventType) => {
+  const { events } = useRealTime();
+  
+  if (eventType) {
+    return events.filter(event => event.type === eventType);
+  }
+  
+  return events;
 };
