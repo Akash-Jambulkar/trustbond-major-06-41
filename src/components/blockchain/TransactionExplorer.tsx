@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,7 +14,7 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Search, ExternalLink, AlertCircle, Check, X } from "lucide-react";
-import { TransactionStatus } from "@/utils/transactionTracker";
+import { TransactionStatus } from "@/utils/transactions/types";
 
 export function TransactionExplorer() {
   const { web3, networkId } = useBlockchain();

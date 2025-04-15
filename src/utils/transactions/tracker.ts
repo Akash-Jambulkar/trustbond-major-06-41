@@ -1,7 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Json } from "@/integrations/supabase/types";
 import { Transaction, TransactionType, createTransactionMetadata } from "./types";
 
 /**
@@ -30,9 +29,9 @@ export const trackTransaction = async (
     // Convert TransactionMetadata to Json-compatible object
     const txMetadata = createTransactionMetadata(transaction);
 
-    // Store transaction in Supabase
+    // Store transaction in Supabase with type assertion
     const { error } = await supabase
-      .from('blockchain_transactions')
+      .from('blockchain_transactions' as any)
       .insert({
         hash: transaction.hash,
         from_address: transaction.account.toLowerCase(),
@@ -43,7 +42,7 @@ export const trackTransaction = async (
         type: transaction.type,
         timestamp: transaction.timestamp,
         metadata: txMetadata
-      });
+      } as any);
     
     if (error) {
       console.error("Error storing transaction:", error);

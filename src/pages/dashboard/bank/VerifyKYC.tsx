@@ -155,7 +155,7 @@ const VerifyKYC = () => {
           verification_status: newStatus,
           verified_at: now,
           verified_by: user?.id
-        })
+        } as any)
         .eq('id', documentIdString);
       
       if (error) {

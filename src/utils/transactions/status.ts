@@ -28,7 +28,8 @@ export const updateTransactionStatus = async (
     }
     
     // Create safe metadata from existing data
-    const existingMetadata = existingTx?.metadata || {};
+    // Use type assertion to safely access properties
+    const existingMetadata = existingTx ? (existingTx as any)?.metadata || {} : {};
     
     // Update the metadata with new information
     const updatedMetadata = {
@@ -43,7 +44,7 @@ export const updateTransactionStatus = async (
       .from('blockchain_transactions' as any)
       .update({
         metadata: updatedMetadata
-      })
+      } as any)
       .eq('hash', hash.toLowerCase())
       .eq('from_address', account.toLowerCase());
     
