@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,7 +30,7 @@ export default function BankApprovals() {
         }
         
         // Type assertion to help TypeScript understand the data type
-        setBanks(data as BankRegistrationType[] || []);
+        setBanks((data as unknown as BankRegistrationType[]) || []);
       } catch (error) {
         console.error("Error fetching banks:", error);
         toast.error("Failed to fetch bank registrations");

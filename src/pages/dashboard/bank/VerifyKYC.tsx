@@ -14,6 +14,7 @@ import { useBlockchain } from "@/contexts/BlockchainContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { kycSubmissionsTable, usersMetadataTable } from "@/utils/supabase-helper";
 import { supabase } from "@/integrations/supabase/client";
+import { KycDocumentSubmissionType } from "@/types/supabase-extensions";
 
 type KYCDocument = {
   id: number | string;
@@ -72,8 +73,10 @@ const VerifyKYC = () => {
         setDocuments([]);
       } else {
         if (data && data.length > 0) {
+          const typedData = data as unknown as KycDocumentSubmissionType[];
+          
           const formattedDocuments = await Promise.all(
-            data.map(async (doc: any) => {
+            typedData.map(async (doc) => {
               try {
                 const { data: userData, error: userError } = await usersMetadataTable()
                   .select('id')
@@ -91,7 +94,7 @@ const VerifyKYC = () => {
                   userName: userName,
                   documentType: getDocumentTypeName(doc.document_type),
                   documentId: doc.document_number,
-                  status: doc.verification_status,
+                  status: doc.verification_status as "pending" | "verified" | "rejected",
                   submissionDate: new Date(doc.submitted_at).toLocaleDateString(),
                   verificationDate: doc.verified_at ? new Date(doc.verified_at).toLocaleDateString() : undefined,
                   documentHash: doc.document_hash,
@@ -105,7 +108,7 @@ const VerifyKYC = () => {
                   userName: "Unknown User",
                   documentType: getDocumentTypeName(doc.document_type),
                   documentId: doc.document_number,
-                  status: doc.verification_status,
+                  status: doc.verification_status as "pending" | "verified" | "rejected",
                   submissionDate: new Date(doc.submitted_at).toLocaleDateString(),
                   verificationDate: doc.verified_at ? new Date(doc.verified_at).toLocaleDateString() : undefined,
                   documentHash: doc.document_hash,
@@ -143,12 +146,14 @@ const VerifyKYC = () => {
       
       const documentIdString = String(docId);
       
+      const updateData = { 
+        verification_status: newStatus,
+        verified_at: now,
+        verified_by: user?.id
+      };
+      
       const { error } = await kycSubmissionsTable()
-        .update({ 
-          verification_status: newStatus,
-          verified_at: now,
-          verified_by: user?.id
-        })
+        .update(updateData as any)
         .eq('id', documentIdString);
       
       if (error) {
@@ -200,7 +205,7 @@ const VerifyKYC = () => {
       let documentDetails = exists ? result.data : null;
       
       setHashVerificationResult({
-        exists,
+        exists: exists ? true : false,
         documentDetails,
         isVerifying: false
       });
@@ -225,31 +230,6 @@ const VerifyKYC = () => {
       case 'driving_license': return 'Driving License';
       default: return type;
     }
-  };
-
-  const renderBlockchainVerification = () => {
-    if (!enableBlockchain || !selectedDocument?.documentHash) return null;
-    
-    return (
-      <div className="space-y-2">
-        <h3 className="text-sm font-medium">Blockchain Verification</h3>
-        <div className="rounded-md border p-3 space-y-2">
-          <div className="grid grid-cols-4">
-            <div className="text-sm font-medium">Document Hash:</div>
-            <div className="text-xs font-mono col-span-3 truncate">
-              {selectedDocument.documentHash}
-            </div>
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="text-sm font-medium">Verify on Blockchain:</div>
-            <Button variant="outline" size="sm" onClick={() => toast.success("Verified document hash on blockchain")}>
-              <CheckCircle className="mr-2 h-4 w-4" />
-              Verify Hash
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
   };
 
   return (

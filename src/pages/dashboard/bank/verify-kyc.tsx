@@ -142,11 +142,13 @@ const VerifyKYCPage = () => {
       await verifyKYC(userAddress, status);
       
       try {
+        const updateData = { 
+          verification_status: status ? "verified" : "rejected",
+          verified_at: new Date().toISOString()
+        };
+        
         const { error } = await kycSubmissionsTable()
-          .update({ 
-            verification_status: status ? "verified" : "rejected",
-            verified_at: new Date().toISOString()
-          })
+          .update(updateData as any)
           .eq('id', requestId);
           
         if (error) {

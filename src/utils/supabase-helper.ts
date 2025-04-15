@@ -1,14 +1,5 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import type { 
-  BankRegistrationType, 
-  KycDocumentSubmissionType,
-  KycVerificationVoteType,
-  BlockchainTransactionType,
-  TrustScoreType,
-  LoanType,
-  UsersMetadataType
-} from '@/types/supabase-extensions';
 
 /**
  * Helper functions for typed Supabase queries

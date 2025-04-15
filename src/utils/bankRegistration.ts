@@ -17,7 +17,8 @@ export async function getBankRegistrations(): Promise<BankRegistrationType[]> {
       return [];
     }
 
-    return (data as BankRegistrationType[]) || [];
+    // Use type assertion to convert the data to the expected type
+    return (data as unknown as BankRegistrationType[]) || [];
   } catch (error) {
     console.error("Exception in getBankRegistrations:", error);
     return [];
@@ -39,7 +40,8 @@ export async function getPendingBankRegistrations(): Promise<BankRegistrationTyp
       return [];
     }
 
-    return (data as BankRegistrationType[]) || [];
+    // Use type assertion to convert the data to the expected type
+    return (data as unknown as BankRegistrationType[]) || [];
   } catch (error) {
     console.error("Exception in getPendingBankRegistrations:", error);
     return [];
@@ -71,8 +73,8 @@ export async function getBankRegistrationStatus(walletAddress: string): Promise<
 
     return {
       exists: true,
-      status: data.status,
-      bankId: data.id
+      status: (data as any).status,
+      bankId: (data as any).id
     };
   } catch (error) {
     console.error("Exception in getBankRegistrationStatus:", error);
@@ -85,12 +87,14 @@ export async function getBankRegistrationStatus(walletAddress: string): Promise<
  */
 export async function saveBankRegistration(registration: Omit<BankRegistrationType, 'id' | 'created_at' | 'updated_at'>): Promise<string | null> {
   try {
+    const registrationData = {
+      ...registration,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
     const { data, error } = await bankRegistrationsTable()
-      .insert([{
-        ...registration,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }])
+      .insert([registrationData])
       .select('id')
       .single();
 
@@ -153,14 +157,16 @@ export async function approveBankRegistration(bankId: string): Promise<boolean> 
       return false;
     }
 
+    const bankDataTyped = bankData as unknown as BankRegistrationType;
+
     // Then add bank to users_metadata table
     const { error: userMetadataError } = await usersMetadataTable()
       .insert({
-        id: bankData.id,
+        id: bankDataTyped.id,
         role: 'bank',
-        wallet_address: bankData.wallet_address,
+        wallet_address: bankDataTyped.wallet_address,
         is_verified: true
-      } as any); // Using type assertion to bypass strict type checking
+      } as unknown as UsersMetadataType);
 
     if (userMetadataError) {
       console.error("Error adding bank to users_metadata:", userMetadataError);
