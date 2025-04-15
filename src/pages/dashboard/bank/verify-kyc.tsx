@@ -54,7 +54,8 @@ const VerifyKYC = () => {
   const handleVerifyDocument = async (approve: boolean) => {
     try {
       setVerifying(true);
-      await verifyKYC(selectedDocument.id, approve ? 'verified' : 'rejected');
+      const verificationStatus = approve ? 'verified' : 'rejected';
+      await verifyKYC(selectedDocument.id, verificationStatus);
       toast.success(approve ? "Document verified!" : "Document rejected");
       setSelectedDocument(null);
       fetchDocuments();

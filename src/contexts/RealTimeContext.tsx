@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from './AuthContext';
@@ -60,7 +59,7 @@ export const RealTimeProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (!user || !supabase) return;
 
-    const userId = user.id || user.email;
+    const userId = user.id || user.user_id || user.email;
     
     // Set up client-side event handling
     const initialEventHandlers: Record<string, Array<(data: any) => void>> = {};
@@ -78,7 +77,7 @@ export const RealTimeProvider = ({ children }: { children: ReactNode }) => {
           event: '*',
           schema: 'public',
           table: 'kyc_documents',
-          filter: user.id ? `user_id=eq.${user.id}` : undefined
+          filter: userId ? `user_id=eq.${userId}` : undefined
         },
         (payload) => {
           const eventType = payload.eventType === 'INSERT' 
@@ -102,7 +101,7 @@ export const RealTimeProvider = ({ children }: { children: ReactNode }) => {
           event: '*',
           schema: 'public',
           table: 'transactions',
-          filter: user.id ? `user_id=eq.${user.id}` : undefined
+          filter: userId ? `user_id=eq.${userId}` : undefined
         },
         (payload) => {
           const eventType = payload.eventType === 'INSERT' 

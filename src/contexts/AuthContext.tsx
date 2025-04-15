@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 // Define the user type to match both Supabase User and our custom UserProfile
 export type User = {
+  id: string; // Add id property
   user_id: string;
   email: string;
   name?: string;
@@ -14,6 +15,9 @@ export type User = {
   app_metadata?: any;
   user_metadata?: any;
   aud?: string;
+  phone?: string; // Add phone property
+  address?: string; // Add address property
+  walletAddress?: string; // Add walletAddress property
 };
 
 // Define the auth context type
@@ -70,7 +74,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             kyc_status: profile?.kyc_status || 'not_submitted',
             app_metadata: session.user.app_metadata,
             user_metadata: session.user.user_metadata,
-            aud: session.user.aud
+            aud: session.user.aud,
+            phone: profile?.phone,
+            address: profile?.address,
+            walletAddress: profile?.walletAddress
           };
 
           setUser(userWithProfile);
@@ -125,7 +132,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         kyc_status: profile?.kyc_status || 'not_submitted',
         app_metadata: data.user.app_metadata,
         user_metadata: data.user.user_metadata,
-        aud: data.user.aud
+        aud: data.user.aud,
+        phone: profile?.phone,
+        address: profile?.address,
+        walletAddress: profile?.walletAddress
       };
 
       setUser(userWithProfile);
@@ -235,6 +245,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     toast.success(`Logged in with wallet address: ${address}`);
     // Set a mock user for now
     const mockUser: User = {
+      id: address,
       user_id: address,
       email: `wallet-${address.substring(0, 8)}@example.com`,
       name: `Wallet User ${address.substring(0, 6)}`,
@@ -243,7 +254,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       kyc_status: 'not_submitted',
       app_metadata: {},
       user_metadata: {},
-      aud: 'authenticated'
+      aud: 'authenticated',
+      phone: '',
+      address: '',
+      walletAddress: address
     };
     setUser(mockUser);
     setIsAuthenticated(true);

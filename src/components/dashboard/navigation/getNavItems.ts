@@ -1,5 +1,5 @@
 
-import { Home, CreditCard, FileText, User, Users, Bank, Shield, Settings, FileCode, LineChart, FileSearch, Lock } from "lucide-react";
+import { Home, CreditCard, FileText, User, Users, BuildingIcon, Shield, Settings, FileCode, LineChart, FileSearch, Lock } from "lucide-react";
 import { UserRole } from "@/contexts/auth/types";
 
 interface NavItem {
@@ -105,7 +105,7 @@ export const getNavItems = (role: UserRole): NavItems => {
         {
           title: "Banks",
           href: "/dashboard/admin/banks",
-          icon: Bank,
+          icon: BuildingIcon, // Changed from Bank to BuildingIcon
         },
         {
           title: "Bank Approvals",

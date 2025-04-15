@@ -10,6 +10,8 @@ import { motion } from "framer-motion";
 import { CheckCircle, XCircle, Clock, RefreshCw, Wallet } from "lucide-react";
 import TransactionVisualizer from "@/components/blockchain/TransactionVisualizer";
 
+const TRANSACTION_UPDATED = RealTimeEventType.TRANSACTION_CREATED;
+
 const BlockchainTransactionsPage = () => {
   const { getTransactionHistory, isConnected, connectWallet } = useBlockchain();
   const { user } = useAuth();
@@ -34,12 +36,12 @@ const BlockchainTransactionsPage = () => {
   }, [isConnected]);
 
   // Subscribe to real-time updates
-  useRealTimeUpdates(RealTimeEventType.TRANSACTION_CREATED, (payload) => {
+  useRealTimeUpdates(TRANSACTION_UPDATED, (data) => {
     // Check if this is a new transaction
-    const isNew = !transactions.some(tx => tx.id === payload.id);
+    const isNew = !transactions.some(tx => tx.id === data.id);
     
     if (isNew) {
-      setTransactions(prev => [payload, ...prev]);
+      setTransactions(prev => [data, ...prev]);
     }
   });
 
