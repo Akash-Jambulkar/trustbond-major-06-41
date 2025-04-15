@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBlockchain } from "@/contexts/BlockchainContext";
+import { useKYCStatus } from "@/hooks/useKYCStatus";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,7 @@ import {
 const ProfilePage = () => {
   const { user } = useAuth();
   const { account, isConnected } = useBlockchain();
+  const { kycStatus, isVerified, verificationTimestamp } = useKYCStatus();
   
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -37,19 +39,6 @@ const ProfilePage = () => {
     phone: user?.phone || "",
     address: user?.address || ""
   });
-  
-  // Mock KYC status - in a real application, this would come from your backend
-  const kycStatus = {
-    status: "verified", // verified, pending, rejected
-    documents: {
-      aadhaar: { verified: true, date: "2023-12-15" },
-      pan: { verified: true, date: "2023-12-10" },
-      voterId: { verified: false, date: null },
-      drivingLicense: { verified: false, date: null }
-    },
-    lastUpdated: "2023-12-15T14:30:00",
-    trustScore: 85 // 0-100
-  };
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -71,19 +60,14 @@ const ProfilePage = () => {
     }
   };
   
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "Not verified";
-    return new Date(dateString).toLocaleDateString("en-US", {
+  const formatDate = (timestamp: number | null) => {
+    if (!timestamp) return "Not verified";
+    return new Date(timestamp).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric"
     });
   };
-  
-  // Calculate percentage of documents verified
-  const verifiedDocumentsCount = Object.values(kycStatus.documents).filter(doc => doc.verified).length;
-  const totalDocumentsCount = Object.values(kycStatus.documents).length;
-  const verificationPercentage = (verifiedDocumentsCount / totalDocumentsCount) * 100;
   
   return (
     <div className="space-y-6">
@@ -248,114 +232,51 @@ const ProfilePage = () => {
               KYC Verification Status
             </CardTitle>
             <CardDescription>
-              Your document verification status and trust score
+              Your document verification status
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                {kycStatus.status === "verified" ? (
+                {isVerified ? (
                   <Badge className="bg-green-100 text-green-800 border-green-200">Verified</Badge>
-                ) : kycStatus.status === "pending" ? (
-                  <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">Pending</Badge>
                 ) : (
-                  <Badge variant="destructive">Rejected</Badge>
+                  <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">Not Verified</Badge>
                 )}
-                <span className="text-sm text-muted-foreground">
-                  Last updated: {new Date(kycStatus.lastUpdated).toLocaleString()}
-                </span>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">Trust Score:</span>
-                <div className="bg-gradient-to-r from-amber-500 to-green-500 text-white px-3 py-1 rounded-full text-xs font-bold">
-                  {kycStatus.trustScore}/100
-                </div>
+                {verificationTimestamp && (
+                  <span className="text-sm text-muted-foreground">
+                    Last updated: {new Date(verificationTimestamp).toLocaleString()}
+                  </span>
+                )}
               </div>
             </div>
             
             <Separator />
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Document Verification Progress</Label>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div 
-                    className="bg-trustbond-primary h-2.5 rounded-full" 
-                    style={{ width: `${verificationPercentage}%` }}
-                  ></div>
+            <div className="space-y-4">
+              {isVerified ? (
+                <div className="bg-green-50 p-4 rounded-lg border border-green-100 text-green-800">
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-5 w-5" />
+                    <p className="font-medium">Your identity has been verified</p>
+                  </div>
+                  <p className="text-sm mt-1 text-green-700">
+                    Your documents have been securely verified and the verification status 
+                    is recorded on the blockchain. You now have full access to all platform features.
+                  </p>
                 </div>
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{verifiedDocumentsCount} of {totalDocumentsCount} documents verified</span>
-                  <span>{verificationPercentage.toFixed(0)}% Complete</span>
+              ) : (
+                <div className="bg-amber-50 p-4 rounded-lg border border-amber-100 text-amber-800">
+                  <div className="flex items-center gap-2">
+                    <ShieldAlert className="h-5 w-5" />
+                    <p className="font-medium">KYC verification required</p>
+                  </div>
+                  <p className="text-sm mt-1 text-amber-700">
+                    Please complete KYC verification to access all platform features. 
+                    Visit the KYC page to submit your documents.
+                  </p>
                 </div>
-              </div>
-              
-              <div className="space-y-3">
-                <Label>Documents Status</Label>
-                <ul className="space-y-2">
-                  <li className="flex justify-between items-center text-sm">
-                    <span className="flex items-center gap-1">
-                      {kycStatus.documents.aadhaar.verified ? (
-                        <Check size={16} className="text-green-600" />
-                      ) : (
-                        <Clock size={16} className="text-amber-500" />
-                      )}
-                      Aadhaar Card
-                    </span>
-                    <span className="text-muted-foreground text-xs">
-                      {kycStatus.documents.aadhaar.verified ? 
-                        formatDate(kycStatus.documents.aadhaar.date) : 
-                        "Pending verification"}
-                    </span>
-                  </li>
-                  <li className="flex justify-between items-center text-sm">
-                    <span className="flex items-center gap-1">
-                      {kycStatus.documents.pan.verified ? (
-                        <Check size={16} className="text-green-600" />
-                      ) : (
-                        <Clock size={16} className="text-amber-500" />
-                      )}
-                      PAN Card
-                    </span>
-                    <span className="text-muted-foreground text-xs">
-                      {kycStatus.documents.pan.verified ? 
-                        formatDate(kycStatus.documents.pan.date) : 
-                        "Pending verification"}
-                    </span>
-                  </li>
-                  <li className="flex justify-between items-center text-sm">
-                    <span className="flex items-center gap-1">
-                      {kycStatus.documents.voterId.verified ? (
-                        <Check size={16} className="text-green-600" />
-                      ) : (
-                        <Clock size={16} className="text-amber-500" />
-                      )}
-                      Voter ID
-                    </span>
-                    <span className="text-muted-foreground text-xs">
-                      {kycStatus.documents.voterId.verified ? 
-                        formatDate(kycStatus.documents.voterId.date) : 
-                        "Not submitted"}
-                    </span>
-                  </li>
-                  <li className="flex justify-between items-center text-sm">
-                    <span className="flex items-center gap-1">
-                      {kycStatus.documents.drivingLicense.verified ? (
-                        <Check size={16} className="text-green-600" />
-                      ) : (
-                        <Clock size={16} className="text-amber-500" />
-                      )}
-                      Driving License
-                    </span>
-                    <span className="text-muted-foreground text-xs">
-                      {kycStatus.documents.drivingLicense.verified ? 
-                        formatDate(kycStatus.documents.drivingLicense.date) : 
-                        "Not submitted"}
-                    </span>
-                  </li>
-                </ul>
-              </div>
+              )}
             </div>
           </CardContent>
           <CardFooter className="border-t bg-muted/50 gap-2 flex flex-col items-start text-xs text-muted-foreground">

@@ -4,7 +4,6 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { CheckCircle2, Info, AlertCircle, Clock, ShieldAlert, Shield, Check, Calendar } from "lucide-react";
-import { useMode } from "@/contexts/ModeContext";
 import { formatDistanceToNow } from "date-fns";
 
 interface KYCStatusDisplayProps {
@@ -24,35 +23,6 @@ export const KYCStatusDisplay = ({
   isRejected = false,
   rejectionReason = null
 }: KYCStatusDisplayProps) => {
-  const { isProductionMode } = useMode();
-  
-  // Always use production-ready view
-  // In a real application, this would come from the blockchain or backend
-  const kycMockData = {
-    status: kycStatus === true ? "verified" : isRejected ? "rejected" : kycStatus === false ? "pending" : "none",
-    documents: {
-      aadhaar: { verified: true, date: "2023-12-15" },
-      pan: { verified: true, date: "2023-12-10" },
-      voterId: { verified: false, date: null },
-      drivingLicense: { verified: false, date: null }
-    },
-    lastUpdated: "2023-12-15T14:30:00",
-    trustScore: 85 // 0-100
-  };
-  
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "Not submitted";
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric"
-    });
-  };
-  
-  // Calculate percentage of documents verified
-  const verifiedDocumentsCount = Object.values(kycMockData.documents).filter(doc => doc.verified).length;
-  const totalDocumentsCount = Object.values(kycMockData.documents).length;
-  const verificationPercentage = (verifiedDocumentsCount / totalDocumentsCount) * 100;
   
   if (!isConnected) {
     return (
@@ -78,8 +48,8 @@ export const KYCStatusDisplay = ({
     );
   }
 
-  // Enhanced display for verified status - ALWAYS use production view
-  if (kycStatus === true || isProductionMode) {
+  // Enhanced display for verified status
+  if (kycStatus === true) {
     return (
       <Card className="border-green-100 shadow-sm">
         <CardHeader className="bg-green-50 border-b border-green-100 pb-4">
@@ -100,91 +70,23 @@ export const KYCStatusDisplay = ({
         <CardContent className="pt-5 space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <span className="text-sm text-muted-foreground">
-              Last updated: {new Date(kycMockData.lastUpdated).toLocaleString()}
+              {verificationTimestamp ? (
+                <>Verified: {new Date(verificationTimestamp).toLocaleString()}</>
+              ) : (
+                <>Verification date not available</>
+              )}
             </span>
-            
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Trust Score:</span>
-              <div className="bg-gradient-to-r from-amber-500 to-green-500 text-white px-3 py-1 rounded-full text-xs font-bold">
-                {kycMockData.trustScore}/100
-              </div>
-            </div>
           </div>
           
-          <Separator />
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium">Document Verification Progress</h3>
-              <div className="w-full bg-gray-200 rounded-full h-2.5">
-                <div 
-                  className="bg-trustbond-primary h-2.5 rounded-full" 
-                  style={{ width: `${verificationPercentage}%` }}
-                ></div>
-              </div>
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{verifiedDocumentsCount} of {totalDocumentsCount} documents verified</span>
-                <span>{verificationPercentage.toFixed(0)}% Complete</span>
-              </div>
+          <div className="bg-green-50 p-4 rounded-lg border border-green-100 text-green-800">
+            <div className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              <p className="font-medium">Your identity has been verified on the blockchain</p>
             </div>
-            
-            <div className="space-y-3">
-              <h3 className="text-sm font-medium">Documents Status</h3>
-              <ul className="space-y-2">
-                <li className="flex justify-between items-center text-sm">
-                  <span className="flex items-center gap-1">
-                    {kycMockData.documents.aadhaar.verified ? (
-                      <Check size={16} className="text-green-600" />
-                    ) : (
-                      <Clock size={16} className="text-amber-500" />
-                    )}
-                    Aadhaar Card
-                  </span>
-                  <span className="text-muted-foreground text-xs">
-                    {formatDate(kycMockData.documents.aadhaar.date)}
-                  </span>
-                </li>
-                <li className="flex justify-between items-center text-sm">
-                  <span className="flex items-center gap-1">
-                    {kycMockData.documents.pan.verified ? (
-                      <Check size={16} className="text-green-600" />
-                    ) : (
-                      <Clock size={16} className="text-amber-500" />
-                    )}
-                    PAN Card
-                  </span>
-                  <span className="text-muted-foreground text-xs">
-                    {formatDate(kycMockData.documents.pan.date)}
-                  </span>
-                </li>
-                <li className="flex justify-between items-center text-sm">
-                  <span className="flex items-center gap-1">
-                    {kycMockData.documents.voterId.verified ? (
-                      <Check size={16} className="text-green-600" />
-                    ) : (
-                      <Clock size={16} className="text-amber-500" />
-                    )}
-                    Voter ID
-                  </span>
-                  <span className="text-muted-foreground text-xs">
-                    {formatDate(kycMockData.documents.voterId.date)}
-                  </span>
-                </li>
-                <li className="flex justify-between items-center text-sm">
-                  <span className="flex items-center gap-1">
-                    {kycMockData.documents.drivingLicense.verified ? (
-                      <Check size={16} className="text-green-600" />
-                    ) : (
-                      <Clock size={16} className="text-amber-500" />
-                    )}
-                    Driving License
-                  </span>
-                  <span className="text-muted-foreground text-xs">
-                    {formatDate(kycMockData.documents.drivingLicense.date)}
-                  </span>
-                </li>
-              </ul>
-            </div>
+            <p className="text-sm mt-1 text-green-700">
+              Your documents have been securely verified and the verification status is recorded on the blockchain.
+              You now have full access to all platform features.
+            </p>
           </div>
         </CardContent>
         
