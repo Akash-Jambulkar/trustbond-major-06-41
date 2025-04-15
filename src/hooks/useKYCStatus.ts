@@ -78,21 +78,17 @@ export const useKYCStatus = () => {
         // Try to also get data from Supabase if available
         try {
           if (supabase) {
-            // Avoid type instantiation issues by using any type for supabase response
-            // and then manually verifying and shaping the data
-            const result = await supabase
+            // Use any type for the response to avoid type inference issues
+            const response: any = await supabase
               .from('kyc_document_submissions')
               .select('*')
               .eq('wallet_address', account)
               .order('submitted_at', { ascending: false })
               .limit(1);
             
-            // Manually extract data and error to avoid complex type inference
-            const data = result.data;
-            const error = result.error;
-              
-            if (!error && data && data.length > 0) {
-              const submission = data[0];
+            // Safely access the data
+            if (response && !response.error && response.data && response.data.length > 0) {
+              const submission = response.data[0];
               
               // Check if we have a rejected status from database
               if (!status && 
@@ -100,6 +96,7 @@ export const useKYCStatus = () => {
                   submission.verification_status === 'rejected' && 
                   !isRejected) {
                 setIsRejected(true);
+                // Safely access rejection_reason
                 if (submission.rejection_reason) {
                   setRejectionReason(submission.rejection_reason);
                 }
