@@ -89,6 +89,14 @@ export interface KycVerificationVoteType {
   updated_at?: string;
 }
 
+// Users Metadata Type
+export interface UsersMetadataType {
+  id: string;
+  role: string;
+  wallet_address: string;
+  is_verified: boolean;
+}
+
 // Transaction metadata type to ensure strong typing
 export interface TransactionMetadata {
   description: string;
@@ -115,14 +123,6 @@ export interface ConsensusVerificationResult {
   progress: number;
   consensusReached: boolean;
   finalDecision: boolean | null;
-}
-
-// Users Metadata Type
-export interface UsersMetadataType {
-  id: string;
-  role: string;
-  wallet_address: string;
-  is_verified: boolean;
 }
 
 /**

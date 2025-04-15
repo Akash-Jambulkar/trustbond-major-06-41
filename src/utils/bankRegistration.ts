@@ -1,157 +1,146 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { trackTransaction, watchTransaction } from "@/utils/transactionTracker";
-import { toast } from "sonner";
-import { BankRegistrationType } from "@/types/supabase-extensions";
-import { bankRegistrationsTable, usersMetadataTable } from "@/utils/supabase-helper";
+import { supabase } from '@/integrations/supabase/client';
+import { BankRegistrationType, UsersMetadataType } from '@/types/supabase-extensions';
+import { bankRegistrationsTable, usersMetadataTable } from '@/utils/supabase-helper';
 
-export interface BankRegistration {
-  id: string;
-  name: string;
-  registrationNumber: string;
-  walletAddress: string;
-  status: "pending" | "approved" | "rejected";
-  createdAt: string;
-  updatedAt: string;
-  documentUrl?: string;
-  blockchainTxHash?: string;
-}
-
-export async function submitBankRegistration(
-  name: string,
-  registrationNumber: string,
-  walletAddress: string,
-  documentId: string
-) {
+/**
+ * Get bank registrations
+ */
+export async function getBankRegistrations(): Promise<BankRegistrationType[]> {
   try {
-    // Store bank registration in Supabase
     const { data, error } = await bankRegistrationsTable()
-      .insert({
-        name,
-        registration_number: registrationNumber,
-        wallet_address: walletAddress.toLowerCase(),
-        document_url: documentId,
-        status: 'pending',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .select()
-      .single();
+      .select('*')
+      .order('created_at', { ascending: false });
 
-    if (error) throw error;
-    
-    // Create user metadata entry if it doesn't exist
-    await usersMetadataTable()
-      .upsert({
-        id: `bank_${Date.now()}`,
-        role: 'bank',
-        wallet_address: walletAddress.toLowerCase(),
-        is_verified: false,
-      }, { onConflict: 'wallet_address' });
-    
-    return {
-      id: data.id,
-      name: data.name,
-      registrationNumber: data.registration_number,
-      walletAddress: data.wallet_address,
-      status: data.status,
-      documentUrl: data.document_url,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
-      blockchainTxHash: data.blockchain_tx_hash
-    } as BankRegistration;
+    if (error) {
+      console.error("Error fetching bank registrations:", error);
+      return [];
+    }
+
+    return data || [];
   } catch (error) {
-    console.error("Error submitting bank registration:", error);
-    throw error;
+    console.error("Exception in getBankRegistrations:", error);
+    return [];
   }
 }
 
-export async function getBankRegistrationStatus(walletAddress: string) {
+/**
+ * Get pending bank registrations
+ */
+export async function getPendingBankRegistrations(): Promise<BankRegistrationType[]> {
   try {
-    // Check if the bank exists in bank_registrations
     const { data, error } = await bankRegistrationsTable()
       .select('*')
-      .eq('wallet_address', walletAddress.toLowerCase())
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
-      
+      .eq('status', 'pending')
+      .order('created_at', { ascending: true });
+
     if (error) {
-      if (error.code === 'PGRST116') { // No rows returned
-        return null;
-      }
-      throw error;
+      console.error("Error fetching pending bank registrations:", error);
+      return [];
     }
-    
-    if (!data) {
+
+    return data || [];
+  } catch (error) {
+    console.error("Exception in getPendingBankRegistrations:", error);
+    return [];
+  }
+}
+
+/**
+ * Save a new bank registration
+ */
+export async function saveBankRegistration(registration: Omit<BankRegistrationType, 'id' | 'created_at' | 'updated_at'>): Promise<string | null> {
+  try {
+    const { data, error } = await bankRegistrationsTable()
+      .insert([{
+        ...registration,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }])
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error("Error saving bank registration:", error);
       return null;
     }
-    
-    return {
-      id: data.id,
-      name: data.name,
-      registrationNumber: data.registration_number,
-      walletAddress: data.wallet_address,
-      status: data.status,
-      documentUrl: data.document_url,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
-      blockchainTxHash: data.blockchain_tx_hash
-    } as BankRegistration;
+
+    return data?.id || null;
   } catch (error) {
-    console.error("Error getting bank registration status:", error);
+    console.error("Exception in saveBankRegistration:", error);
     return null;
   }
 }
 
-export async function updateBankRegistrationWithTransaction(
-  registrationId: string,
-  txHash: string
-) {
+/**
+ * Update a bank registration
+ */
+export async function updateBankRegistration(id: string, updates: Partial<BankRegistrationType>): Promise<boolean> {
   try {
-    // Update in Supabase
+    // Include updated_at time
+    const updatesWithTimestamp = {
+      ...updates,
+      updated_at: new Date().toISOString()
+    };
+
     const { error } = await bankRegistrationsTable()
-      .update({
-        blockchain_tx_hash: txHash,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', registrationId);
-    
-    if (error) throw error;
-    
+      .update(updatesWithTimestamp)
+      .eq('id', id);
+
+    if (error) {
+      console.error("Error updating bank registration:", error);
+      return false;
+    }
+
     return true;
   } catch (error) {
-    console.error("Error updating bank registration with transaction:", error);
+    console.error("Exception in updateBankRegistration:", error);
     return false;
   }
 }
 
-export async function approveBankRegistration(walletAddress: string) {
+/**
+ * Approve a bank and add it to users_metadata
+ */
+export async function approveBankRegistration(bankId: string): Promise<boolean> {
   try {
-    // Update users_metadata to mark the bank as verified
-    const { error: metadataError } = await usersMetadataTable()
-      .update({
-        is_verified: true
-      })
-      .eq('wallet_address', walletAddress.toLowerCase())
-      .eq('role', 'bank');
-      
-    if (metadataError) throw metadataError;
-    
-    // Update bank_registrations status
-    const { error: registrationError } = await bankRegistrationsTable()
+    // First update the bank registration status
+    const { data: bankData, error: bankUpdateError } = await bankRegistrationsTable()
       .update({
         status: 'approved',
         updated_at: new Date().toISOString()
       })
-      .eq('wallet_address', walletAddress.toLowerCase());
-    
-    if (registrationError) throw registrationError;
-    
-    toast.success(`Bank registration approved for ${walletAddress.substring(0, 8)}...`);
+      .eq('id', bankId)
+      .select('*')
+      .single();
+
+    if (bankUpdateError || !bankData) {
+      console.error("Error approving bank:", bankUpdateError);
+      return false;
+    }
+
+    // Then add bank to users_metadata table
+    const { error: userMetadataError } = await usersMetadataTable()
+      .insert({
+        id: bankData.id,
+        role: 'bank',
+        wallet_address: bankData.wallet_address,
+        is_verified: true
+      });
+
+    if (userMetadataError) {
+      console.error("Error adding bank to users_metadata:", userMetadataError);
+      // Try to rollback bank registration approval
+      await bankRegistrationsTable()
+        .update({ status: 'pending' })
+        .eq('id', bankId);
+        
+      return false;
+    }
+
     return true;
   } catch (error) {
-    console.error("Error approving bank registration:", error);
+    console.error("Exception in approveBankRegistration:", error);
     return false;
   }
 }

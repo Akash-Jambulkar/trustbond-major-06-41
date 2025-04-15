@@ -128,67 +128,6 @@ export const getConsensusStatus = async (documentId: string): Promise<ConsensusR
 };
 
 /**
- * Submit a verification vote for a document
- * 
- * @param documentId The document ID to vote on
- * @param bankId The ID of the voting bank
- * @param bankName The name of the voting bank
- * @param approved Whether the document is approved or rejected
- * @param notes Optional notes for the verification
- * @returns Promise with the vote ID
- */
-export const submitVerificationVote = async (
-  documentId: string,
-  bankId: string,
-  bankName: string,
-  approved: boolean,
-  notes?: string
-): Promise<string> => {
-  try {
-    // Initialize votes array for this document if needed
-    if (!mockVerificationVotes[documentId]) {
-      mockVerificationVotes[documentId] = [];
-    }
-    
-    // Check if this bank has already voted
-    const existingVoteIndex = mockVerificationVotes[documentId].findIndex(
-      vote => vote.bank_id === bankId
-    );
-    
-    const timestamp = new Date().toISOString();
-    
-    if (existingVoteIndex >= 0) {
-      // Update existing vote
-      mockVerificationVotes[documentId][existingVoteIndex] = {
-        ...mockVerificationVotes[documentId][existingVoteIndex],
-        approved,
-        notes,
-        updated_at: timestamp
-      };
-      
-      return mockVerificationVotes[documentId][existingVoteIndex].id;
-    } else {
-      // Create new vote
-      const newVote: KycVerificationVoteType = {
-        id: `vote-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        document_id: documentId,
-        bank_id: bankId,
-        bank_name: bankName,
-        approved,
-        notes,
-        created_at: timestamp
-      };
-      
-      mockVerificationVotes[documentId].push(newVote);
-      return newVote.id;
-    }
-  } catch (error) {
-    console.error("Error in submitVerificationVote:", error);
-    throw error;
-  }
-};
-
-/**
  * Update the document status based on consensus
  * 
  * @param documentId The document ID to update
@@ -305,6 +244,67 @@ export const checkVotingEligibility = async (
 };
 
 /**
+ * Submit a verification vote for a document
+ * 
+ * @param documentId The document ID to vote on
+ * @param bankId The ID of the voting bank
+ * @param bankName The name of the voting bank
+ * @param approved Whether the document is approved or rejected
+ * @param notes Optional notes for the verification
+ * @returns Promise with the vote ID
+ */
+export const submitVerificationVote = async (
+  documentId: string,
+  bankId: string,
+  bankName: string,
+  approved: boolean,
+  notes?: string
+): Promise<string> => {
+  try {
+    // Initialize votes array for this document if needed
+    if (!mockVerificationVotes[documentId]) {
+      mockVerificationVotes[documentId] = [];
+    }
+    
+    // Check if this bank has already voted
+    const existingVoteIndex = mockVerificationVotes[documentId].findIndex(
+      vote => vote.bank_id === bankId
+    );
+    
+    const timestamp = new Date().toISOString();
+    
+    if (existingVoteIndex >= 0) {
+      // Update existing vote
+      mockVerificationVotes[documentId][existingVoteIndex] = {
+        ...mockVerificationVotes[documentId][existingVoteIndex],
+        approved,
+        notes,
+        updated_at: timestamp
+      };
+      
+      return mockVerificationVotes[documentId][existingVoteIndex].id;
+    } else {
+      // Create new vote
+      const newVote: KycVerificationVoteType = {
+        id: `vote-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        document_id: documentId,
+        bank_id: bankId,
+        bank_name: bankName,
+        approved,
+        notes,
+        created_at: timestamp
+      };
+      
+      mockVerificationVotes[documentId].push(newVote);
+      return newVote.id;
+    }
+  } catch (error) {
+    console.error("Error in submitVerificationVote:", error);
+    throw error;
+  }
+};
+
+/**
  * Get all documents requiring consensus verification
  * 
  * @returns Promise with the array of document IDs
@@ -321,7 +321,7 @@ export const getDocumentsNeedingConsensus = async (): Promise<KycDocumentSubmiss
       throw error;
     }
     
-    return Array.isArray(data) ? data as KycDocumentSubmissionType[] : [];
+    return data || [];
   } catch (error) {
     console.error("Error in getDocumentsNeedingConsensus:", error);
     throw error;

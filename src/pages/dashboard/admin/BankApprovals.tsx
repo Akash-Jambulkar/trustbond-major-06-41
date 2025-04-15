@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,10 +29,12 @@ export default function BankApprovals() {
           throw error;
         }
         
-        setBanks(data as BankRegistrationType[]);
+        setBanks(data || []);
       } catch (error) {
         console.error("Error fetching banks:", error);
         toast.error("Failed to fetch bank registrations");
+        // Fallback to mock data when there's an error
+        setBanks(mockBanks);
       } finally {
         setIsLoading(false);
       }
@@ -65,7 +68,7 @@ export default function BankApprovals() {
         bank.id === bankId 
           ? { ...bank, status: approved ? 'approved' : 'rejected' } 
           : bank
-      ) as BankRegistrationType[]);
+      ));
       
       toast.success(`Bank ${approved ? 'approved' : 'rejected'} successfully`);
     } catch (error) {
@@ -110,7 +113,7 @@ export default function BankApprovals() {
     }
   ];
 
-  // Use mock data for now
+  // Use mock data only when we have no real data
   const displayBanks = banks.length > 0 ? banks : mockBanks;
 
   return (
