@@ -1,13 +1,11 @@
-
 import { useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { DashboardStats } from "@/components/dashboard/DashboardStats";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CreditCard, Shield, Activity, AlertCircle, Wallet } from "lucide-react";
+import { AlertCircle, Wallet } from "lucide-react";
 
 const UserDashboard = () => {
   const { user } = useAuth();

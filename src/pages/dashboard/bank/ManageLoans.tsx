@@ -1,14 +1,11 @@
 
 import { useState, useEffect } from "react";
-import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { CircleDollarSign, Search } from "lucide-react";
-
-// Import the newly created components
 import { LoanManagementTable } from "@/components/loans/LoanManagementTable";
 import { LoanDetailsDialog } from "@/components/loans/LoanDetailsDialog";
 
@@ -30,9 +27,16 @@ const ManageLoansPage = () => {
       return [];
     }
     
-    const loanIds = [0, 1, 2, 3, 4, 5];
-    
     try {
+      // In a real application, we would fetch the actual loan count
+      const loanCount = await loanContract.methods.getLoanCount().call().catch(() => 0);
+      
+      if (loanCount === 0) {
+        return [];
+      }
+      
+      const loanIds = Array.from({ length: Number(loanCount) }, (_, i) => i);
+      
       const loanPromises = loanIds.map((id) => 
         loanContract.methods.getLoan(id).call().catch(() => null)
       );
@@ -57,7 +61,7 @@ const ManageLoansPage = () => {
         const loans = await fetchAllLoans();
         setAllLoans(loans);
         
-        if (trustScoreContract && kycContract) {
+        if (trustScoreContract && kycContract && loans.length > 0) {
           const uniqueBorrowers = [...new Set(loans.map((loan: any) => loan.borrower))];
           
           const trustScorePromises = uniqueBorrowers.map((borrower) => 
@@ -250,76 +254,74 @@ const ManageLoansPage = () => {
   const filteredLoans = filterLoans();
   
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Manage Loans</h1>
-          <p className="text-muted-foreground">
-            Review, approve, and fund loan applications.
-          </p>
-        </div>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CircleDollarSign className="h-5 w-5 text-trustbond-primary" />
-              Loan Applications
-            </CardTitle>
-            <CardDescription>
-              Review loan applications, check borrower credentials, and make lending decisions.
-            </CardDescription>
-            <div className="mt-4 relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search by borrower address, purpose or lender..." 
-                className="pl-8" 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+    <div className="space-y-6 p-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Manage Loans</h1>
+        <p className="text-muted-foreground">
+          Review, approve, and fund loan applications.
+        </p>
+      </div>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CircleDollarSign className="h-5 w-5 text-trustbond-primary" />
+            Loan Applications
+          </CardTitle>
+          <CardDescription>
+            Review loan applications, check borrower credentials, and make lending decisions.
+          </CardDescription>
+          <div className="mt-4 relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input 
+              placeholder="Search by borrower address, purpose or lender..." 
+              className="pl-8" 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="pending" value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="pending">Pending</TabsTrigger>
+              <TabsTrigger value="approved">Approved</TabsTrigger>
+              <TabsTrigger value="funded">Active</TabsTrigger>
+              <TabsTrigger value="completed">Completed</TabsTrigger>
+              <TabsTrigger value="rejected">Rejected</TabsTrigger>
+            </TabsList>
+            
+            <div className="mt-6">
+              <LoanManagementTable 
+                loans={filteredLoans}
+                isLoading={isLoading}
+                isProcessing={isProcessing}
+                onViewDetails={viewLoanDetails}
+                onReviewLoan={handleReviewLoan}
+                onFundLoan={handleFundLoan}
+                onMarkDefaulted={handleMarkDefaulted}
+                formatDate={formatDate}
+                formatAmount={formatAmount}
               />
             </div>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="pending" value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="pending">Pending</TabsTrigger>
-                <TabsTrigger value="approved">Approved</TabsTrigger>
-                <TabsTrigger value="funded">Active</TabsTrigger>
-                <TabsTrigger value="completed">Completed</TabsTrigger>
-                <TabsTrigger value="rejected">Rejected</TabsTrigger>
-              </TabsList>
-              
-              <div className="mt-6">
-                <LoanManagementTable 
-                  loans={filteredLoans}
-                  isLoading={isLoading}
-                  isProcessing={isProcessing}
-                  onViewDetails={viewLoanDetails}
-                  onReviewLoan={handleReviewLoan}
-                  onFundLoan={handleFundLoan}
-                  onMarkDefaulted={handleMarkDefaulted}
-                  formatDate={formatDate}
-                  formatAmount={formatAmount}
-                />
-              </div>
-            </Tabs>
-          </CardContent>
-        </Card>
-        
-        <LoanDetailsDialog 
-          isOpen={isDetailsOpen}
-          setIsOpen={setIsDetailsOpen}
-          loan={selectedLoan}
-          userTrustScores={userTrustScores}
-          userKYCStatus={userKYCStatus}
-          isProcessing={isProcessing}
-          onReviewLoan={handleReviewLoan}
-          onFundLoan={handleFundLoan}
-          onMarkDefaulted={handleMarkDefaulted}
-          formatDate={formatDate}
-          formatAmount={formatAmount}
-        />
-      </div>
-    </DashboardLayout>
+          </Tabs>
+        </CardContent>
+      </Card>
+      
+      <LoanDetailsDialog 
+        isOpen={isDetailsOpen}
+        setIsOpen={setIsDetailsOpen}
+        loan={selectedLoan}
+        userTrustScores={userTrustScores}
+        userKYCStatus={userKYCStatus}
+        isProcessing={isProcessing}
+        onReviewLoan={handleReviewLoan}
+        onFundLoan={handleFundLoan}
+        onMarkDefaulted={handleMarkDefaulted}
+        formatDate={formatDate}
+        formatAmount={formatAmount}
+      />
+    </div>
   );
 };
 

@@ -17,20 +17,58 @@ import {
   Users
 } from "lucide-react";
 import { LoanAnalyticsDashboard } from "@/components/analytics/LoanAnalyticsDashboard";
+import { getDocumentsNeedingConsensus } from "@/utils/consensusVerifier";
 
 const BankHome = () => {
   const { user } = useAuth();
-  const { isConnected } = useBlockchain();
+  const { isConnected, loanContract } = useBlockchain();
   const navigate = useNavigate();
 
-  // These would be fetched from the blockchain in a real implementation
-  const [pendingVerifications, setPendingVerifications] = useState(7);
-  const [activeLoans, setActiveLoans] = useState(42);
-  const [consensusRequests, setConsensusRequests] = useState(3);
-  const [verificationRate, setVerificationRate] = useState(95);
+  const [pendingVerifications, setPendingVerifications] = useState(0);
+  const [activeLoans, setActiveLoans] = useState(0);
+  const [consensusRequests, setConsensusRequests] = useState(0);
+  const [verificationRate, setVerificationRate] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      if (!isConnected) return;
+      
+      setIsLoading(true);
+      try {
+        // Fetch real consensus requests
+        const documents = await getDocumentsNeedingConsensus();
+        setConsensusRequests(documents.length);
+        
+        // Fetch KYC verifications (in real app would call API)
+        setPendingVerifications(0);
+        
+        // Get active loans from contract if available
+        if (loanContract) {
+          try {
+            const loanCount = await loanContract.methods.getLoanCount().call().catch(() => 0);
+            const activeLoanCount = await loanContract.methods.getActiveLoanCount().call().catch(() => 0);
+            setActiveLoans(Number(activeLoanCount));
+          } catch (error) {
+            console.error("Error fetching loan data:", error);
+            setActiveLoans(0);
+          }
+        }
+        
+        // Verification rate would come from API in real app
+        setVerificationRate(0);
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, [isConnected, loanContract]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Welcome, {user?.name || 'Bank'}</h1>
         <div className="flex gap-2">
@@ -75,9 +113,11 @@ const BankHome = () => {
             <UserCheck className="h-4 w-4 text-trustbond-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{pendingVerifications}</div>
+            <div className="text-2xl font-bold">{isLoading ? "..." : pendingVerifications}</div>
             <p className="text-xs text-muted-foreground">
-              {pendingVerifications > 0 ? `${pendingVerifications} verification${pendingVerifications > 1 ? 's' : ''} waiting` : 'No pending verifications'}
+              {pendingVerifications > 0 
+                ? `${pendingVerifications} verification${pendingVerifications > 1 ? 's' : ''} waiting` 
+                : 'No pending verifications'}
             </p>
             <Button 
               variant="link" 
@@ -96,14 +136,14 @@ const BankHome = () => {
             <CreditCard className="h-4 w-4 text-trustbond-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{activeLoans}</div>
+            <div className="text-2xl font-bold">{isLoading ? "..." : activeLoans}</div>
             <p className="text-xs text-muted-foreground">
-              Total value: 215.75 ETH
+              {activeLoans > 0 ? `${activeLoans} active loan${activeLoans !== 1 ? 's' : ''}` : 'No active loans'}
             </p>
             <Button 
               variant="link" 
               className="p-0 h-auto mt-2 text-sm flex items-center gap-1"
-              onClick={() => navigate("/dashboard/bank/loans")}
+              onClick={() => navigate("/dashboard/bank/manage-loans")}
             >
               View Loans
               <ChevronRight className="h-3 w-3" />
@@ -117,9 +157,11 @@ const BankHome = () => {
             <Users className="h-4 w-4 text-trustbond-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{consensusRequests}</div>
+            <div className="text-2xl font-bold">{isLoading ? "..." : consensusRequests}</div>
             <p className="text-xs text-muted-foreground">
-              Requires multi-bank verification
+              {consensusRequests > 0 
+                ? `${consensusRequests} document${consensusRequests !== 1 ? 's' : ''} awaiting consensus` 
+                : 'No pending consensus requests'}
             </p>
             <Button 
               variant="link" 
@@ -138,10 +180,14 @@ const BankHome = () => {
             <CheckSquare className="h-4 w-4 text-trustbond-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{verificationRate}%</div>
+            <div className="text-2xl font-bold">{isLoading ? "..." : `${verificationRate}%`}</div>
             <Progress value={verificationRate} className="h-2 mt-2" />
             <p className="text-xs text-muted-foreground mt-2">
-              Last 30 days: {verificationRate > 90 ? 'Excellent' : verificationRate > 70 ? 'Good' : 'Needs improvement'}
+              {isLoading 
+                ? "Loading verification rate..." 
+                : verificationRate > 0 
+                  ? `Last 30 days: ${verificationRate > 90 ? 'Excellent' : verificationRate > 70 ? 'Good' : 'Needs improvement'}`
+                  : "No verification data available"}
             </p>
           </CardContent>
         </Card>

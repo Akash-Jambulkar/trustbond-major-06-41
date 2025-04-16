@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -24,12 +25,7 @@ export const KYCHistory = () => {
       try {
         // Fetch submissions using our utility function
         const data = await getUserKycSubmissions(account);
-        if (data && data.length > 0) {
-          setSubmissions(data);
-        } else {
-          // No mock data - use empty array
-          setSubmissions([]);
-        }
+        setSubmissions(data || []);
       } catch (error) {
         console.error("Error fetching KYC history:", error);
         setSubmissions([]);
