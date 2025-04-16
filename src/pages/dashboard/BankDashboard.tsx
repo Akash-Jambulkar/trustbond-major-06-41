@@ -1,12 +1,14 @@
 
-import React from "react";
 import { Outlet } from "react-router-dom";
+import { DashboardLayout } from "@/components/DashboardLayout";
 
 const BankDashboard = () => {
   return (
-    <div className="flex-1 overflow-auto">
-      <Outlet />
-    </div>
+    <DashboardLayout>
+      <div className="p-6">
+        <Outlet />
+      </div>
+    </DashboardLayout>
   );
 };
 
