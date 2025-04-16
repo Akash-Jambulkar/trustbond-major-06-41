@@ -1,5 +1,6 @@
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   SidebarProvider,
@@ -8,20 +9,34 @@ import {
 } from "@/components/ui/sidebar";
 import { SidebarNav } from "./dashboard/navigation/SidebarNav";
 import { DashboardHeader } from "./dashboard/navigation/DashboardHeader";
+import { useRealTimeUpdates } from "@/hooks/useRealTimeUpdates";
 
 interface DashboardLayoutProps {
   children?: ReactNode;
 }
 
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
-  const { user, logout } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  // Use real-time updates hook
+  useRealTimeUpdates();
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, navigate]);
+
+  if (!user) return null;
 
   return (
     <SidebarProvider>
       <div className="flex h-screen w-full bg-gray-50">
         {/* Main Sidebar */}
         <Sidebar className="border-r border-gray-200">
-          <SidebarNav user={user} onLogout={logout} />
+          <SidebarNav user={user} onLogout={() => {}} />
         </Sidebar>
 
         {/* Main content */}
