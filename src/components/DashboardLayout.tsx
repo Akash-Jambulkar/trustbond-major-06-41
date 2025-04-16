@@ -2,11 +2,6 @@
 import { ReactNode, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import {
-  SidebarProvider,
-  Sidebar,
-  SidebarInset,
-} from "@/components/ui/sidebar";
 import { SidebarNav } from "./dashboard/navigation/SidebarNav";
 import { DashboardHeader } from "./dashboard/navigation/DashboardHeader";
 import { useRealTimeUpdates } from "@/hooks/useRealTimeUpdates";
@@ -32,24 +27,20 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   if (!user) return null;
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <div className="flex h-screen w-full overflow-hidden bg-gray-50">
-        {/* Main Sidebar - More compact */}
-        <Sidebar className="border-r border-gray-200 w-52 flex-shrink-0 shadow-sm">
-          <SidebarNav user={user} onLogout={logout} />
-        </Sidebar>
-
-        {/* Main content */}
-        <SidebarInset className="p-0 flex-1 overflow-hidden">
-          <div className="flex flex-col h-full">
-            <DashboardHeader user={user} className="border-b border-gray-200 bg-white shadow-sm" />
-            {/* Content Area - With proper padding and overflow handling */}
-            <div className="flex-1 overflow-y-auto">
-              {children}
-            </div>
-          </div>
-        </SidebarInset>
+    <div className="flex h-screen w-full overflow-hidden bg-gray-50">
+      {/* Main Sidebar - More compact */}
+      <div className="flex-shrink-0 w-52 bg-white border-r border-gray-200 shadow-sm">
+        <SidebarNav user={user} onLogout={logout} />
       </div>
-    </SidebarProvider>
+
+      {/* Main content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <DashboardHeader user={user} className="border-b border-gray-200 bg-white shadow-sm" />
+        {/* Content Area - With proper padding and overflow handling */}
+        <div className="flex-1 overflow-y-auto">
+          {children}
+        </div>
+      </div>
+    </div>
   );
 };

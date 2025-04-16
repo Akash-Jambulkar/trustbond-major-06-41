@@ -18,18 +18,19 @@ const KYCPage = () => {
   
   return (
     <DashboardLayout>
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <Shield className="h-6 w-6 text-trustbond-primary" />
-            <h2 className="text-xl font-bold text-gray-800">KYC Verification</h2>
+      <div className="p-4 lg:p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+          <div className="p-4 border-b border-gray-100">
+            <div className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-trustbond-primary" />
+              <h2 className="text-lg font-bold text-gray-800">KYC Verification</h2>
+            </div>
+            <p className="text-gray-500 mt-1 text-sm">
+              Submit and manage your KYC documents for secure blockchain identity verification.
+            </p>
           </div>
           
-          <p className="text-gray-500 mb-4 text-sm">
-            Submit and manage your KYC documents for secure blockchain identity verification.
-          </p>
-          
-          <div className="space-y-4">
+          <div className="p-4">
             <KYCStatusDisplay 
               kycStatus={kycStatus} 
               isLoading={isLoading} 
@@ -39,7 +40,9 @@ const KYCPage = () => {
               rejectionReason={rejectionReason}
             />
             
-            <KYCTabs />
+            <div className="mt-4">
+              <KYCTabs />
+            </div>
           </div>
         </div>
       </div>
