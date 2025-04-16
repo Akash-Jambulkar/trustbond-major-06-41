@@ -1,248 +1,341 @@
-import { useState, useEffect } from "react";
+
+import React from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, ShieldCheck, Database, Clock, ArrowRight, ChevronRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Shield, 
+  Database, 
+  Lock, 
+  LineChart, 
+  CheckCircle, 
+  ArrowRight, 
+  FileCheck,
+  UserCheck,
+  Building
+} from "lucide-react";
+import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { supabase } from "@/lib/supabase";
+import FeatureCard from "@/components/FeatureCard";
 
 const Index = () => {
-  const [stats, setStats] = useState({
-    users: '0',
-    banks: '0',
-    transactions: '0',
-    loans: '0'
-  });
-  const [isConnected, setIsConnected] = useState(false);
-
-  useEffect(() => {
-    const checkConnection = async () => {
-      try {
-        const { data, error } = await supabase.from('health_check').select('*').limit(1);
-        setIsConnected(!error);
-      } catch (e) {
-        setIsConnected(false);
-      }
-    };
-
-    setStats({
-      users: '0',
-      banks: '0',
-      transactions: '0',
-      loans: '0'
-    });
-
-    const fetchStats = async () => {
-      if (isConnected) {
-        try {
-          const { count: userCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
-          const { count: bankCount } = await supabase.from('banks').select('*', { count: 'exact', head: true });
-          const { count: transactionCount } = await supabase.from('transactions').select('*', { count: 'exact', head: true });
-          const { count: loanCount } = await supabase.from('loans').select('*', { count: 'exact', head: true });
-          
-          setStats({
-            users: userCount?.toString() || '0',
-            banks: bankCount?.toString() || '0', 
-            transactions: transactionCount?.toString() || '0',
-            loans: loanCount?.toString() || '0'
-          });
-        } catch (error) {
-          console.error('Error fetching stats:', error);
-        }
-      }
-    };
-
-    checkConnection();
-  }, [isConnected]);
-
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Navigation */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link to="/" className="text-2xl font-bold text-trustbond-primary">TrustBond</Link>
-          <nav className="hidden md:flex items-center space-x-6">
-            <Link to="/about" className="text-gray-700 hover:text-trustbond-primary transition">About</Link>
-            <Link to="/whitepaper" className="text-gray-700 hover:text-trustbond-primary transition">Whitepaper</Link>
-            <Link to="/contact" className="text-gray-700 hover:text-trustbond-primary transition">Contact</Link>
-            <div className="h-6 w-px bg-gray-300 mx-2"></div>
-            <Link to="/login">
-              <Button variant="outline" size="sm">Login</Button>
-            </Link>
-            <Link to="/register">
-              <Button size="sm">Register</Button>
-            </Link>
-          </nav>
-          <div className="md:hidden">
-            <Button variant="ghost" size="sm">
-              <span className="sr-only">Menu</span>
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
-            </Button>
-          </div>
-        </div>
-      </header>
-
+      <Navbar />
+      
       <main className="flex-grow">
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-trustbond-primary to-trustbond-secondary text-white py-20 md:py-32">
-          <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto text-center">
-              <motion.h1 
-                className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-              >
-                Secure KYC & Lending on the Blockchain
-              </motion.h1>
-              <motion.p 
-                className="text-lg md:text-xl mb-8 opacity-90"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-              >
-                TrustBond connects users and financial institutions with a blockchain-powered
-                platform for secure identity verification and lending.
-              </motion.p>
-              <motion.div 
-                className="flex flex-wrap justify-center gap-4"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-              >
-                <Link to="/register">
-                  <Button className="bg-white text-trustbond-primary hover:bg-gray-100">
-                    Get Started
-                    <ArrowRight className="ml-2 h-4 w-4" />
+        <section className="bg-gradient-to-r from-cryptolock-primary to-cryptolock-secondary py-20 px-4">
+          <div className="container mx-auto">
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+              <div className="text-white">
+                <Badge variant="crypto" className="mb-4 bg-white/20 backdrop-blur-sm">CRYPTO-LOCK (TrustBond)</Badge>
+                <h1 className="text-4xl md:text-5xl font-bold mb-6">
+                  Blockchain-Powered KYC Verification & Trust Scores
+                </h1>
+                <p className="text-xl mb-8 opacity-90">
+                  A secure and efficient platform that revolutionizes how financial institutions verify identities and assess risk using blockchain technology.
+                </p>
+                <div className="flex flex-wrap gap-4">
+                  <Button variant="default" className="bg-white text-cryptolock-primary hover:bg-gray-100" size="lg" asChild>
+                    <Link to="/register">Get Started</Link>
                   </Button>
-                </Link>
-                <Link to="/whitepaper">
-                  <Button variant="outline" className="border-white text-white hover:bg-white/10">
-                    Read Whitepaper
-                    <ExternalLink className="ml-2 h-4 w-4" />
+                  <Button variant="outline" className="border-white text-white hover:bg-white/10" size="lg" asChild>
+                    <Link to="/whitepaper">Read Whitepaper</Link>
                   </Button>
-                </Link>
-              </motion.div>
+                </div>
+              </div>
+              <div className="hidden md:block">
+                <div className="relative">
+                  <div className="bg-white/20 backdrop-blur-sm rounded-lg p-6 shadow-xl">
+                    <div className="flex items-center justify-center mb-4">
+                      <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
+                        <Shield className="h-6 w-6 text-white" />
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="h-2 w-3/4 bg-white/40 rounded-full"></div>
+                      <div className="h-2 bg-white/40 rounded-full"></div>
+                      <div className="h-2 w-2/3 bg-white/40 rounded-full"></div>
+                      <div className="h-2 w-3/4 bg-white/40 rounded-full"></div>
+                    </div>
+                    
+                    <div className="mt-6 flex items-center justify-center space-x-6">
+                      <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center node-animation">
+                        <Database className="h-6 w-6 text-white" />
+                      </div>
+                      <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center node-animation node-animation-delay-1">
+                        <Lock className="h-6 w-6 text-white" />
+                      </div>
+                      <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center node-animation node-animation-delay-2">
+                        <LineChart className="h-6 w-6 text-white" />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="absolute -bottom-6 -right-6 bg-white rounded-lg p-4 shadow-lg">
+                    <div className="flex items-center">
+                      <div className="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                        <CheckCircle className="h-6 w-6 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">KYC Verified</p>
+                        <p className="text-xs text-gray-500">Trust Score: 92/100</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
-
-        {/* Stats Section */}
-        <section className="py-10 bg-white">
-          <div className="container mx-auto px-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <div className="bg-gray-50 rounded-lg p-5 text-center">
-                <div className="text-3xl md:text-4xl font-bold text-trustbond-primary mb-2">{stats.users}</div>
-                <div className="text-sm md:text-base text-gray-600">Users</div>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-5 text-center">
-                <div className="text-3xl md:text-4xl font-bold text-trustbond-primary mb-2">{stats.banks}</div>
-                <div className="text-sm md:text-base text-gray-600">Banks</div>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-5 text-center">
-                <div className="text-3xl md:text-4xl font-bold text-trustbond-primary mb-2">{stats.transactions}</div>
-                <div className="text-sm md:text-base text-gray-600">Transactions</div>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-5 text-center">
-                <div className="text-3xl md:text-4xl font-bold text-trustbond-primary mb-2">{stats.loans}</div>
-                <div className="text-sm md:text-base text-gray-600">Loans Processed</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
+        
         {/* Features Section */}
-        <section className="py-16 bg-gray-50">
-          <div className="container mx-auto px-4">
+        <section className="py-16 px-4">
+          <div className="container mx-auto">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold mb-4">How TrustBond Works</h2>
-              <p className="text-gray-600 max-w-2xl mx-auto">
-                Our platform leverages blockchain technology to create a secure, transparent, and efficient ecosystem for KYC verification and lending.
+              <Badge variant="crypto" className="mb-4">FEATURES</Badge>
+              <h2 className="text-3xl font-bold mb-4">Key Features of CRYPTO-LOCK</h2>
+              <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+                Our platform combines blockchain technology and machine learning to create a revolutionary approach to KYC verification and risk assessment.
               </p>
             </div>
-
+            
             <div className="grid md:grid-cols-3 gap-8">
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                  <ShieldCheck className="h-6 w-6 text-blue-600" />
+              <FeatureCard 
+                icon={Shield}
+                title="Secure KYC Verification"
+                description="Documents securely hashed and stored on the blockchain, ensuring data integrity while protecting sensitive information."
+                className="border-l-4 border-l-cryptolock-primary"
+              />
+              <FeatureCard 
+                icon={LineChart}
+                title="Trust Score Generation"
+                description="Machine learning algorithms analyze customer data to create reliable trust scores for more accurate risk assessment."
+                className="border-l-4 border-l-cryptolock-secondary"
+              />
+              <FeatureCard 
+                icon={Database}
+                title="Smart Contract Integration"
+                description="Automated verification processes and transparent loan terms through immutable smart contracts."
+                className="border-l-4 border-l-cryptolock-accent"
+              />
+            </div>
+          </div>
+        </section>
+        
+        {/* How It Works */}
+        <section className="py-16 px-4 bg-gray-50">
+          <div className="container mx-auto">
+            <div className="text-center mb-12">
+              <Badge variant="crypto" className="mb-4">PROCESS</Badge>
+              <h2 className="text-3xl font-bold mb-4">How CRYPTO-LOCK Works</h2>
+              <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+                Our streamlined process makes KYC verification and loan applications more efficient and secure.
+              </p>
+            </div>
+            
+            <div className="max-w-4xl mx-auto">
+              <div className="relative">
+                {/* Step 1 */}
+                <div className="flex md:items-center flex-col md:flex-row mb-12 relative">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-cryptolock-primary flex items-center justify-center text-white font-bold md:mr-6 mb-4 md:mb-0 z-10">
+                    1
+                  </div>
+                  <div className="md:ml-6">
+                    <h3 className="text-xl font-semibold mb-3 flex items-center">
+                      <FileCheck className="mr-2 h-5 w-5 text-cryptolock-primary" />
+                      Document Submission
+                    </h3>
+                    <p className="text-gray-600">
+                      Users securely upload their KYC documents through the platform. Documents are hashed and encrypted before storage, ensuring that sensitive information remains protected.
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-xl font-semibold mb-3">Secure KYC Verification</h3>
-                <p className="text-gray-600 mb-4">
-                  Upload your documents once and have them verified by trusted financial institutions. Your data remains private while verification status is securely recorded on the blockchain.
-                </p>
-                <Link to="/about" className="text-trustbond-primary hover:text-trustbond-primary/80 flex items-center text-sm font-medium">
-                  Learn more <ChevronRight className="h-4 w-4 ml-1" />
-                </Link>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                  <Database className="h-6 w-6 text-green-600" />
+                
+                {/* Step 2 */}
+                <div className="flex md:items-center flex-col md:flex-row mb-12 relative">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-cryptolock-primary flex items-center justify-center text-white font-bold md:mr-6 mb-4 md:mb-0 z-10">
+                    2
+                  </div>
+                  <div className="md:ml-6">
+                    <h3 className="text-xl font-semibold mb-3 flex items-center">
+                      <UserCheck className="mr-2 h-5 w-5 text-cryptolock-primary" />
+                      Verification Process
+                    </h3>
+                    <p className="text-gray-600">
+                      Authorized banks verify the submitted documents and record the verification status on the blockchain. This creates an immutable record of verification that can be trusted by all participants.
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-xl font-semibold mb-3">Trust Score System</h3>
-                <p className="text-gray-600 mb-4">
-                  Build a portable trust score based on your verified credentials, financial history, and blockchain activity. Use your score for faster loan approvals across all participating banks.
-                </p>
-                <Link to="/about" className="text-trustbond-primary hover:text-trustbond-primary/80 flex items-center text-sm font-medium">
-                  Learn more <ChevronRight className="h-4 w-4 ml-1" />
-                </Link>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-4">
-                  <Clock className="h-6 w-6 text-purple-600" />
+                
+                {/* Step 3 */}
+                <div className="flex md:items-center flex-col md:flex-row mb-12 relative">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-cryptolock-primary flex items-center justify-center text-white font-bold md:mr-6 mb-4 md:mb-0 z-10">
+                    3
+                  </div>
+                  <div className="md:ml-6">
+                    <h3 className="text-xl font-semibold mb-3 flex items-center">
+                      <LineChart className="mr-2 h-5 w-5 text-cryptolock-primary" />
+                      Trust Score Creation
+                    </h3>
+                    <p className="text-gray-600">
+                      Based on verified KYC data and other factors, machine learning models calculate a comprehensive trust score. This score provides a reliable measure of creditworthiness for financial institutions.
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-xl font-semibold mb-3">Efficient Loan Processing</h3>
-                <p className="text-gray-600 mb-4">
-                  Apply for loans with transparent terms encoded in smart contracts. Enjoy faster processing, reduced paperwork, and secure, automated disbursements and repayments.
-                </p>
-                <Link to="/about" className="text-trustbond-primary hover:text-trustbond-primary/80 flex items-center text-sm font-medium">
-                  Learn more <ChevronRight className="h-4 w-4 ml-1" />
-                </Link>
+                
+                {/* Step 4 */}
+                <div className="flex md:items-center flex-col md:flex-row relative">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-cryptolock-primary flex items-center justify-center text-white font-bold md:mr-6 mb-4 md:mb-0 z-10">
+                    4
+                  </div>
+                  <div className="md:ml-6">
+                    <h3 className="text-xl font-semibold mb-3 flex items-center">
+                      <Building className="mr-2 h-5 w-5 text-cryptolock-primary" />
+                      Financial Services Access
+                    </h3>
+                    <p className="text-gray-600">
+                      With verified KYC and a trust score, users can easily apply for loans and other financial services across multiple institutions without repeating the verification process.
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Connecting Line */}
+                <div className="absolute top-0 bottom-0 left-6 md:left-6 w-0.5 bg-gray-200 -z-10"></div>
               </div>
             </div>
           </div>
         </section>
-
-        {/* Supabase Connection Status */}
-        <section className="py-6 bg-white border-t border-gray-200">
-          <div className="container mx-auto px-4">
-            <div className="flex items-center justify-center">
-              <div className="flex items-center gap-2">
-                <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                <span className="text-sm text-gray-600">
-                  {isConnected 
-                    ? 'Supabase Connected: Real-time features active' 
-                    : 'Supabase Not Connected: Please connect your Supabase project'}
-                </span>
+        
+        {/* Benefits Section */}
+        <section className="py-16 px-4">
+          <div className="container mx-auto">
+            <div className="text-center mb-12">
+              <Badge variant="crypto" className="mb-4">ADVANTAGES</Badge>
+              <h2 className="text-3xl font-bold mb-4">Benefits of CRYPTO-LOCK</h2>
+              <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+                Our blockchain-based solution offers numerous advantages over traditional KYC and lending processes.
+              </p>
+            </div>
+            
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-cryptolock-primary">
+                <h3 className="text-lg font-semibold mb-3 flex items-center">
+                  <Shield className="mr-2 h-5 w-5 text-cryptolock-primary" />
+                  Enhanced Security
+                </h3>
+                <p className="text-gray-600">
+                  Decentralized storage and encryption protect sensitive data from breaches and unauthorized access.
+                </p>
+              </div>
+              
+              <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-cryptolock-primary">
+                <h3 className="text-lg font-semibold mb-3 flex items-center">
+                  <CheckCircle className="mr-2 h-5 w-5 text-cryptolock-primary" />
+                  Improved Efficiency
+                </h3>
+                <p className="text-gray-600">
+                  Automation reduces operational costs and eliminates redundant verification processes across institutions.
+                </p>
+              </div>
+              
+              <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-cryptolock-primary">
+                <h3 className="text-lg font-semibold mb-3 flex items-center">
+                  <Database className="mr-2 h-5 w-5 text-cryptolock-primary" />
+                  Data Integrity
+                </h3>
+                <p className="text-gray-600">
+                  Blockchain's immutability ensures that records cannot be altered, providing a trusted source of verification.
+                </p>
+              </div>
+              
+              <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-cryptolock-primary">
+                <h3 className="text-lg font-semibold mb-3 flex items-center">
+                  <LineChart className="mr-2 h-5 w-5 text-cryptolock-primary" />
+                  Better Risk Assessment
+                </h3>
+                <p className="text-gray-600">
+                  Machine learning models provide more accurate and comprehensive risk evaluations for financial decisions.
+                </p>
               </div>
             </div>
           </div>
         </section>
-
+        
+        {/* Testimonials */}
+        <section className="py-16 px-4 bg-gray-50">
+          <div className="container mx-auto">
+            <div className="text-center mb-12">
+              <Badge variant="crypto" className="mb-4">TESTIMONIALS</Badge>
+              <h2 className="text-3xl font-bold mb-4">What People Say About Us</h2>
+              <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+                Hear from the financial institutions and users who have transformed their KYC processes with CRYPTO-LOCK.
+              </p>
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 rounded-full bg-gray-200 mr-4"></div>
+                  <div>
+                    <h4 className="font-semibold">Rajesh Kumar</h4>
+                    <p className="text-sm text-gray-500">Bank Manager, State Bank</p>
+                  </div>
+                </div>
+                <p className="text-gray-600 italic">
+                  "CRYPTO-LOCK has revolutionized our KYC process. We've reduced verification time by 70% and improved customer satisfaction significantly."
+                </p>
+              </div>
+              
+              <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 rounded-full bg-gray-200 mr-4"></div>
+                  <div>
+                    <h4 className="font-semibold">Priya Sharma</h4>
+                    <p className="text-sm text-gray-500">Customer</p>
+                  </div>
+                </div>
+                <p className="text-gray-600 italic">
+                  "I was amazed at how quick and secure the verification process was. I could apply for a loan across multiple banks without repeating the KYC procedure."
+                </p>
+              </div>
+              
+              <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 rounded-full bg-gray-200 mr-4"></div>
+                  <div>
+                    <h4 className="font-semibold">Akash Patel</h4>
+                    <p className="text-sm text-gray-500">Compliance Officer, Global Bank</p>
+                  </div>
+                </div>
+                <p className="text-gray-600 italic">
+                  "The immutable nature of blockchain has made our compliance audits much more straightforward. We can verify the integrity of our KYC data with confidence."
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+        
         {/* CTA Section */}
-        <section className="py-16 bg-trustbond-primary/10">
-          <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold mb-6">Ready to Experience the Future of Finance?</h2>
-            <p className="text-gray-700 max-w-2xl mx-auto mb-8">
-              Join TrustBond today and discover how blockchain technology is transforming identity verification and lending, making them more secure, efficient, and accessible.
+        <section className="py-16 px-4 bg-gradient-to-r from-cryptolock-primary to-cryptolock-secondary text-white">
+          <div className="container mx-auto text-center">
+            <h2 className="text-3xl font-bold mb-6">Ready to Transform Your KYC Process?</h2>
+            <p className="text-xl max-w-3xl mx-auto mb-8 opacity-90">
+              Join the revolution in secure, efficient identity verification and risk assessment with CRYPTO-LOCK.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <Link to="/register">
-                <Button className="bg-trustbond-primary hover:bg-trustbond-primary/90">
-                  Create an Account
-                </Button>
-              </Link>
-              <Link to="/login">
-                <Button variant="outline">
-                  Login
-                </Button>
-              </Link>
+              <Button variant="default" className="bg-white text-cryptolock-primary hover:bg-gray-100" size="lg" asChild>
+                <Link to="/register">Get Started <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              </Button>
+              <Button variant="outline" className="border-white text-white hover:bg-white/10" size="lg" asChild>
+                <Link to="/about">Learn More</Link>
+              </Button>
             </div>
           </div>
         </section>
       </main>
-
+      
       <Footer />
     </div>
   );

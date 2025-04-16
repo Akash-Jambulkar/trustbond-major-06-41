@@ -1,6 +1,7 @@
 
-/** @type {import('tailwindcss').Config} */
-module.exports = {
+import type { Config } from "tailwindcss";
+
+const config: Config = {
   darkMode: ["class"],
   content: [
     './pages/**/*.{ts,tsx}',
@@ -51,21 +52,21 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Custom colors for TrustBond/CRYPTO-LOCK
         trustbond: {
-          primary: "#1e40af",    // Deep blue
-          secondary: "#0d9488",  // Teal
-          accent: "#10b981",     // Green for accents
-          dark: "#1e293b",       // Dark slate for text
-          light: "#f8fafc",      // Light background
-          ethereum: "#3c3c3d",   // Ethereum color
-          ganache: "#5e464d",    // Ganache color
-          success: "#16a34a",    // Success green
-          warning: "#d97706",    // Warning amber
-          error: "#dc2626",      // Error red
-          "gray-light": "#f9fafb", // Light gray for backgrounds
-          "gray-medium": "#9ca3af", // Medium gray for secondary text
-          "gray-dark": "#4b5563", // Dark gray for primary text
+          primary: "#3B82F6",
+          secondary: "#8B5CF6",
+          accent: "#10B981",
+          dark: "#1E293B",
+          light: "#F8FAFC"
         },
+        cryptolock: {
+          primary: "#3B82F6", // Blue
+          secondary: "#8B5CF6", // Purple
+          accent: "#10B981", // Green
+          dark: "#1E293B", // Dark blue
+          light: "#F8FAFC" // Light gray
+        }
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -74,12 +75,12 @@ module.exports = {
       },
       keyframes: {
         "accordion-down": {
-          from: { height: 0 },
+          from: { height: "0" },
           to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
           from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: 0 },
+          to: { height: "0" },
         },
       },
       animation: {
@@ -89,4 +90,6 @@ module.exports = {
     },
   },
   plugins: [require("tailwindcss-animate")],
-}
+};
+
+export default config;
