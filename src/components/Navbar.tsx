@@ -33,13 +33,13 @@ const Navbar = () => {
           <div className="hidden md:flex items-center space-x-4">
             <Link 
               to="/" 
-              className={`px-3 py-2 ${location.pathname === '/' ? 'text-trustbond-primary font-medium' : 'text-gray-700'} hover:text-trustbond-primary transition-colors`}
+              className={`px-3 py-2 ${location.pathname === '/' ? 'text-trustbond-primary font-medium' : 'text-gray-700'} hover:text-trustbond-primary transition-colors cursor-pointer`}
             >
               Home
             </Link>
             <Link 
               to="/about" 
-              className={`px-3 py-2 ${location.pathname === '/about' ? 'text-trustbond-primary font-medium' : 'text-gray-700'} hover:text-trustbond-primary transition-colors`}
+              className={`px-3 py-2 ${location.pathname === '/about' ? 'text-trustbond-primary font-medium' : 'text-gray-700'} hover:text-trustbond-primary transition-colors cursor-pointer`}
             >
               About
             </Link>
@@ -48,7 +48,7 @@ const Navbar = () => {
             <div className="relative">
               <button 
                 onClick={() => setIsResourcesOpen(!isResourcesOpen)}
-                className="px-3 py-2 text-gray-700 hover:text-trustbond-primary transition-colors flex items-center"
+                className="px-3 py-2 text-gray-700 hover:text-trustbond-primary transition-colors flex items-center cursor-pointer"
                 aria-expanded={isResourcesOpen}
                 aria-haspopup="true"
               >
@@ -63,13 +63,13 @@ const Navbar = () => {
                 >
                   <Link 
                     to="/whitepaper" 
-                    className={`block px-4 py-2 ${location.pathname === '/whitepaper' ? 'text-trustbond-primary bg-gray-50' : 'text-gray-700'} hover:bg-gray-100 hover:text-trustbond-primary`}
+                    className={`block px-4 py-2 ${location.pathname === '/whitepaper' ? 'text-trustbond-primary bg-gray-50' : 'text-gray-700'} hover:bg-gray-100 hover:text-trustbond-primary cursor-pointer`}
                   >
                     Whitepaper
                   </Link>
                   <Link 
                     to="/contact" 
-                    className={`block px-4 py-2 ${location.pathname === '/contact' ? 'text-trustbond-primary bg-gray-50' : 'text-gray-700'} hover:bg-gray-100 hover:text-trustbond-primary`}
+                    className={`block px-4 py-2 ${location.pathname === '/contact' ? 'text-trustbond-primary bg-gray-50' : 'text-gray-700'} hover:bg-gray-100 hover:text-trustbond-primary cursor-pointer`}
                   >
                     Contact
                   </Link>
@@ -78,10 +78,10 @@ const Navbar = () => {
             </div>
             
             <Link to="/login">
-              <Button variant="outline" className="ml-2">Log in</Button>
+              <Button variant="outline" className="ml-2 cursor-pointer">Log in</Button>
             </Link>
             <Link to="/register">
-              <Button variant="default">Register</Button>
+              <Button variant="default" className="cursor-pointer">Register</Button>
             </Link>
           </div>
 
@@ -89,7 +89,7 @@ const Navbar = () => {
           <div className="md:hidden flex items-center">
             <button 
               onClick={() => setIsMenuOpen(!isMenuOpen)} 
-              className="text-gray-500 hover:text-gray-700"
+              className="text-gray-500 hover:text-gray-700 cursor-pointer"
               aria-expanded={isMenuOpen}
               aria-label="Toggle menu"
             >
@@ -104,34 +104,34 @@ const Navbar = () => {
             <div className="flex flex-col space-y-2 pt-2 pb-3">
               <Link 
                 to="/" 
-                className={`px-4 py-2 text-base ${location.pathname === '/' ? 'text-trustbond-primary font-medium bg-gray-50' : 'text-gray-700'} hover:bg-gray-100 hover:text-trustbond-primary rounded-md`}
+                className={`px-4 py-2 text-base ${location.pathname === '/' ? 'text-trustbond-primary font-medium bg-gray-50' : 'text-gray-700'} hover:bg-gray-100 hover:text-trustbond-primary rounded-md cursor-pointer`}
               >
                 Home
               </Link>
               <Link 
                 to="/about" 
-                className={`px-4 py-2 text-base ${location.pathname === '/about' ? 'text-trustbond-primary font-medium bg-gray-50' : 'text-gray-700'} hover:bg-gray-100 hover:text-trustbond-primary rounded-md`}
+                className={`px-4 py-2 text-base ${location.pathname === '/about' ? 'text-trustbond-primary font-medium bg-gray-50' : 'text-gray-700'} hover:bg-gray-100 hover:text-trustbond-primary rounded-md cursor-pointer`}
               >
                 About
               </Link>
               <Link 
                 to="/whitepaper" 
-                className={`px-4 py-2 text-base ${location.pathname === '/whitepaper' ? 'text-trustbond-primary font-medium bg-gray-50' : 'text-gray-700'} hover:bg-gray-100 hover:text-trustbond-primary rounded-md`}
+                className={`px-4 py-2 text-base ${location.pathname === '/whitepaper' ? 'text-trustbond-primary font-medium bg-gray-50' : 'text-gray-700'} hover:bg-gray-100 hover:text-trustbond-primary rounded-md cursor-pointer`}
               >
                 Whitepaper
               </Link>
               <Link 
                 to="/contact" 
-                className={`px-4 py-2 text-base ${location.pathname === '/contact' ? 'text-trustbond-primary font-medium bg-gray-50' : 'text-gray-700'} hover:bg-gray-100 hover:text-trustbond-primary rounded-md`}
+                className={`px-4 py-2 text-base ${location.pathname === '/contact' ? 'text-trustbond-primary font-medium bg-gray-50' : 'text-gray-700'} hover:bg-gray-100 hover:text-trustbond-primary rounded-md cursor-pointer`}
               >
                 Contact
               </Link>
               <div className="pt-2 flex flex-col space-y-2">
                 <Link to="/login">
-                  <Button variant="outline" className="w-full">Log in</Button>
+                  <Button variant="outline" className="w-full cursor-pointer">Log in</Button>
                 </Link>
                 <Link to="/register">
-                  <Button variant="default" className="w-full">Register</Button>
+                  <Button variant="default" className="w-full cursor-pointer">Register</Button>
                 </Link>
               </div>
             </div>
