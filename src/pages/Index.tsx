@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import FeatureCard from "@/components/FeatureCard";
 import SectionHeading from "@/components/SectionHeading";
-import { Shield, Users, Database, BarChart3 } from "lucide-react";
+import { Shield, Users, Database, BarChart3, ArrowRight, Check } from "lucide-react";
 
 const Index = () => {
   return (
@@ -73,8 +73,67 @@ const Index = () => {
         </div>
       </section>
       
-      {/* How It Works Section */}
+      {/* Benefits Section - New */}
       <section className="py-20 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <SectionHeading 
+            title="Why Choose TrustBond"
+            subtitle="Our blockchain-based solution offers numerous advantages over traditional systems"
+            centered={true}
+          />
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
+            <div className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+              <h3 className="text-xl font-bold mb-4 text-trustbond-primary">For Financial Institutions</h3>
+              <ul className="space-y-3">
+                {[
+                  "Reduced KYC processing time by up to 70%",
+                  "Lower compliance costs through shared verification",
+                  "Enhanced fraud prevention with consensus mechanisms",
+                  "Immutable audit trail for regulatory compliance",
+                  "Secure document sharing with permissioned access"
+                ].map((item, index) => (
+                  <li key={index} className="flex items-start">
+                    <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-6">
+                <Link to="/whitepaper" className="inline-flex items-center text-trustbond-primary hover:text-trustbond-primary/80 cursor-pointer">
+                  Learn more <ArrowRight className="ml-1 h-4 w-4" />
+                </Link>
+              </div>
+            </div>
+            
+            <div className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+              <h3 className="text-xl font-bold mb-4 text-trustbond-secondary">For Customers</h3>
+              <ul className="space-y-3">
+                {[
+                  "Complete control over personal identity information",
+                  "One-time KYC process valid across multiple institutions",
+                  "Enhanced privacy with selective information sharing",
+                  "Digital identity that follows you across services",
+                  "Better loan terms based on verified trust scores"
+                ].map((item, index) => (
+                  <li key={index} className="flex items-start">
+                    <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-6">
+                <Link to="/register" className="inline-flex items-center text-trustbond-primary hover:text-trustbond-primary/80 cursor-pointer">
+                  Sign up now <ArrowRight className="ml-1 h-4 w-4" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      {/* How It Works Section */}
+      <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <SectionHeading 
             title="How TrustBond Works"
@@ -110,7 +169,7 @@ const Index = () => {
           
           <div className="flex justify-center mt-12">
             <Link to="/about">
-              <Button>Learn More About Our Process</Button>
+              <Button className="cursor-pointer">Learn More About Our Process</Button>
             </Link>
           </div>
         </div>
@@ -125,12 +184,12 @@ const Index = () => {
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link to="/register">
-              <Button size="lg" className="bg-white hover:bg-gray-100 text-trustbond-primary border-white">
+              <Button size="lg" className="bg-white hover:bg-gray-100 text-trustbond-primary border-white cursor-pointer">
                 Create Account
               </Button>
             </Link>
             <Link to="/contact">
-              <Button size="lg" variant="outline" className="border-white hover:bg-white/20">
+              <Button size="lg" variant="outline" className="border-white hover:bg-white/20 cursor-pointer">
                 Contact Us
               </Button>
             </Link>

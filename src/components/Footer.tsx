@@ -18,13 +18,13 @@ const Footer = () => {
               Blockchain-powered KYC verification and trust score generation for secure, efficient, and transparent financial services.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-white">
+              <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white cursor-pointer">
                 <Github className="h-5 w-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-white">
+              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white cursor-pointer">
                 <Twitter className="h-5 w-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-white">
+              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white cursor-pointer">
                 <Linkedin className="h-5 w-5" />
               </a>
             </div>
@@ -33,20 +33,20 @@ const Footer = () => {
           <div>
             <h3 className="font-semibold text-lg mb-4">Platform</h3>
             <ul className="space-y-2">
-              <li><Link to="/about" className="text-gray-400 hover:text-white">About</Link></li>
-              <li><Link to="/whitepaper" className="text-gray-400 hover:text-white">Whitepaper</Link></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">API Documentation</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Smart Contracts</a></li>
+              <li><Link to="/about" className="text-gray-400 hover:text-white cursor-pointer">About</Link></li>
+              <li><Link to="/whitepaper" className="text-gray-400 hover:text-white cursor-pointer">Whitepaper</Link></li>
+              <li><Link to="/contact" className="text-gray-400 hover:text-white cursor-pointer">Contact</Link></li>
+              <li><a href="#" className="text-gray-400 hover:text-white cursor-pointer">API Documentation</a></li>
             </ul>
           </div>
           
           <div>
             <h3 className="font-semibold text-lg mb-4">Resources</h3>
             <ul className="space-y-2">
-              <li><a href="#" className="text-gray-400 hover:text-white">Documentation</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Developer Guide</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Blog</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">FAQ</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-white cursor-pointer">Documentation</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-white cursor-pointer">Developer Guide</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-white cursor-pointer">Blog</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-white cursor-pointer">FAQ</a></li>
             </ul>
           </div>
           
@@ -54,9 +54,9 @@ const Footer = () => {
             <h3 className="font-semibold text-lg mb-4">Contact</h3>
             <ul className="space-y-2">
               <li className="text-gray-400">info@trustbond.com</li>
-              <li className="text-gray-400">+91 9854742954</li>
-              <li><Link to="/contact" className="text-gray-400 hover:text-white">Contact Form</Link></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Support</a></li>
+              <li className="text-gray-400">+1 (555) 123-4567</li>
+              <li><Link to="/contact" className="text-gray-400 hover:text-white cursor-pointer">Contact Form</Link></li>
+              <li><a href="#" className="text-gray-400 hover:text-white cursor-pointer">Support</a></li>
             </ul>
           </div>
         </div>
@@ -64,9 +64,9 @@ const Footer = () => {
         <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-400 text-sm">© 2025 TrustBond. All rights reserved.</p>
           <div className="flex space-x-6 mt-4 md:mt-0">
-            <a href="#" className="text-sm text-gray-400 hover:text-white">Privacy Policy</a>
-            <a href="#" className="text-sm text-gray-400 hover:text-white">Terms of Service</a>
-            <a href="#" className="text-sm text-gray-400 hover:text-white">Cookie Policy</a>
+            <a href="#" className="text-sm text-gray-400 hover:text-white cursor-pointer">Privacy Policy</a>
+            <a href="#" className="text-sm text-gray-400 hover:text-white cursor-pointer">Terms of Service</a>
+            <a href="#" className="text-sm text-gray-400 hover:text-white cursor-pointer">Cookie Policy</a>
           </div>
         </div>
       </div>
