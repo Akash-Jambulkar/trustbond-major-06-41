@@ -10,6 +10,7 @@ import {
 import { SidebarNav } from "./dashboard/navigation/SidebarNav";
 import { DashboardHeader } from "./dashboard/navigation/DashboardHeader";
 import { useRealTimeUpdates } from "@/hooks/useRealTimeUpdates";
+import { cn } from "@/lib/utils";
 
 interface DashboardLayoutProps {
   children?: ReactNode;

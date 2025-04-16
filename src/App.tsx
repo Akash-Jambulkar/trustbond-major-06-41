@@ -25,7 +25,7 @@ const Whitepaper = lazy(() => import("@/pages/Whitepaper"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 // User Dashboard
-const UserDashboard = lazy(() => import("@/pages/dashboard/UserDashboard"));
+const UserDashboard = lazy(() => import("./pages/dashboard/UserDashboard"));
 const UserHome = lazy(() => import("@/pages/dashboard/user/UserHome"));
 const KYCPage = lazy(() => import("@/pages/dashboard/user/KYCPage"));
 const ProfilePage = lazy(() => import("@/pages/dashboard/user/ProfilePage"));
