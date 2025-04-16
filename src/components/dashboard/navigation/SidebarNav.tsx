@@ -79,52 +79,56 @@ export const SidebarNav = ({ user, onLogout }: { user: any; onLogout: () => void
   };
 
   return (
-    <div className="flex flex-col h-full py-4 bg-white">
-      <div className="px-4 py-2 flex items-center mb-6">
-        <div className="text-xl font-bold text-trustbond-primary">TrustBond</div>
+    <div className="flex flex-col h-full py-3 bg-white">
+      <div className="px-4 py-2 flex items-center mb-4 border-b pb-3">
+        <div className="text-xl font-bold bg-gradient-to-r from-trustbond-primary to-trustbond-secondary bg-clip-text text-transparent">TrustBond</div>
       </div>
 
-      <ScrollArea className="flex-1 px-4">
-        <nav className="space-y-1">
+      <ScrollArea className="flex-1 px-3">
+        <nav className="space-y-0.5">
           {navLinks.map((link) => (
             <Button
               key={link.href}
               variant={location.pathname === link.href ? "default" : "ghost"}
+              size="sm"
               className={cn(
-                "w-full justify-start",
-                location.pathname === link.href ? "bg-trustbond-primary hover:bg-trustbond-primary/90" : ""
+                "w-full justify-start mb-0.5 text-sm transition-all duration-200",
+                location.pathname === link.href 
+                  ? "bg-trustbond-primary hover:bg-trustbond-primary/90" 
+                  : "hover:bg-gray-100 hover:text-trustbond-primary hover:translate-x-1"
               )}
               onClick={() => navigate(link.href)}
             >
-              <link.icon className="mr-2 h-5 w-5" />
+              <link.icon className="mr-2 h-4 w-4" />
               {link.label}
             </Button>
           ))}
         </nav>
       </ScrollArea>
 
-      <div className="px-4 mt-auto pt-4 border-t">
-        <div className="flex items-center mb-4">
+      <div className="px-3 mt-auto pt-3 border-t">
+        <div className="flex items-center mb-3">
           <NetworkStatus />
         </div>
         
-        <div className="flex items-center gap-3 mb-4">
-          <Avatar className="h-10 w-10">
+        <div className="flex items-center gap-2 mb-3 bg-gray-50 p-2 rounded-lg">
+          <Avatar className="h-8 w-8">
             <AvatarImage src={user?.avatar} alt={user?.name || "User"} />
             <AvatarFallback>{getInitials(user?.name || "User")}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
             <p className="text-sm font-medium">{user?.name || "User"}</p>
-            <p className="text-xs text-muted-foreground">{user?.role || "user"}</p>
+            <p className="text-xs text-muted-foreground capitalize">{user?.role || "user"}</p>
           </div>
         </div>
         
         <Button 
           variant="ghost" 
-          className="w-full justify-start text-red-500 hover:text-red-700 hover:bg-red-50"
+          size="sm"
+          className="w-full justify-start text-red-500 hover:text-red-700 hover:bg-red-50 text-sm"
           onClick={onLogout}
         >
-          <LogOut className="mr-2 h-5 w-5" />
+          <LogOut className="mr-2 h-4 w-4" />
           Logout
         </Button>
       </div>

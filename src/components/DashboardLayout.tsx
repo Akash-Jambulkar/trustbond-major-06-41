@@ -35,16 +35,16 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="flex h-screen w-full overflow-hidden bg-gray-50">
-        {/* Main Sidebar */}
-        <Sidebar className="border-r border-gray-200 w-64 flex-shrink-0">
+        {/* Main Sidebar - Reduced width */}
+        <Sidebar className="border-r border-gray-200 w-56 flex-shrink-0 shadow-sm">
           <SidebarNav user={user} onLogout={logout} />
         </Sidebar>
 
         {/* Main content */}
         <SidebarInset className="p-0 flex-1 overflow-hidden">
           <div className="flex flex-col h-full">
-            <DashboardHeader user={user} className="border-b border-gray-200 bg-white" />
-            {/* Content Area */}
+            <DashboardHeader user={user} className="border-b border-gray-200 bg-white shadow-sm" />
+            {/* Content Area - With proper padding */}
             <div className="flex-1 overflow-y-auto">
               {children}
             </div>

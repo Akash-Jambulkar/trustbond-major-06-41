@@ -29,7 +29,7 @@ import { Separator } from "@/components/ui/separator";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
-import { BarChart2, PieChart as PieChartIcon, TrendingUp, AlertTriangle, Loader2 } from "lucide-react";
+import { BarChart2, PieChart as PieChartIcon, TrendingUp, AlertTriangle, Loader2, CreditCard, CheckCircle2 } from "lucide-react";
 
 // Interface for user loan data
 interface UserLoan {
@@ -356,54 +356,66 @@ export const LoanAnalyticsDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">Your Loan Analytics</h2>
+      <div className="bg-gradient-to-r from-trustbond-primary/5 to-trustbond-secondary/5 p-4 rounded-lg mb-6">
+        <h2 className="text-2xl font-bold tracking-tight text-trustbond-dark">Your Loan Analytics</h2>
         <p className="text-muted-foreground">
           Monitor your personal loan performance and portfolio analysis
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="shadow-sm border-l-4 border-l-trustbond-primary hover:shadow transition-shadow duration-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Active Loans</CardTitle>
+            <CardTitle className="text-base font-medium flex items-center gap-2">
+              <CreditCard className="h-4 w-4 text-trustbond-primary" />
+              Active Loans
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalActiveLoans}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-3xl font-bold my-2">{totalActiveLoans}</div>
+            <p className="text-sm text-muted-foreground">
               Your current active loans
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-sm border-l-4 border-l-trustbond-secondary hover:shadow transition-shadow duration-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Portfolio Value</CardTitle>
+            <CardTitle className="text-base font-medium flex items-center gap-2">
+              <BarChart2 className="h-4 w-4 text-trustbond-secondary" />
+              Portfolio Value
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{portfolioValue} ETH</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-3xl font-bold my-2">{portfolioValue} ETH</div>
+            <p className="text-sm text-muted-foreground">
               Total value of your active loans
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-sm border-l-4 border-l-green-500 hover:shadow transition-shadow duration-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Repayment Rate</CardTitle>
+            <CardTitle className="text-base font-medium flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
+              Repayment Rate
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{repaymentRate}%</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-3xl font-bold my-2">{repaymentRate}%</div>
+            <p className="text-sm text-muted-foreground">
               Your loan completion rate
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-sm border-l-4 border-l-amber-500 hover:shadow transition-shadow duration-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Default Rate</CardTitle>
+            <CardTitle className="text-base font-medium flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-600" />
+              Default Rate
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{defaultRate}%</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-3xl font-bold my-2">{defaultRate}%</div>
+            <p className="text-sm text-muted-foreground">
               Your loan default rate
             </p>
           </CardContent>
@@ -411,12 +423,12 @@ export const LoanAnalyticsDashboard: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="col-span-1">
+        <Card className="col-span-1 shadow-sm border-l-4 border-l-trustbond-primary">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5" />
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <TrendingUp className="h-5 w-5 text-trustbond-primary" />
                   Your Loan Performance
                 </CardTitle>
                 <CardDescription>
@@ -502,10 +514,10 @@ export const LoanAnalyticsDashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card className="col-span-1">
+        <Card className="col-span-1 shadow-sm border-l-4 border-l-trustbond-secondary">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <PieChartIcon className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <PieChartIcon className="h-5 w-5 text-trustbond-secondary" />
               Your Risk Distribution
             </CardTitle>
             <CardDescription>
@@ -570,15 +582,18 @@ export const LoanAnalyticsDashboard: React.FC = () => {
       </div>
 
       <Tabs defaultValue="distribution">
-        <TabsList className="w-full md:w-auto">
-          <TabsTrigger value="distribution">Your Loan Distribution</TabsTrigger>
-          <TabsTrigger value="trends">Monthly Trends</TabsTrigger>
-        </TabsList>
-        <TabsContent value="distribution" className="mt-6">
-          <Card>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-xl font-semibold text-trustbond-dark">Detailed Analysis</h2>
+          <TabsList className="w-auto">
+            <TabsTrigger value="distribution">Loan Distribution</TabsTrigger>
+            <TabsTrigger value="trends">Monthly Trends</TabsTrigger>
+          </TabsList>
+        </div>
+        <TabsContent value="distribution" className="mt-4">
+          <Card className="shadow-sm border-l-4 border-l-trustbond-accent">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart2 className="h-5 w-5" />
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <BarChart2 className="h-5 w-5 text-trustbond-accent" />
                 Your Loan Type Distribution
               </CardTitle>
               <CardDescription>
@@ -598,18 +613,18 @@ export const LoanAnalyticsDashboard: React.FC = () => {
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="count" fill="#3b82f6" />
+                    <Bar dataKey="count" fill="#10b981" />
                   </BarChart>
                 </ResponsiveContainer>
               )}
             </CardContent>
           </Card>
         </TabsContent>
-        <TabsContent value="trends" className="mt-6">
-          <Card>
+        <TabsContent value="trends" className="mt-4">
+          <Card className="shadow-sm border-l-4 border-l-trustbond-accent">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <TrendingUp className="h-5 w-5 text-trustbond-accent" />
                 Your Monthly Borrowing
               </CardTitle>
               <CardDescription>
@@ -634,7 +649,8 @@ export const LoanAnalyticsDashboard: React.FC = () => {
                     <Line 
                       type="monotone" 
                       dataKey="amount" 
-                      stroke="#8884d8" 
+                      stroke="#10b981" 
+                      strokeWidth={2}
                       activeDot={{ r: 8 }} 
                     />
                   </LineChart>

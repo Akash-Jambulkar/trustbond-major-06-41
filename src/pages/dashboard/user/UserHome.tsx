@@ -19,19 +19,23 @@ const UserHome = () => {
   const { getStatusIcon, getStatusText, getStatusDescription, needsAction } = useKYCStatusUI(kycStatus);
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Welcome, {user?.name || 'User'}</h1>
+    <div className="space-y-6 p-6 max-w-7xl mx-auto">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-gradient-to-r from-trustbond-primary/10 to-trustbond-secondary/5 p-6 rounded-xl">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-trustbond-dark">Welcome, {user?.name || 'User'}</h1>
+          <p className="text-gray-600 mt-1">Manage your personal loans, identity verification, and trust score.</p>
+        </div>
         <Button 
           onClick={() => navigate("/dashboard/user/loan-application")}
-          className="bg-trustbond-primary hover:bg-trustbond-primary/90"
+          className="bg-trustbond-primary hover:bg-trustbond-primary/90 shadow-sm whitespace-nowrap"
+          size="lg"
         >
           Apply for a Loan
         </Button>
       </div>
 
       {!isConnected && (
-        <Card className="bg-amber-50 border-amber-200">
+        <Card className="bg-amber-50 border-amber-200 shadow-sm">
           <CardContent className="pt-6">
             <div className="flex items-start space-x-4">
               <AlertTriangle className="mt-0.5 text-amber-600" />
@@ -47,7 +51,7 @@ const UserHome = () => {
       )}
 
       {error && (
-        <Card className="bg-red-50 border-red-200">
+        <Card className="bg-red-50 border-red-200 shadow-sm">
           <CardContent className="pt-6">
             <div className="flex items-start space-x-4">
               <AlertTriangle className="mt-0.5 text-red-600" />
@@ -62,23 +66,25 @@ const UserHome = () => {
         </Card>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
+      <h2 className="text-xl font-semibold mb-2 text-trustbond-dark">Your Financial Overview</h2>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <Card className="shadow-sm border-l-4 border-l-trustbond-primary h-auto">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">KYC Status</CardTitle>
+            <CardTitle className="text-base font-medium">KYC Status</CardTitle>
             {getStatusIcon()}
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-3xl font-bold mt-2">
               {getStatusText()}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm text-muted-foreground mt-2">
               {getStatusDescription()}
             </p>
             {needsAction && (
               <Button 
-                variant="link" 
-                className="p-0 h-auto mt-2 text-sm"
+                variant="outline"
+                size="sm"
+                className="mt-4"
                 onClick={() => navigate("/dashboard/user/kyc")}
               >
                 {kycStatus === 'pending' ? 'Check Status' : 'Complete KYC'}
@@ -86,47 +92,50 @@ const UserHome = () => {
             )}
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-sm border-l-4 border-l-trustbond-secondary h-auto">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Trust Score</CardTitle>
-            <Shield className="h-4 w-4 text-trustbond-primary" />
+            <CardTitle className="text-base font-medium">Trust Score</CardTitle>
+            <Shield className="h-5 w-5 text-trustbond-secondary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{trustScore}/100</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-3xl font-bold mt-2">{trustScore}/100</div>
+            <p className="text-sm text-muted-foreground mt-2">
               {trustScore > 80 ? 'Excellent' : trustScore > 60 ? 'Good' : 'Needs Improvement'}
             </p>
             <Button 
-              variant="link" 
-              className="p-0 h-auto mt-2 text-sm"
+              variant="outline"
+              size="sm"
+              className="mt-4"
               onClick={() => navigate("/dashboard/user/trust-score")}
             >
-              View Details
+              View Score Details
             </Button>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-sm border-l-4 border-l-trustbond-accent h-auto">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Loans</CardTitle>
-            <CreditCard className="h-4 w-4 text-trustbond-primary" />
+            <CardTitle className="text-base font-medium">Active Loans</CardTitle>
+            <CreditCard className="h-5 w-5 text-trustbond-accent" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{activeLoans}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-3xl font-bold mt-2">{activeLoans}</div>
+            <p className="text-sm text-muted-foreground mt-2">
               {activeLoans > 0 ? `${activeLoans} active loan${activeLoans > 1 ? 's' : ''}` : 'No active loans'}
             </p>
             <Button 
-              variant="link" 
-              className="p-0 h-auto mt-2 text-sm"
+              variant="outline"
+              size="sm"
+              className="mt-4"
               onClick={() => navigate("/dashboard/user/loans")}
             >
-              Manage Loans
+              Manage Your Loans
             </Button>
           </CardContent>
         </Card>
       </div>
 
-      <div className="mt-8">
+      <div className="mt-10">
+        <h2 className="text-xl font-semibold mb-4 text-trustbond-dark">Loan Analytics Dashboard</h2>
         <LoanAnalyticsDashboard />
       </div>
     </div>

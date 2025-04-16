@@ -39,31 +39,36 @@ export const DashboardHeader = ({ user, className }: DashboardHeaderProps) => {
 
   return (
     <header className={cn("border-b border-gray-200 bg-white", className)}>
-      <div className="flex h-16 items-center px-4 md:px-6">
+      <div className="flex h-14 items-center px-3 md:px-4 gap-2">
         {/* Mobile Sidebar Trigger */}
-        <div className="md:hidden mr-2">
+        <div className="md:hidden mr-1">
           <SidebarTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <Menu className="h-5 w-5" />
+            <Button variant="ghost" size="icon" className="h-9 w-9">
+              <Menu className="h-4 w-4" />
             </Button>
           </SidebarTrigger>
         </div>
         
-        <h1 className="text-lg font-semibold">{getRoleName(user?.role || 'user')}</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-base font-semibold text-trustbond-dark">{getRoleName(user?.role || 'user')}</h1>
+          <span className="hidden md:inline-block h-4 w-px bg-gray-300"></span>
+        </div>
         
-        <div className="hidden md:flex gap-4 ml-8">
+        <div className="hidden md:flex gap-1">
           {user.role === 'user' && (
             <>
               <Button 
                 variant="ghost" 
-                className="text-sm font-medium"
+                size="sm"
+                className="text-xs font-medium"
                 onClick={() => navigate('/dashboard/user/loan-application')}
               >
                 Apply for Loan
               </Button>
               <Button 
                 variant="ghost" 
-                className="text-sm font-medium"
+                size="sm"
+                className="text-xs font-medium"
                 onClick={() => navigate('/dashboard/user/kyc')}
               >
                 KYC Verification
@@ -75,14 +80,16 @@ export const DashboardHeader = ({ user, className }: DashboardHeaderProps) => {
             <>
               <Button 
                 variant="ghost" 
-                className="text-sm font-medium"
+                size="sm"
+                className="text-xs font-medium"
                 onClick={() => navigate('/dashboard/bank/verify-kyc')}
               >
                 Verify KYC
               </Button>
               <Button 
                 variant="ghost" 
-                className="text-sm font-medium"
+                size="sm"
+                className="text-xs font-medium"
                 onClick={() => navigate('/dashboard/bank/manage-loans')}
               >
                 Manage Loans
@@ -94,14 +101,16 @@ export const DashboardHeader = ({ user, className }: DashboardHeaderProps) => {
             <>
               <Button 
                 variant="ghost" 
-                className="text-sm font-medium"
+                size="sm"
+                className="text-xs font-medium"
                 onClick={() => navigate('/dashboard/admin/users')}
               >
                 Users
               </Button>
               <Button 
                 variant="ghost" 
-                className="text-sm font-medium"
+                size="sm"
+                className="text-xs font-medium"
                 onClick={() => navigate('/dashboard/admin/bank-approvals')}
               >
                 Bank Approvals
@@ -110,16 +119,16 @@ export const DashboardHeader = ({ user, className }: DashboardHeaderProps) => {
           )}
         </div>
 
-        <div className="ml-auto flex items-center gap-2">
-          <Button variant="ghost" size="icon">
-            <Search className="h-5 w-5" />
+        <div className="ml-auto flex items-center gap-1 md:gap-2">
+          <Button variant="ghost" size="icon" className="h-9 w-9">
+            <Search className="h-4 w-4" />
           </Button>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-trustbond-primary"></span>
+              <Button variant="ghost" size="icon" className="relative h-9 w-9">
+                <Bell className="h-4 w-4" />
+                <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-trustbond-primary"></span>
                 <span className="sr-only">Notifications</span>
               </Button>
             </DropdownMenuTrigger>
@@ -181,7 +190,7 @@ export const DashboardHeader = ({ user, className }: DashboardHeaderProps) => {
             </DropdownMenuContent>
           </DropdownMenu>
           
-          <WalletStatus />
+          <div className="hidden md:block"><WalletStatus /></div>
           <ModeToggle />
         </div>
       </div>
