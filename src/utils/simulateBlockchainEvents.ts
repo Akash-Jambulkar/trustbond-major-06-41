@@ -2,7 +2,7 @@
 import { RealTimeEventType, simulateBlockchainEvent } from './realTimeData';
 
 /**
- * Generate a random hash to simulate a blockchain transaction
+ * Generate a mock transaction hash
  */
 function randomHash() {
   return '0x' + Array.from({ length: 64 }, () => 
@@ -12,6 +12,7 @@ function randomHash() {
 
 /**
  * Simulate a random blockchain event
+ * Note: This is a development utility only and should not be used in production
  */
 export function simulateRandomBlockchainEvent() {
   const eventTypes = [
@@ -75,26 +76,25 @@ export function simulateRandomBlockchainEvent() {
       break;
   }
   
-  simulateBlockchainEvent(eventType, data);
+  // Only use in development, not in production
+  console.log(`Would have simulated ${eventType} event with data:`, data);
   
-  console.log(`Simulated ${eventType} event with data:`, data);
+  // Commented out the actual simulation to avoid fake data in production
+  // simulateBlockchainEvent(eventType, data);
   
   return { eventType, data };
 }
 
 /**
  * Start simulating blockchain events at regular intervals
+ * This function is for development purposes only
  */
 export function startSimulation(intervalMs = 10000) {
-  const interval = setInterval(() => {
-    simulateRandomBlockchainEvent();
-  }, intervalMs);
+  // In production, this should not generate events
+  console.log('Blockchain event simulation disabled in production.');
   
-  console.log(`Started blockchain event simulation at ${intervalMs}ms intervals`);
-  
-  // Return function to stop simulation
+  // Return function that does nothing since simulation is disabled
   return () => {
-    clearInterval(interval);
-    console.log('Stopped blockchain event simulation');
+    console.log('No simulation running to stop.');
   };
 }

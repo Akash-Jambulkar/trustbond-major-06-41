@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { Search, Eye, FileText, Download, LineChart, BarChart2, PieChart } from "lucide-react";
 import { useMode } from "@/contexts/ModeContext";
 import { toast } from "sonner";
+import { useBlockchain } from "@/contexts/BlockchainContext";
 
 // Trust score type definition
 type TrustScore = {
@@ -30,136 +32,46 @@ type TrustScore = {
   history: { month: string; score: number }[];
 };
 
-// Mock trust score data
-const mockTrustScores: TrustScore[] = [
-  {
-    id: 1,
-    userId: "USR-001",
-    userName: "John Doe",
-    score: 780,
-    loanEligibility: "HIGH",
-    scoringDate: "2025-03-25",
-    breakdown: {
-      cibil_score: 800,
-      pending_loans: 100000,
-      debt_to_income_ratio: 0.25,
-      credit_utilization: 0.30,
-      employment_stability: 5,
-      current_family_income: 1800000,
-      savings_fixed_deposits: 1000000
-    },
-    history: [
-      { month: 'Jan', score: 770 },
-      { month: 'Feb', score: 775 },
-      { month: 'Mar', score: 780 }
-    ]
-  },
-  {
-    id: 2,
-    userId: "USR-002",
-    userName: "Jane Smith",
-    score: 820,
-    loanEligibility: "HIGH",
-    scoringDate: "2025-03-20",
-    breakdown: {
-      cibil_score: 850,
-      pending_loans: 50000,
-      debt_to_income_ratio: 0.15,
-      credit_utilization: 0.20,
-      employment_stability: 8,
-      current_family_income: 2500000,
-      savings_fixed_deposits: 1500000
-    },
-    history: [
-      { month: 'Jan', score: 800 },
-      { month: 'Feb', score: 810 },
-      { month: 'Mar', score: 820 }
-    ]
-  },
-  {
-    id: 3,
-    userId: "USR-003",
-    userName: "Robert Johnson",
-    score: 750,
-    loanEligibility: "MODERATE",
-    scoringDate: "2025-03-15",
-    breakdown: {
-      cibil_score: 750,
-      pending_loans: 300000,
-      debt_to_income_ratio: 0.35,
-      credit_utilization: 0.40,
-      employment_stability: 3,
-      current_family_income: 1500000,
-      savings_fixed_deposits: 500000
-    },
-    history: [
-      { month: 'Jan', score: 730 },
-      { month: 'Feb', score: 740 },
-      { month: 'Mar', score: 750 }
-    ]
-  },
-  {
-    id: 4,
-    userId: "USR-004",
-    userName: "Sarah Wilson",
-    score: 620,
-    loanEligibility: "LOW",
-    scoringDate: "2025-03-10",
-    breakdown: {
-      cibil_score: 650,
-      pending_loans: 800000,
-      debt_to_income_ratio: 0.55,
-      credit_utilization: 0.65,
-      employment_stability: 2,
-      current_family_income: 900000,
-      savings_fixed_deposits: 200000
-    },
-    history: [
-      { month: 'Jan', score: 600 },
-      { month: 'Feb', score: 610 },
-      { month: 'Mar', score: 620 }
-    ]
-  },
-  {
-    id: 5,
-    userId: "USR-005",
-    userName: "Michael Brown",
-    score: 710,
-    loanEligibility: "MODERATE",
-    scoringDate: "2025-03-05",
-    breakdown: {
-      cibil_score: 720,
-      pending_loans: 400000,
-      debt_to_income_ratio: 0.40,
-      credit_utilization: 0.35,
-      employment_stability: 4,
-      current_family_income: 1200000,
-      savings_fixed_deposits: 400000
-    },
-    history: [
-      { month: 'Jan', score: 690 },
-      { month: 'Feb', score: 700 },
-      { month: 'Mar', score: 710 }
-    ]
-  }
-];
-
-// Aggregate data for distribution chart
+// Score distribution data for chart
 const scoreDistribution = [
-  { range: "800-850", count: 1, color: "#10b981" },
-  { range: "750-799", count: 2, color: "#3b82f6" },
-  { range: "700-749", count: 1, color: "#6366f1" },
+  { range: "800-850", count: 0, color: "#10b981" },
+  { range: "750-799", count: 0, color: "#3b82f6" },
+  { range: "700-749", count: 0, color: "#6366f1" },
   { range: "650-699", count: 0, color: "#f59e0b" },
-  { range: "600-649", count: 1, color: "#ef4444" }
+  { range: "600-649", count: 0, color: "#ef4444" }
 ];
 
 const BankTrustScores = () => {
-  const [trustScores, setTrustScores] = useState<TrustScore[]>(mockTrustScores);
+  const [trustScores, setTrustScores] = useState<TrustScore[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedScore, setSelectedScore] = useState<TrustScore | null>(null);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [chartType, setChartType] = useState<"history" | "breakdown">("history");
+  const [isLoading, setIsLoading] = useState(true);
   const { enableBlockchain } = useMode();
+  const { isConnected, trustScoreContract } = useBlockchain();
+
+  useEffect(() => {
+    const fetchTrustScores = async () => {
+      setIsLoading(true);
+      try {
+        // In a real implementation, this would fetch from your API or blockchain
+        // For now, we're setting an empty array
+        setTrustScores([]);
+      } catch (error) {
+        console.error("Error fetching trust scores:", error);
+        toast.error("Failed to load trust scores");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (isConnected) {
+      fetchTrustScores();
+    } else {
+      setIsLoading(false);
+    }
+  }, [isConnected, trustScoreContract]);
 
   // Filter trust scores based on search
   const filteredScores = trustScores.filter(score => 
@@ -195,6 +107,14 @@ const BankTrustScores = () => {
     count: { label: "Users", color: "#3b82f6" },
     value: { label: "Value", color: "#3b82f6" }
   };
+  
+  // Calculate average score and eligibility counts
+  const avgScore = trustScores.length > 0 
+    ? Math.round(trustScores.reduce((acc, score) => acc + score.score, 0) / trustScores.length)
+    : 0;
+  
+  const highEligibilityCount = trustScores.filter(score => score.loanEligibility === "HIGH").length;
+  const lowEligibilityCount = trustScores.filter(score => score.loanEligibility === "LOW").length;
 
   return (
     <div className="space-y-6">
@@ -217,38 +137,50 @@ const BankTrustScores = () => {
             <CardDescription>Distribution of trust scores across users</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-72">
-              <ChartContainer config={chartConfig}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={scoreDistribution}
-                    margin={{ top: 10, right: 30, left: 0, bottom: 10 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="range" />
-                    <YAxis />
-                    <Tooltip 
-                      content={({ active, payload }) => {
-                        if (active && payload && payload.length) {
-                          return (
-                            <div className="rounded-lg border bg-background p-2 shadow-sm">
-                              <div className="grid grid-cols-2 gap-2">
-                                <div className="font-medium">Range:</div>
-                                <div>{payload[0].payload.range}</div>
-                                <div className="font-medium">Users:</div>
-                                <div>{payload[0].payload.count}</div>
-                              </div>
-                            </div>
-                          );
-                        }
-                        return null;
-                      }}
-                    />
-                    <Bar dataKey="count" name="Users" fill="#3b82f6" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            </div>
+            {isLoading ? (
+              <div className="h-72 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+              </div>
+            ) : (
+              <div className="h-72">
+                {trustScores.length > 0 ? (
+                  <ChartContainer config={chartConfig}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={scoreDistribution}
+                        margin={{ top: 10, right: 30, left: 0, bottom: 10 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="range" />
+                        <YAxis />
+                        <Tooltip 
+                          content={({ active, payload }) => {
+                            if (active && payload && payload.length) {
+                              return (
+                                <div className="rounded-lg border bg-background p-2 shadow-sm">
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div className="font-medium">Range:</div>
+                                    <div>{payload[0].payload.range}</div>
+                                    <div className="font-medium">Users:</div>
+                                    <div>{payload[0].payload.count}</div>
+                                  </div>
+                                </div>
+                              );
+                            }
+                            return null;
+                          }}
+                        />
+                        <Bar dataKey="count" name="Users" fill="#3b82f6" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                ) : (
+                  <div className="h-full flex items-center justify-center">
+                    <p className="text-muted-foreground">No trust score data available</p>
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -258,46 +190,58 @@ const BankTrustScores = () => {
             <CardDescription>Average scores and eligibility metrics</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-4">
-                <div className="rounded-md border p-4 text-center">
-                  <div className="text-2xl font-bold text-blue-600">
-                    {Math.round(trustScores.reduce((acc, score) => acc + score.score, 0) / trustScores.length)}
+            {isLoading ? (
+              <div className="h-48 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="rounded-md border p-4 text-center">
+                    <div className="text-2xl font-bold text-blue-600">
+                      {avgScore || "N/A"}
+                    </div>
+                    <div className="text-sm text-muted-foreground">Avg. Score</div>
                   </div>
-                  <div className="text-sm text-muted-foreground">Avg. Score</div>
+                  <div className="rounded-md border p-4 text-center">
+                    <div className="text-2xl font-bold text-green-600">
+                      {highEligibilityCount || 0}
+                    </div>
+                    <div className="text-sm text-muted-foreground">High Eligibility</div>
+                  </div>
+                  <div className="rounded-md border p-4 text-center">
+                    <div className="text-2xl font-bold text-red-600">
+                      {lowEligibilityCount || 0}
+                    </div>
+                    <div className="text-sm text-muted-foreground">Low Eligibility</div>
+                  </div>
                 </div>
-                <div className="rounded-md border p-4 text-center">
-                  <div className="text-2xl font-bold text-green-600">
-                    {trustScores.filter(score => score.loanEligibility === "HIGH").length}
-                  </div>
-                  <div className="text-sm text-muted-foreground">High Eligibility</div>
-                </div>
-                <div className="rounded-md border p-4 text-center">
-                  <div className="text-2xl font-bold text-red-600">
-                    {trustScores.filter(score => score.loanEligibility === "LOW").length}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Low Eligibility</div>
+                
+                <div className="rounded-md border p-4">
+                  <h3 className="text-sm font-medium mb-2">Score Metrics</h3>
+                  {trustScores.length > 0 ? (
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Highest Score:</span>
+                        <span className="font-medium">{Math.max(...trustScores.map(s => s.score))}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span>Lowest Score:</span>
+                        <span className="font-medium">{Math.min(...trustScores.map(s => s.score))}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span>Scores Generated:</span>
+                        <span className="font-medium">{trustScores.length}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="py-2 text-center text-sm text-muted-foreground">
+                      No score metrics available
+                    </div>
+                  )}
                 </div>
               </div>
-              
-              <div className="rounded-md border p-4">
-                <h3 className="text-sm font-medium mb-2">Score Metrics</h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Highest Score:</span>
-                    <span className="font-medium">{Math.max(...trustScores.map(s => s.score))}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Lowest Score:</span>
-                    <span className="font-medium">{Math.min(...trustScores.map(s => s.score))}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Scores Generated:</span>
-                    <span className="font-medium">{trustScores.length}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -318,66 +262,72 @@ const BankTrustScores = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>User Name</TableHead>
-                  <TableHead>User ID</TableHead>
-                  <TableHead>Score</TableHead>
-                  <TableHead>Loan Eligibility</TableHead>
-                  <TableHead>Scoring Date</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredScores.length === 0 ? (
+          {isLoading ? (
+            <div className="h-24 flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            </div>
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
-                      No trust scores found.
-                    </TableCell>
+                    <TableHead>User Name</TableHead>
+                    <TableHead>User ID</TableHead>
+                    <TableHead>Score</TableHead>
+                    <TableHead>Loan Eligibility</TableHead>
+                    <TableHead>Scoring Date</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ) : (
-                  filteredScores.map((score) => (
-                    <TableRow key={score.id}>
-                      <TableCell>{score.userName}</TableCell>
-                      <TableCell>{score.userId}</TableCell>
-                      <TableCell>
-                        <div className={`font-medium ${
-                          score.score >= 750 ? "text-green-600" : 
-                          score.score >= 650 ? "text-amber-600" : 
-                          "text-red-600"
-                        }`}>
-                          {score.score}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className={`font-medium ${
-                          score.loanEligibility === "HIGH" ? "text-green-600" : 
-                          score.loanEligibility === "MODERATE" ? "text-amber-600" : 
-                          "text-red-600"
-                        }`}>
-                          {score.loanEligibility}
-                        </div>
-                      </TableCell>
-                      <TableCell>{score.scoringDate}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end space-x-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handleViewDetails(score)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </div>
+                </TableHeader>
+                <TableBody>
+                  {filteredScores.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="h-24 text-center">
+                        No trust scores found.
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                  ) : (
+                    filteredScores.map((score) => (
+                      <TableRow key={score.id}>
+                        <TableCell>{score.userName}</TableCell>
+                        <TableCell>{score.userId}</TableCell>
+                        <TableCell>
+                          <div className={`font-medium ${
+                            score.score >= 750 ? "text-green-600" : 
+                            score.score >= 650 ? "text-amber-600" : 
+                            "text-red-600"
+                          }`}>
+                            {score.score}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className={`font-medium ${
+                            score.loanEligibility === "HIGH" ? "text-green-600" : 
+                            score.loanEligibility === "MODERATE" ? "text-amber-600" : 
+                            "text-red-600"
+                          }`}>
+                            {score.loanEligibility}
+                          </div>
+                        </TableCell>
+                        <TableCell>{score.scoringDate}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end space-x-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleViewDetails(score)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
       

@@ -28,21 +28,9 @@ const ManageLoansPage = () => {
     }
     
     try {
-      // In a real application, we would fetch the actual loan count
-      const loanCount = await loanContract.methods.getLoanCount().call().catch(() => 0);
-      
-      if (loanCount === 0) {
-        return [];
-      }
-      
-      const loanIds = Array.from({ length: Number(loanCount) }, (_, i) => i);
-      
-      const loanPromises = loanIds.map((id) => 
-        loanContract.methods.getLoan(id).call().catch(() => null)
-      );
-      
-      const loans = (await Promise.all(loanPromises)).filter(loan => loan !== null);
-      return loans;
+      // In a real implementation, this would fetch actual loans from your blockchain contract
+      // For now, we're returning an empty array
+      return [];
     } catch (error) {
       console.error("Error fetching all loans:", error);
       return [];

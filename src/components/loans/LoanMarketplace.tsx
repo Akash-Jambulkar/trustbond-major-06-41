@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -32,25 +32,29 @@ export const LoanMarketplace: React.FC<LoanMarketplaceProps> = ({
   walletAddress,
   trustScore,
 }) => {
-  // In a real implementation, this would come from the blockchain
-  const [availableLoans] = useState<Loan[]>([
-    {
-      id: 1,
-      amount: "5.0",
-      term: 30,
-      interestRate: 5.5,
-      status: "available",
-      createdAt: "2025-04-14",
-    },
-    {
-      id: 2,
-      amount: "10.0",
-      term: 60,
-      interestRate: 6.0,
-      status: "available",
-      createdAt: "2025-04-13",
-    },
-  ]);
+  const [availableLoans, setAvailableLoans] = useState<Loan[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchLoans = async () => {
+      setIsLoading(true);
+      try {
+        // In a real implementation, fetch from the blockchain or API
+        // For now, we're setting an empty array
+        setAvailableLoans([]);
+      } catch (error) {
+        console.error("Error fetching available loans:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (isConnected) {
+      fetchLoans();
+    } else {
+      setIsLoading(false);
+    }
+  }, [isConnected]);
 
   const handleFundLoan = async (loanId: number) => {
     if (!isConnected) {
@@ -95,52 +99,63 @@ export const LoanMarketplace: React.FC<LoanMarketplaceProps> = ({
         </Card>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2">
-        {availableLoans.map((loan) => (
-          <Card key={loan.id}>
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle>{loan.amount} ETH</CardTitle>
-                  <CardDescription>Loan #{loan.id}</CardDescription>
-                </div>
-                <Badge variant="outline" className="bg-green-50 text-green-700">
-                  Available
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500 flex items-center gap-1">
-                    <Clock className="h-4 w-4" /> Term
-                  </span>
-                  <span className="font-medium">{loan.term} days</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500">Interest Rate</span>
-                  <span className="font-medium">{loan.interestRate}%</span>
-                </div>
-                <div className="pt-4">
-                  <Button
-                    onClick={() => handleFundLoan(loan.id)}
-                    disabled={!isConnected || !trustScore || trustScore < 50}
-                    className="w-full"
-                  >
-                    <Wallet className="h-4 w-4 mr-2" />
-                    Fund Loan
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {availableLoans.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
-          No loans are currently available in the marketplace.
+      {isLoading ? (
+        <div className="flex justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-trustbond-primary"></div>
         </div>
+      ) : (
+        <>
+          {availableLoans.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              {availableLoans.map((loan) => (
+                <Card key={loan.id}>
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <CardTitle>{loan.amount} ETH</CardTitle>
+                        <CardDescription>Loan #{loan.id}</CardDescription>
+                      </div>
+                      <Badge variant="outline" className="bg-green-50 text-green-700">
+                        Available
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-500 flex items-center gap-1">
+                          <Clock className="h-4 w-4" /> Term
+                        </span>
+                        <span className="font-medium">{loan.term} days</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-500">Interest Rate</span>
+                        <span className="font-medium">{loan.interestRate}%</span>
+                      </div>
+                      <div className="pt-4">
+                        <Button
+                          onClick={() => handleFundLoan(loan.id)}
+                          disabled={!isConnected || !trustScore || trustScore < 50}
+                          className="w-full"
+                        >
+                          <Wallet className="h-4 w-4 mr-2" />
+                          Fund Loan
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="text-center py-12 text-gray-500">
+                <p className="mb-2">No loans are currently available in the marketplace.</p>
+                <p className="text-sm">Check back later or create a loan application yourself.</p>
+              </CardContent>
+            </Card>
+          )}
+        </>
       )}
     </div>
   );

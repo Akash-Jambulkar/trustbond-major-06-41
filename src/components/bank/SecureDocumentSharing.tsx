@@ -11,6 +11,8 @@ import { AlertCircle, ChevronRight, FileText, Lock, Share2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useBlockchain } from "@/contexts/BlockchainContext";
+import { useEffect } from "react";
 
 interface Document {
   id: string;
@@ -35,60 +37,31 @@ export function SecureDocumentSharing() {
   const [expiryDays, setExpiryDays] = useState("7");
   const [allowDownload, setAllowDownload] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [banks, setBanks] = useState<Bank[]>([]);
+  const [sharedDocuments, setSharedDocuments] = useState<any[]>([]);
+  const { isConnected } = useBlockchain();
+  
+  // Effect to fetch verified documents
+  useEffect(() => {
+    // In a real implementation, this would fetch from your API or blockchain
+    // Leaving documents empty for now
+    setDocuments([]);
+  }, []);
 
-  // Sample data - in a real app this would come from your API
-  const documents: Document[] = [
-    {
-      id: "doc-1",
-      name: "Passport Verification",
-      type: "passport",
-      user: "John Doe",
-      date: "2023-05-15",
-      status: "verified"
-    },
-    {
-      id: "doc-2",
-      name: "Address Proof",
-      type: "address",
-      user: "Jane Smith",
-      date: "2023-06-21",
-      status: "verified"
-    },
-    {
-      id: "doc-3",
-      name: "Income Statement",
-      type: "income",
-      user: "Alex Johnson",
-      date: "2023-07-03",
-      status: "verified"
-    }
-  ];
+  // Effect to fetch verified banks
+  useEffect(() => {
+    // In a real implementation, this would fetch from your API or blockchain
+    // Leaving banks empty for now
+    setBanks([]); 
+  }, []);
 
-  const banks: Bank[] = [
-    { id: "bank-1", name: "First National Bank", address: "0x1234...5678", verified: true },
-    { id: "bank-2", name: "City Trust Bank", address: "0xabcd...ef01", verified: true },
-    { id: "bank-3", name: "Heritage Banking Corp", address: "0x9876...5432", verified: false }
-  ];
-
-  // Shared documents data
-  const sharedDocuments = [
-    { 
-      id: "share-1", 
-      documentName: "Passport Verification", 
-      sharedWith: "First National Bank", 
-      sharedOn: "2023-08-15", 
-      expires: "2023-08-22", 
-      status: "active" 
-    },
-    { 
-      id: "share-2", 
-      documentName: "Address Proof", 
-      sharedWith: "City Trust Bank", 
-      sharedOn: "2023-08-10", 
-      expires: "2023-08-17", 
-      status: "expired" 
-    }
-  ];
+  // Effect to fetch shared documents
+  useEffect(() => {
+    // In a real implementation, this would fetch from your API or blockchain
+    // Leaving shared documents empty for now
+    setSharedDocuments([]);
+  }, []);
 
   const handleShare = async () => {
     if (!selectedDocument || !selectedBank) {
@@ -189,6 +162,11 @@ export function SecureDocumentSharing() {
                           {doc.name} - {doc.user}
                         </SelectItem>
                       ))}
+                    {documents.filter(doc => doc.status === "verified").length === 0 && (
+                      <SelectItem value="no-docs" disabled>
+                        No verified documents available
+                      </SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -205,6 +183,11 @@ export function SecureDocumentSharing() {
                         {bank.name} {!bank.verified && "(Not Verified)"}
                       </SelectItem>
                     ))}
+                    {banks.length === 0 && (
+                      <SelectItem value="no-banks" disabled>
+                        No verified banks available
+                      </SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
                 <p className="text-sm text-muted-foreground">
@@ -254,7 +237,7 @@ export function SecureDocumentSharing() {
               <Button 
                 className="w-full" 
                 onClick={handleShare}
-                disabled={!selectedDocument || !selectedBank || isSubmitting}
+                disabled={!selectedDocument || !selectedBank || isSubmitting || !isConnected}
               >
                 {isSubmitting ? "Processing..." : "Share Document Securely"}
               </Button>
