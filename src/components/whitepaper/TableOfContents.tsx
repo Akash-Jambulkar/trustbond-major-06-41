@@ -25,7 +25,10 @@ const TableOfContents: React.FC<TableOfContentsProps> = ({
               className={`${activeSection === section.id 
                 ? "text-trustbond-primary font-medium"
                 : "text-trustbond-dark hover:text-trustbond-primary"}`}
-              onClick={() => onSectionChange(section.id, index + 1)}
+              onClick={(e) => {
+                e.preventDefault();
+                onSectionChange(section.id, index + 1);
+              }}
             >
               {section.name}
             </a>

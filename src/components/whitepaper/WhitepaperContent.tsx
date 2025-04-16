@@ -22,6 +22,8 @@ const WhitepaperContent = () => {
       <ResultsSection />
       <ConclusionSection />
       <TeamSection />
+      
+      {/* References section would go here if needed */}
     </div>
   );
 };
