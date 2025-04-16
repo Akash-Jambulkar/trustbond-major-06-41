@@ -25,12 +25,12 @@ const Index = () => {
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Link to="/register">
-                <Button size="lg" className="bg-trustbond-primary hover:bg-trustbond-primary/90 text-white">
+                <Button size="lg" className="bg-trustbond-primary hover:bg-trustbond-primary/90 text-white cursor-pointer">
                   Get Started
                 </Button>
               </Link>
               <Link to="/whitepaper">
-                <Button size="lg" variant="outline">
+                <Button size="lg" variant="outline" className="cursor-pointer">
                   Read Whitepaper
                 </Button>
               </Link>

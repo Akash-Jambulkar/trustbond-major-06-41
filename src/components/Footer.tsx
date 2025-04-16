@@ -8,7 +8,7 @@ const Footer = () => {
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <Link to="/" className="flex items-center space-x-2 mb-4">
+            <Link to="/" className="flex items-center space-x-2 mb-4 cursor-pointer">
               <div className="w-10 h-10 rounded-full bg-gradient-to-r from-trustbond-primary to-trustbond-secondary flex items-center justify-center">
                 <span className="text-white font-bold">TB</span>
               </div>
@@ -36,17 +36,17 @@ const Footer = () => {
               <li><Link to="/about" className="text-gray-400 hover:text-white cursor-pointer">About</Link></li>
               <li><Link to="/whitepaper" className="text-gray-400 hover:text-white cursor-pointer">Whitepaper</Link></li>
               <li><Link to="/contact" className="text-gray-400 hover:text-white cursor-pointer">Contact</Link></li>
-              <li><a href="#" className="text-gray-400 hover:text-white cursor-pointer">API Documentation</a></li>
+              <li><Link to="/register" className="text-gray-400 hover:text-white cursor-pointer">API Documentation</Link></li>
             </ul>
           </div>
           
           <div>
             <h3 className="font-semibold text-lg mb-4">Resources</h3>
             <ul className="space-y-2">
-              <li><a href="#" className="text-gray-400 hover:text-white cursor-pointer">Documentation</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white cursor-pointer">Developer Guide</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white cursor-pointer">Blog</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white cursor-pointer">FAQ</a></li>
+              <li><Link to="/whitepaper" className="text-gray-400 hover:text-white cursor-pointer">Documentation</Link></li>
+              <li><Link to="/about" className="text-gray-400 hover:text-white cursor-pointer">Developer Guide</Link></li>
+              <li><Link to="/about" className="text-gray-400 hover:text-white cursor-pointer">Blog</Link></li>
+              <li><Link to="/contact" className="text-gray-400 hover:text-white cursor-pointer">FAQ</Link></li>
             </ul>
           </div>
           
@@ -56,7 +56,7 @@ const Footer = () => {
               <li className="text-gray-400">info@trustbond.com</li>
               <li className="text-gray-400">+1 (555) 123-4567</li>
               <li><Link to="/contact" className="text-gray-400 hover:text-white cursor-pointer">Contact Form</Link></li>
-              <li><a href="#" className="text-gray-400 hover:text-white cursor-pointer">Support</a></li>
+              <li><Link to="/contact" className="text-gray-400 hover:text-white cursor-pointer">Support</Link></li>
             </ul>
           </div>
         </div>
@@ -64,9 +64,9 @@ const Footer = () => {
         <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-400 text-sm">© 2025 TrustBond. All rights reserved.</p>
           <div className="flex space-x-6 mt-4 md:mt-0">
-            <a href="#" className="text-sm text-gray-400 hover:text-white cursor-pointer">Privacy Policy</a>
-            <a href="#" className="text-sm text-gray-400 hover:text-white cursor-pointer">Terms of Service</a>
-            <a href="#" className="text-sm text-gray-400 hover:text-white cursor-pointer">Cookie Policy</a>
+            <Link to="/privacy" className="text-sm text-gray-400 hover:text-white cursor-pointer">Privacy Policy</Link>
+            <Link to="/terms" className="text-sm text-gray-400 hover:text-white cursor-pointer">Terms of Service</Link>
+            <Link to="/cookies" className="text-sm text-gray-400 hover:text-white cursor-pointer">Cookie Policy</Link>
           </div>
         </div>
       </div>
