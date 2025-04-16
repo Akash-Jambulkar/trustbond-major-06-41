@@ -12,8 +12,7 @@ const ContactInfo = () => {
           </div>
           <div>
             <h3 className="text-lg font-semibold text-trustbond-dark">Email</h3>
-            <p className="text-gray-700">info@trustbond.com</p>
-            <p className="text-gray-700">support@trustbond.com</p>
+            <p className="text-gray-700">infoTrustbond@trustbond.com</p>
           </div>
         </div>
         <div className="flex items-start gap-4">
@@ -22,8 +21,7 @@ const ContactInfo = () => {
           </div>
           <div>
             <h3 className="text-lg font-semibold text-trustbond-dark">Phone</h3>
-            <p className="text-gray-700">+1 (123) 456-7890</p>
-            <p className="text-gray-700">+1 (987) 654-3210</p>
+            <p className="text-gray-700">+91 9854742954</p>
           </div>
         </div>
         <div className="flex items-start gap-4">

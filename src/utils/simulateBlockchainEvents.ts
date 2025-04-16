@@ -15,74 +15,14 @@ function randomHash() {
  * Note: This is a development utility only and should not be used in production
  */
 export function simulateRandomBlockchainEvent() {
-  const eventTypes = [
-    RealTimeEventType.KYC_UPDATED,
-    RealTimeEventType.TRUST_SCORE_UPDATED,
-    RealTimeEventType.LOAN_UPDATED,
-    RealTimeEventType.TRANSACTION_UPDATED
-  ];
+  // In production, this should not generate events
+  console.log('Blockchain event simulation disabled in production mode.');
   
-  const eventType = eventTypes[Math.floor(Math.random() * eventTypes.length)];
-  
-  let data: any = {};
-  
-  switch (eventType) {
-    case RealTimeEventType.KYC_UPDATED:
-      data = {
-        user_id: '0x' + Math.random().toString(16).substring(2, 42),
-        document_type: ['National ID', 'Passport', 'Driving License'][Math.floor(Math.random() * 3)],
-        verification_status: ['pending', 'verified', 'rejected'][Math.floor(Math.random() * 3)],
-        submitted_at: new Date().toISOString(),
-        document_hash: randomHash()
-      };
-      break;
-      
-    case RealTimeEventType.TRUST_SCORE_UPDATED:
-      data = {
-        user_address: '0x' + Math.random().toString(16).substring(2, 42),
-        score: Math.floor(Math.random() * 100),
-        change: Math.floor(Math.random() * 10),
-        previous_score: Math.floor(Math.random() * 100),
-        timestamp: Date.now()
-      };
-      break;
-      
-    case RealTimeEventType.LOAN_UPDATED:
-      data = {
-        id: Math.floor(Math.random() * 1000).toString(),
-        borrower_address: '0x' + Math.random().toString(16).substring(2, 42),
-        amount: (Math.random() * 10).toFixed(2),
-        status: ['pending', 'approved', 'active', 'repaid', 'defaulted'][Math.floor(Math.random() * 5)],
-        term: 12,
-        interest_rate: (Math.random() * 10).toFixed(2),
-        timestamp: Date.now()
-      };
-      break;
-      
-    case RealTimeEventType.TRANSACTION_UPDATED:
-      const txTypes = ['kyc', 'loan', 'verification', 'registration', 'other'];
-      const txType = txTypes[Math.floor(Math.random() * txTypes.length)];
-      
-      data = {
-        hash: randomHash(),
-        from_address: '0x' + Math.random().toString(16).substring(2, 42),
-        to_address: '0x' + Math.random().toString(16).substring(2, 42),
-        type: txType,
-        status: ['pending', 'confirmed', 'failed'][Math.floor(Math.random() * 3)],
-        timestamp: Date.now(),
-        description: `${txType.charAt(0).toUpperCase() + txType.slice(1)} Transaction`,
-        network: '1'
-      };
-      break;
-  }
-  
-  // Disable simulation in production environment
-  console.log(`Simulation disabled: Would have simulated ${eventType} event with data:`, data);
-  
-  // Do not actually simulate events in production
-  // simulateBlockchainEvent(eventType, data);
-  
-  return { eventType, data };
+  // Return a placeholder with no real data
+  return { 
+    eventType: RealTimeEventType.TRANSACTION_UPDATED, 
+    data: {} 
+  };
 }
 
 /**
@@ -91,7 +31,7 @@ export function simulateRandomBlockchainEvent() {
  */
 export function startSimulation(intervalMs = 10000) {
   // In production, this should not generate events
-  console.log('Blockchain event simulation disabled in production.');
+  console.log('Blockchain event simulation disabled in production mode.');
   
   // Return function that does nothing since simulation is disabled
   return () => {

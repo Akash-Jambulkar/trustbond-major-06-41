@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -26,16 +25,35 @@ const Index = () => {
       }
     };
 
-    // Random stats for demonstration
     setStats({
-      users: Math.floor(100 + Math.random() * 900).toString(),
-      banks: Math.floor(5 + Math.random() * 20).toString(),
-      transactions: Math.floor(1000 + Math.random() * 9000).toString(),
-      loans: Math.floor(50 + Math.random() * 500).toString()
+      users: '0',
+      banks: '0',
+      transactions: '0',
+      loans: '0'
     });
 
+    const fetchStats = async () => {
+      if (isConnected) {
+        try {
+          const { count: userCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
+          const { count: bankCount } = await supabase.from('banks').select('*', { count: 'exact', head: true });
+          const { count: transactionCount } = await supabase.from('transactions').select('*', { count: 'exact', head: true });
+          const { count: loanCount } = await supabase.from('loans').select('*', { count: 'exact', head: true });
+          
+          setStats({
+            users: userCount?.toString() || '0',
+            banks: bankCount?.toString() || '0', 
+            transactions: transactionCount?.toString() || '0',
+            loans: loanCount?.toString() || '0'
+          });
+        } catch (error) {
+          console.error('Error fetching stats:', error);
+        }
+      }
+    };
+
     checkConnection();
-  }, []);
+  }, [isConnected]);
 
   return (
     <div className="flex flex-col min-h-screen">

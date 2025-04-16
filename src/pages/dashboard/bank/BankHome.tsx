@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { LoanAnalyticsDashboard } from "@/components/analytics/LoanAnalyticsDashboard";
 import { getDocumentsNeedingConsensus } from "@/utils/consensusVerifier";
+import { supabase } from "@/lib/supabase";
 
 const BankHome = () => {
   const { user } = useAuth();
@@ -40,23 +41,51 @@ const BankHome = () => {
         const documents = await getDocumentsNeedingConsensus();
         setConsensusRequests(documents.length);
         
-        // Fetch KYC verifications (in real app would call API)
-        setPendingVerifications(0);
-        
-        // Get active loans from contract if available
-        if (loanContract) {
-          try {
-            const loanCount = await loanContract.methods.getLoanCount().call().catch(() => 0);
-            const activeLoanCount = await loanContract.methods.getActiveLoanCount().call().catch(() => 0);
-            setActiveLoans(Number(activeLoanCount));
-          } catch (error) {
-            console.error("Error fetching loan data:", error);
-            setActiveLoans(0);
-          }
+        // Fetch KYC verifications from database
+        try {
+          const { count } = await supabase
+            .from('kyc_verifications')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'pending');
+          setPendingVerifications(count || 0);
+        } catch (error) {
+          console.error("Error fetching KYC verifications:", error);
+          setPendingVerifications(0);
         }
         
-        // Verification rate would come from API in real app
-        setVerificationRate(0);
+        // Get active loans from database
+        try {
+          const { count } = await supabase
+            .from('loans')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'active');
+          setActiveLoans(count || 0);
+        } catch (error) {
+          console.error("Error fetching loan data:", error);
+          setActiveLoans(0);
+        }
+        
+        // Calculate verification rate
+        try {
+          const { count: totalCount } = await supabase
+            .from('kyc_verifications')
+            .select('*', { count: 'exact', head: true });
+          
+          const { count: verifiedCount } = await supabase
+            .from('kyc_verifications')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'verified');
+          
+          if (totalCount && totalCount > 0) {
+            setVerificationRate(Math.round((verifiedCount || 0) / totalCount * 100));
+          } else {
+            setVerificationRate(0);
+          }
+        } catch (error) {
+          console.error("Error calculating verification rate:", error);
+          setVerificationRate(0);
+        }
+        
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {

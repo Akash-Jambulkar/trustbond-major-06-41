@@ -98,9 +98,10 @@ const UserHome = () => {
             <Shield className="h-5 w-5 text-trustbond-secondary" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold mt-2">{trustScore}/100</div>
+            <div className="text-3xl font-bold mt-2">{isLoading ? "Loading..." : trustScore ? `${trustScore}/100` : "Not available"}</div>
             <p className="text-sm text-muted-foreground mt-2">
-              {trustScore > 80 ? 'Excellent' : trustScore > 60 ? 'Good' : 'Needs Improvement'}
+              {!trustScore ? 'Complete KYC to generate your trust score' : 
+                trustScore > 80 ? 'Excellent' : trustScore > 60 ? 'Good' : 'Needs Improvement'}
             </p>
             <Button 
               variant="outline"
@@ -118,7 +119,7 @@ const UserHome = () => {
             <CreditCard className="h-5 w-5 text-trustbond-accent" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold mt-2">{activeLoans}</div>
+            <div className="text-3xl font-bold mt-2">{isLoading ? "Loading..." : activeLoans}</div>
             <p className="text-sm text-muted-foreground mt-2">
               {activeLoans > 0 ? `${activeLoans} active loan${activeLoans > 1 ? 's' : ''}` : 'No active loans'}
             </p>
