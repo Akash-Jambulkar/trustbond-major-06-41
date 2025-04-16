@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 export const SidebarNav = ({ user, onLogout }: { user: any; onLogout: () => void }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   const userLinks = [
     { href: "/dashboard/user", label: "Dashboard", icon: Home },
     { href: "/dashboard/user/kyc", label: "KYC Verification", icon: CheckSquare },

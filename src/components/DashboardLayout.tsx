@@ -16,7 +16,7 @@ interface DashboardLayoutProps {
 }
 
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
 
   // Use real-time updates hook
@@ -36,7 +36,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       <div className="flex h-screen w-full bg-gray-50">
         {/* Main Sidebar */}
         <Sidebar className="border-r border-gray-200">
-          <SidebarNav user={user} onLogout={() => {}} />
+          <SidebarNav user={user} onLogout={logout} />
         </Sidebar>
 
         {/* Main content */}

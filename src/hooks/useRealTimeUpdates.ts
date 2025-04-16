@@ -11,12 +11,12 @@ export const useRealTimeUpdates = () => {
   useEffect(() => {
     if (!isConnected || !account) return;
 
-    // Subscribe to various blockchain events
+    // Subscribe to blockchain events
     const unsubscribeKYC = subscribeToEvent(RealTimeEventType.KYC_UPDATED, (data) => {
       if (data.status === 'verified') {
-        toast.success('Your KYC verification has been approved!');
+        toast.success('Your KYC verification has been approved');
       } else if (data.status === 'rejected') {
-        toast.error('Your KYC verification was not approved. Please check your documents.');
+        toast.error('Your KYC verification was not approved');
       }
     });
 
@@ -26,9 +26,9 @@ export const useRealTimeUpdates = () => {
 
     const unsubscribeLoan = subscribeToEvent(RealTimeEventType.LOAN_UPDATED, (data) => {
       if (data.status === 'approved') {
-        toast.success('Your loan application has been approved!');
+        toast.success('Your loan application has been approved');
       } else if (data.status === 'rejected') {
-        toast.error('Your loan application was not approved.');
+        toast.error('Your loan application was not approved');
       }
     });
 
