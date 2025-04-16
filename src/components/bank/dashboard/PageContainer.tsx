@@ -7,7 +7,7 @@ interface PageContainerProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export function PageContainer({ children, className, ...props }: PageContainerProps) {
   return (
-    <div className={cn("flex-1 overflow-auto", className)} {...props}>
+    <div className={cn("flex-1 overflow-auto w-full", className)} {...props}>
       {children}
     </div>
   );

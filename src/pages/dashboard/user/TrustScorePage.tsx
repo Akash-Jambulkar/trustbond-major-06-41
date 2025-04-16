@@ -117,8 +117,8 @@ export default function TrustScorePage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
+    <div className="p-4 md:p-6 max-w-full">
+      <div className="mb-6">
         <h1 className="text-2xl font-bold tracking-tight">Trust Score Dashboard</h1>
         <p className="text-muted-foreground">
           Monitor and improve your blockchain-verified trust score
@@ -143,7 +143,7 @@ export default function TrustScorePage() {
           {/* Trust Score Overview */}
           <div className="grid gap-6 md:grid-cols-3">
             <Card className="md:col-span-2">
-              <CardHeader>
+              <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2">
                   <BarChart3 className="h-5 w-5 text-trustbond-primary" />
                   Trust Score Overview
@@ -242,7 +242,7 @@ export default function TrustScorePage() {
 
             {/* Benefits Panel */}
             <Card>
-              <CardHeader>
+              <CardHeader className="pb-2">
                 <CardTitle>Score Benefits</CardTitle>
                 <CardDescription>
                   Advantages of your current trust score
@@ -310,7 +310,7 @@ export default function TrustScorePage() {
           </div>
 
           {/* Impact History & Recommendations */}
-          <Tabs defaultValue="impacts">
+          <Tabs defaultValue="impacts" className="mt-6">
             <TabsList>
               <TabsTrigger value="impacts">Score Impacts</TabsTrigger>
               <TabsTrigger value="recommendations">Improvement Tips</TabsTrigger>
@@ -318,14 +318,14 @@ export default function TrustScorePage() {
             
             <TabsContent value="impacts">
               <Card>
-                <CardHeader>
+                <CardHeader className="pb-2">
                   <CardTitle>Trust Score Impacts</CardTitle>
                   <CardDescription>
                     Factors that have affected your trust score
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
+                  <div className="grid gap-4 md:grid-cols-2">
                     {transactions.map((tx) => (
                       <div key={tx.id} className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 border border-gray-100">
                         <div className={`p-2 rounded-full ${tx.positive ? 'bg-green-100' : 'bg-red-100'}`}>
@@ -352,7 +352,7 @@ export default function TrustScorePage() {
                     ))}
                     
                     {transactions.length === 0 && (
-                      <div className="text-center py-6 text-muted-foreground">
+                      <div className="text-center py-6 text-muted-foreground md:col-span-2">
                         No score impacts recorded yet
                       </div>
                     )}
@@ -363,16 +363,16 @@ export default function TrustScorePage() {
             
             <TabsContent value="recommendations">
               <Card>
-                <CardHeader>
+                <CardHeader className="pb-2">
                   <CardTitle>Score Improvement Recommendations</CardTitle>
                   <CardDescription>
                     Steps you can take to improve your trust score
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
+                  <div className="grid gap-4 md:grid-cols-2">
                     {!kycVerified && (
-                      <Alert className="bg-blue-50 border-blue-200">
+                      <Alert className="bg-blue-50 border-blue-200 md:col-span-2">
                         <Info className="h-4 w-4 text-blue-600" />
                         <AlertTitle className="text-blue-800">Complete KYC Verification</AlertTitle>
                         <AlertDescription className="text-blue-700">
@@ -411,6 +411,16 @@ export default function TrustScorePage() {
                       </h3>
                       <p className="text-sm text-blue-700 mt-1">
                         Regularly update your profile information and maintain accurate personal details.
+                      </p>
+                    </div>
+                    
+                    <div className="p-3 rounded-lg bg-amber-50 border border-amber-100">
+                      <h3 className="font-medium text-amber-800 flex items-center gap-2">
+                        <BarChart3 className="h-4 w-4" />
+                        Diversify Your Financial Activities
+                      </h3>
+                      <p className="text-sm text-amber-700 mt-1">
+                        Participate in various blockchain financial activities to demonstrate reliability.
                       </p>
                     </div>
                   </div>

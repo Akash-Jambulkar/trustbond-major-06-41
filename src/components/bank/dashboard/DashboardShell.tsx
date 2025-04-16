@@ -9,9 +9,9 @@ interface DashboardShellProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export function DashboardShell({ children, className, ...props }: DashboardShellProps) {
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen w-full">
       <BankSidebar />
-      <PageContainer className={cn("p-8", className)} {...props}>
+      <PageContainer className={cn("p-4 md:p-6 lg:p-8 w-full", className)} {...props}>
         {children}
       </PageContainer>
     </div>

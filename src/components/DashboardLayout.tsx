@@ -32,17 +32,17 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   if (!user) return null;
 
   return (
-    <SidebarProvider>
-      <div className="flex h-screen w-full bg-gray-50">
+    <SidebarProvider defaultOpen={true}>
+      <div className="flex h-screen w-full overflow-hidden bg-gray-50">
         {/* Main Sidebar */}
-        <Sidebar className="border-r border-gray-200">
+        <Sidebar className="border-r border-gray-200 w-64 flex-shrink-0">
           <SidebarNav user={user} onLogout={logout} />
         </Sidebar>
 
         {/* Main content */}
-        <SidebarInset className="p-0 flex-1">
-          <div className="flex flex-col h-full overflow-hidden">
-            <DashboardHeader user={user} />
+        <SidebarInset className="p-0 flex-1 overflow-hidden">
+          <div className="flex flex-col h-full">
+            <DashboardHeader user={user} className="border-b border-gray-200 bg-white" />
             {/* Content Area */}
             <div className="flex-1 overflow-y-auto">
               {children}
