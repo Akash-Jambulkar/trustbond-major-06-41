@@ -62,7 +62,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_profile_for_user: {
+        Args: {
+          user_id_param: string
+          email_param: string
+          name_param: string
+          role_param: string
+          mfa_enabled_param: boolean
+          kyc_status_param: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
