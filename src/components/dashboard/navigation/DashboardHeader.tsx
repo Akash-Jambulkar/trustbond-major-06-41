@@ -13,9 +13,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 import { User } from "@/contexts/auth/types";
 
-export const DashboardHeader = ({ user }: { user: User }) => {
+interface DashboardHeaderProps {
+  user: User;
+  className?: string;
+}
+
+export const DashboardHeader = ({ user, className }: DashboardHeaderProps) => {
   const navigate = useNavigate();
 
   const getRoleName = (role: string) => {
@@ -32,7 +38,7 @@ export const DashboardHeader = ({ user }: { user: User }) => {
   };
 
   return (
-    <header className="border-b border-gray-200 bg-white">
+    <header className={cn("border-b border-gray-200 bg-white", className)}>
       <div className="flex h-16 items-center px-4 md:px-6">
         {/* Mobile Sidebar Trigger */}
         <div className="md:hidden mr-2">
