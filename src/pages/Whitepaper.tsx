@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +21,8 @@ import Footer from "@/components/Footer";
 import SectionHeading from "@/components/SectionHeading";
 
 const Whitepaper = () => {
+  const [activeSection, setActiveSection] = useState("abstract");
+  
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
@@ -287,7 +290,7 @@ const Whitepaper = () => {
                 
                 <h3 id="architecture" className="text-xl font-semibold mt-8 mb-4">System Architecture</h3>
                 <p className="mb-4">
-                  The system architecture of CRYPTO-LOCK is designed to be modular, scalable, and secure. It consists of several key components:
+                  The system architecture of TrustBond is designed to be modular, scalable, and secure. It consists of several key components:
                 </p>
                 
                 <ul className="list-disc list-inside mb-6">
@@ -338,7 +341,7 @@ const Whitepaper = () => {
                 
                 <h3 id="technology-stack" className="text-xl font-semibold mt-8 mb-4">Technology Stack</h3>
                 <p className="mb-4">
-                  The implementation of CRYPTO-LOCK leverages a variety of technologies to create a robust and scalable solution:
+                  The implementation of TrustBond leverages a variety of technologies to create a robust and scalable solution:
                 </p>
                 
                 <table className="border-collapse table-auto w-full mb-8">
@@ -375,208 +378,32 @@ const Whitepaper = () => {
                     </tr>
                   </tbody>
                 </table>
-                
-                <h3 id="implementation" className="text-xl font-semibold mt-8 mb-4">Implementation Details</h3>
-                
-                <h4 className="text-lg font-medium mt-6 mb-3">Blockchain Implementation</h4>
-                <p className="mb-4">
-                  The core of our solution is the blockchain implementation that secures the KYC data and ensures its integrity. We use Ethereum smart contracts to:
-                </p>
-                <ul className="list-disc list-inside mb-4">
-                  <li className="mb-2">Store document hashes instead of actual documents to maintain privacy</li>
-                  <li className="mb-2">Record verification status updates by authorized banks</li>
-                  <li className="mb-2">Implement role-based access control for different participants</li>
-                  <li className="mb-2">Enable secure cross-bank data sharing</li>
-                </ul>
-                <div className="code-block mb-6">
-                  <pre className="text-sm overflow-x-auto">
-{`pragma solidity ^0.8.0;
-
-contract KYCRegistry {
-    struct KYCDocument {
-        bytes32 documentHash;
-        address verifiedBy;
-        bool isVerified;
-        uint256 timestamp;
-    }
-
-    mapping(address => mapping(string => KYCDocument)) private userDocuments;
-    mapping(address => bool) public authorizedBanks;
-
-    event DocumentSubmitted(address indexed user, string docType, bytes32 documentHash);
-    event DocumentVerified(address indexed user, address indexed bank, string docType);
-
-    modifier onlyAuthorizedBank() {
-        require(authorizedBanks[msg.sender], "Only authorized banks can verify");
-        _;
-    }
-
-    // Submit KYC document hash
-    function submitDocument(string memory docType, bytes32 documentHash) public {
-        userDocuments[msg.sender][docType] = KYCDocument(
-            documentHash,
-            address(0),
-            false,
-            block.timestamp
-        );
+              </div>
+            </div>
+          </div>
+        </section>
         
-        emit DocumentSubmitted(msg.sender, docType, documentHash);
-    }
+        <section className="py-12 px-4 bg-gray-50">
+          <div className="container mx-auto max-w-5xl">
+            <h2 className="text-3xl font-bold mb-6 text-center">Ready to Transform Your KYC Process?</h2>
+            <p className="text-lg text-center mb-8 max-w-3xl mx-auto">
+              Join the TrustBond ecosystem today and experience the power of blockchain-enabled KYC verification and trust score generation.
+            </p>
+            <div className="flex flex-wrap justify-center gap-4">
+              <Button variant="trustbond" size="lg" asChild>
+                <Link to="/register">Get Started</Link>
+              </Button>
+              <Button variant="outline" size="lg" asChild>
+                <Link to="/contact">Contact Us</Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+      </main>
+      
+      <Footer />
+    </div>
+  );
+};
 
-    // Verify KYC document
-    function verifyDocument(address user, string memory docType) public onlyAuthorizedBank {
-        KYCDocument storage doc = userDocuments[user][docType];
-        require(doc.documentHash != bytes32(0), "Document does not exist");
-        
-        doc.isVerified = true;
-        doc.verifiedBy = msg.sender;
-        doc.timestamp = block.timestamp;
-        
-        emit DocumentVerified(user, msg.sender, docType);
-    }
-}`}</pre>
-                </div>
-
-                <h4 className="text-lg font-medium mt-6 mb-3">Machine Learning for Trust Scores</h4>
-                <p className="mb-4">
-                  The GSA (Geometric Scoring Algorithm) classifier leverages machine learning to generate Trust Scores based on various factors:
-                </p>
-                <ul className="list-disc list-inside mb-4">
-                  <li className="mb-2">Historical financial data analysis</li>
-                  <li className="mb-2">KYC verification status</li>
-                  <li className="mb-2">Transaction patterns</li>
-                  <li className="mb-2">Loan repayment history</li>
-                  <li className="mb-2">Real-time behavioral factors</li>
-                </ul>
-                <p className="mb-4">
-                  This algorithm provides a more accurate and dynamic assessment compared to the traditional Bayesian classifier approach, allowing for better decision-making in loan approvals.
-                </p>
-
-                <h4 className="text-lg font-medium mt-6 mb-3">IPFS Integration</h4>
-                <p className="mb-4">
-                  The InterPlanetary File System (IPFS) is integrated to provide decentralized storage for KYC documents:
-                </p>
-                
-                <div className="my-8 flex justify-center">
-                  <figure className="text-center">
-                    <div className="bg-gray-100 p-6 rounded-lg inline-block">
-                      <div className="flex flex-col items-center justify-center space-y-4">
-                        <div className="w-full p-4 bg-white rounded-lg border border-gray-300 flex items-center justify-center space-x-4">
-                          <div>
-                            <FileText className="h-8 w-8 text-trustbond-primary" />
-                          </div>
-                          <div className="text-left">
-                            <h4 className="font-medium">Original Document</h4>
-                            <p className="text-xs text-gray-500">KYC Document (PDF, Image)</p>
-                          </div>
-                        </div>
-                        <div className="text-center text-xl">↓</div>
-                        <div className="w-full p-4 bg-white rounded-lg border border-gray-300 flex items-center justify-center space-x-4">
-                          <div>
-                            <Lock className="h-8 w-8 text-trustbond-secondary" />
-                          </div>
-                          <div className="text-left">
-                            <h4 className="font-medium">Encryption & Hashing</h4>
-                            <p className="text-xs text-gray-500">Secure document processing</p>
-                          </div>
-                        </div>
-                        <div className="text-center text-xl">↓</div>
-                        <div className="flex w-full space-x-4">
-                          <div className="flex-1 p-4 bg-white rounded-lg border border-gray-300 flex flex-col items-center">
-                            <Database className="h-8 w-8 text-trustbond-accent mb-2" />
-                            <h4 className="font-medium text-center">IPFS Storage</h4>
-                            <p className="text-xs text-gray-500">Document content stored</p>
-                          </div>
-                          <div className="flex-1 p-4 bg-white rounded-lg border border-gray-300 flex flex-col items-center">
-                            <Layers className="h-8 w-8 text-trustbond-primary mb-2" />
-                            <h4 className="font-medium text-center">Blockchain</h4>
-                            <p className="text-xs text-gray-500">Hash & access rights stored</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <figcaption className="mt-2 text-sm text-gray-500">Figure 4: IPFS Working with Blockchain</figcaption>
-                  </figure>
-                </div>
-
-                <h4 className="text-lg font-medium mt-6 mb-3">Security Measures</h4>
-                <p className="mb-4">
-                  The platform implements comprehensive security measures to protect sensitive data:
-                </p>
-                <ul className="list-disc list-inside mb-4">
-                  <li className="mb-2"><strong>Encryption:</strong> AES-256 encryption for sensitive data</li>
-                  <li className="mb-2"><strong>Authentication:</strong> Multi-factor authentication</li>
-                  <li className="mb-2"><strong>Access Control:</strong> Role-based access control</li>
-                  <li className="mb-2"><strong>Audit Trails:</strong> Immutable record of all system actions</li>
-                  <li className="mb-2"><strong>Compliance:</strong> GDPR and AML compliance built-in</li>
-                </ul>
-
-                <h4 className="text-lg font-medium mt-6 mb-3">Implementation Plan</h4>
-                <p className="mb-4">
-                  The implementation of CRYPTO-LOCK follows a structured approach to ensure all components are properly integrated:
-                </p>
-                
-                <div className="my-8 flex justify-center">
-                  <figure className="text-center">
-                    <div className="bg-gray-100 p-6 rounded-lg">
-                      <div className="flex flex-wrap justify-center gap-4">
-                        <div className="w-56 p-4 bg-white rounded-lg border border-gray-300">
-                          <h4 className="font-medium text-center mb-2">Phase 1</h4>
-                          <ul className="text-sm text-left list-disc list-inside">
-                            <li>Backend Development</li>
-                            <li>Blockchain Integration</li>
-                            <li>Smart Contract Development</li>
-                          </ul>
-                        </div>
-                        <div className="w-56 p-4 bg-white rounded-lg border border-gray-300">
-                          <h4 className="font-medium text-center mb-2">Phase 2</h4>
-                          <ul className="text-sm text-left list-disc list-inside">
-                            <li>Frontend Development</li>
-                            <li>API Gateway Implementation</li>
-                            <li>User Authentication</li>
-                          </ul>
-                        </div>
-                        <div className="w-56 p-4 bg-white rounded-lg border border-gray-300">
-                          <h4 className="font-medium text-center mb-2">Phase 3</h4>
-                          <ul className="text-sm text-left list-disc list-inside">
-                            <li>ML Model Integration</li>
-                            <li>Trust Score Implementation</li>
-                            <li>Testing & Debugging</li>
-                          </ul>
-                        </div>
-                        <div className="w-56 p-4 bg-white rounded-lg border border-gray-300">
-                          <h4 className="font-medium text-center mb-2">Phase 4</h4>
-                          <ul className="text-sm text-left list-disc list-inside">
-                            <li>Security Measures</li>
-                            <li>System Monitoring</li>
-                            <li>Deployment & Launch</li>
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                    <figcaption className="mt-2 text-sm text-gray-500">Figure 5: Implementation Plan for CRYPTO-LOCK</figcaption>
-                  </figure>
-                </div>
-
-                <h4 className="text-lg font-medium mt-6 mb-3">Algorithm Comparison</h4>
-                <p className="mb-4">
-                  To evaluate the effectiveness of our proposed model, we compare the GSA classifier with the traditional Bayesian classifier:
-                </p>
-                
-                <table className="border-collapse table-auto w-full mb-8">
-                  <thead>
-                    <tr>
-                      <th className="border border-gray-300 px-4 py-2 bg-gray-100">Feature</th>
-                      <th className="border border-gray-300 px-4 py-2 bg-gray-100">Bayesian Classifier (Previous)</th>
-                      <th className="border border-gray-300 px-4 py-2 bg-gray-100">GSA Classifier (Proposed)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td className="border border-gray-300 px-4 py-2">Real-time Assessment</td>
-                      <td className="border border-gray-300 px-4 py-2">Limited</td>
-                      <td className="border border-gray-300 px-4 py-2">Comprehensive</td>
-                    </tr>
-                    <tr>
-                      <td className="border border-gray-300 px-4 py-2">Adaptability</td>
-                      <td className="border border-gray-300 px-4
+export default Whitepaper;
