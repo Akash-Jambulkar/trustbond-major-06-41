@@ -78,26 +78,26 @@ export const useUserMetrics = () => {
           {
             title: "Identity Status",
             value: kycStatus ? "Verified" : "Pending",
-            icon: <ShieldCheck className="h-4 w-4 text-green-600" />,
+            icon: <ShieldCheck size={16} className="text-green-600" />,
             status: kycStatus ? "up" : "neutral"
           },
           {
             title: "Trust Score",
             value: trustScore,
             change: "+2 this month",
-            icon: <ChartBar className="h-4 w-4 text-blue-600" />,
+            icon: <ChartBar size={16} className="text-blue-600" />,
             status: "up"
           },
           {
             title: "Active Loans",
             value: activeLoans,
-            icon: <CreditCard className="h-4 w-4 text-purple-600" />,
+            icon: <CreditCard size={16} className="text-purple-600" />,
             status: "neutral"
           },
           {
             title: "Loan Balance",
             value: `${parseFloat(totalLoanBalance).toFixed(2)} ETH`,
-            icon: <AlertCircle className="h-4 w-4 text-amber-600" />,
+            icon: <AlertCircle size={16} className="text-amber-600" />,
             status: "neutral"
           }
         ];

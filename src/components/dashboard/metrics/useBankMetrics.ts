@@ -28,28 +28,28 @@ export const useBankMetrics = () => {
             title: "Pending KYC",
             value: 12,
             change: "+3 today",
-            icon: <ShieldCheck className="h-4 w-4 text-amber-600" />,
+            icon: <ShieldCheck size={16} className="text-amber-600" />,
             status: "up"
           },
           {
             title: "Active Loans",
             value: 128,
             change: "+8 this week",
-            icon: <CreditCard className="h-4 w-4 text-purple-600" />,
+            icon: <CreditCard size={16} className="text-purple-600" />,
             status: "up"
           },
           {
             title: "Loan Volume",
             value: "245.8 ETH",
             change: "+12.4 ETH this month",
-            icon: <ChartBar className="h-4 w-4 text-blue-600" />,
+            icon: <ChartBar size={16} className="text-blue-600" />,
             status: "up"
           },
           {
             title: "KYC Success Rate",
             value: "94%",
             change: "+2% this month",
-            icon: <CheckCircle className="h-4 w-4 text-green-600" />,
+            icon: <CheckCircle size={16} className="text-green-600" />,
             status: "up"
           }
         ];

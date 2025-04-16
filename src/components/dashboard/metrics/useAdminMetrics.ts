@@ -27,28 +27,28 @@ export const useAdminMetrics = () => {
           {
             title: "System Status",
             value: "Operational",
-            icon: <CheckCircle className="h-4 w-4 text-green-600" />,
+            icon: <CheckCircle size={16} className="text-green-600" />,
             status: "up"
           },
           {
             title: "Active Users",
             value: 156,
             change: "+12 this week",
-            icon: <ArrowUpRight className="h-4 w-4 text-blue-600" />,
+            icon: <ArrowUpRight size={16} className="text-blue-600" />,
             status: "up"
           },
           {
             title: "Banks Registered",
             value: 8,
             change: "+1 this month",
-            icon: <CreditCard className="h-4 w-4 text-purple-600" />,
+            icon: <CreditCard size={16} className="text-purple-600" />,
             status: "up"
           },
           {
             title: "Total Transactions",
             value: 12458,
             change: "+234 today",
-            icon: <ChartBar className="h-4 w-4 text-blue-600" />,
+            icon: <ChartBar size={16} className="text-blue-600" />,
             status: "up"
           }
         ];
