@@ -10,15 +10,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Wallet, Clock, AlertTriangle } from "lucide-react";
+import { Wallet, Clock, AlertTriangle, Loader2 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 interface Loan {
   id: number;
   amount: string;
   term: number;
-  interestRate: number;
+  interest_rate: number;
   status: "available" | "funded" | "closed";
-  createdAt: string;
+  created_at: string;
+  purpose: string;
 }
 
 interface LoanMarketplaceProps {
@@ -39,11 +41,31 @@ export const LoanMarketplace: React.FC<LoanMarketplaceProps> = ({
     const fetchLoans = async () => {
       setIsLoading(true);
       try {
-        // In a real implementation, fetch from the blockchain or API
-        // For now, we're setting an empty array
-        setAvailableLoans([]);
-      } catch (error) {
+        // Fetch loans from Supabase that are approved and available for funding
+        const { data, error } = await supabase
+          .from("loans")
+          .select("*")
+          .eq("status", "approved");
+        
+        if (error) {
+          throw error;
+        }
+
+        const formattedLoans = data?.map((loan: any) => ({
+          id: loan.id,
+          amount: loan.amount.toString(),
+          term: loan.term_days || 30,
+          interest_rate: loan.interest_rate,
+          status: "available",
+          created_at: loan.created_at,
+          purpose: loan.purpose,
+        })) || [];
+
+        setAvailableLoans(formattedLoans);
+      } catch (error: any) {
         console.error("Error fetching available loans:", error);
+        toast.error("Failed to load available loans");
+        setAvailableLoans([]);
       } finally {
         setIsLoading(false);
       }
@@ -54,6 +76,53 @@ export const LoanMarketplace: React.FC<LoanMarketplaceProps> = ({
     } else {
       setIsLoading(false);
     }
+  }, [isConnected]);
+
+  // Set up real-time subscription for loan updates
+  useEffect(() => {
+    if (!isConnected) return;
+
+    const channel = supabase
+      .channel('marketplace-loans')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'loans' },
+        (payload) => {
+          // Refresh loans when there's a change
+          console.log('Loan marketplace update:', payload);
+          fetchLoans();
+        }
+      )
+      .subscribe();
+
+    const fetchLoans = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("loans")
+          .select("*")
+          .eq("status", "approved");
+        
+        if (error) throw error;
+
+        const formattedLoans = data?.map((loan: any) => ({
+          id: loan.id,
+          amount: loan.amount.toString(),
+          term: loan.term_days || 30,
+          interest_rate: loan.interest_rate,
+          status: "available",
+          created_at: loan.created_at,
+          purpose: loan.purpose,
+        })) || [];
+
+        setAvailableLoans(formattedLoans);
+      } catch (error) {
+        console.error("Error in real-time loan update:", error);
+      }
+    };
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [isConnected]);
 
   const handleFundLoan = async (loanId: number) => {
@@ -68,8 +137,22 @@ export const LoanMarketplace: React.FC<LoanMarketplaceProps> = ({
     }
 
     try {
-      // This would call the smart contract in a real implementation
+      // Update the loan status to funded
+      const { error } = await supabase
+        .from('loans')
+        .update({ 
+          status: 'active',
+          lender_address: walletAddress,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', loanId);
+
+      if (error) throw error;
+      
       toast.success(`Successfully initiated funding for loan #${loanId}`);
+      
+      // Remove the funded loan from the local state
+      setAvailableLoans(availableLoans.filter(loan => loan.id !== loanId));
     } catch (error) {
       console.error("Error funding loan:", error);
       toast.error("Failed to fund loan");
@@ -101,7 +184,7 @@ export const LoanMarketplace: React.FC<LoanMarketplaceProps> = ({
 
       {isLoading ? (
         <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-trustbond-primary"></div>
+          <Loader2 className="h-8 w-8 animate-spin text-trustbond-primary" />
         </div>
       ) : (
         <>
@@ -130,7 +213,11 @@ export const LoanMarketplace: React.FC<LoanMarketplaceProps> = ({
                       </div>
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-gray-500">Interest Rate</span>
-                        <span className="font-medium">{loan.interestRate}%</span>
+                        <span className="font-medium">{loan.interest_rate}%</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-500">Purpose</span>
+                        <span className="font-medium">{loan.purpose}</span>
                       </div>
                       <div className="pt-4">
                         <Button

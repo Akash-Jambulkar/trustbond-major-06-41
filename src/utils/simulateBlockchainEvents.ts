@@ -76,10 +76,10 @@ export function simulateRandomBlockchainEvent() {
       break;
   }
   
-  // Only use in development, not in production
-  console.log(`Would have simulated ${eventType} event with data:`, data);
+  // Disable simulation in production environment
+  console.log(`Simulation disabled: Would have simulated ${eventType} event with data:`, data);
   
-  // Commented out the actual simulation to avoid fake data in production
+  // Do not actually simulate events in production
   // simulateBlockchainEvent(eventType, data);
   
   return { eventType, data };
