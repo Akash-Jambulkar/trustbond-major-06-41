@@ -13,12 +13,22 @@ export const KYCTabs = () => {
   
   return (
     <Tabs defaultValue="upload" className="w-full">
-      <TabsList className="grid w-full grid-cols-2 px-2 pt-2">
-        <TabsTrigger value="upload">Document Upload</TabsTrigger>
-        <TabsTrigger value="history">Verification History</TabsTrigger>
+      <TabsList className="grid grid-cols-2 bg-gray-50 p-1 rounded-md mb-4">
+        <TabsTrigger 
+          value="upload" 
+          className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-sm"
+        >
+          Document Upload
+        </TabsTrigger>
+        <TabsTrigger 
+          value="history" 
+          className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-sm"
+        >
+          Verification History
+        </TabsTrigger>
       </TabsList>
       
-      <TabsContent value="upload" className="p-4">
+      <TabsContent value="upload" className="space-y-4">
         {!isConnected && (
           <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
@@ -31,7 +41,7 @@ export const KYCTabs = () => {
         <KYCDocumentUpload />
       </TabsContent>
       
-      <TabsContent value="history" className="p-4">
+      <TabsContent value="history" className="space-y-4">
         {!isConnected && (
           <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
