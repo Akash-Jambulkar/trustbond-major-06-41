@@ -1,28 +1,64 @@
 
-import { useEffect, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBlockchain } from "@/contexts/BlockchainContext";
-import { Shield, CreditCard, TrendingUp, AlertTriangle, CheckCircle, Clock } from "lucide-react";
+import { Shield, CreditCard, AlertTriangle, CheckCircle, Clock } from "lucide-react";
 import { LoanAnalyticsDashboard } from "@/components/analytics/LoanAnalyticsDashboard";
 
 const UserHome = () => {
   const { user } = useAuth();
-  const { isConnected } = useBlockchain();
+  const { 
+    isConnected, 
+    account, 
+    getKYCStatus, 
+    trustScoreContract, 
+    loanContract, 
+    web3 
+  } = useBlockchain();
   const navigate = useNavigate();
-  const [kycStatus, setKycStatus] = useState<'pending' | 'verified' | 'not_submitted'>('not_submitted');
+
+  const [kycStatus, setKYCStatus] = useState<'pending' | 'verified' | 'not_submitted'>('not_submitted');
   const [trustScore, setTrustScore] = useState<number>(0);
   const [activeLoans, setActiveLoans] = useState<number>(0);
 
   useEffect(() => {
-    // In a real implementation, this would fetch actual data from the blockchain
-    // For now, we'll just set some placeholder data
-    setKycStatus('pending');
-    setTrustScore(78);
-    setActiveLoans(2);
-  }, []);
+    const fetchDashboardData = async () => {
+      if (!isConnected || !account) return;
+
+      try {
+        // Fetch KYC Status
+        const status = await getKYCStatus(account);
+        setKYCStatus(status ? 'verified' : 'pending');
+
+        // Fetch Trust Score
+        if (trustScoreContract) {
+          const score = await trustScoreContract.methods.calculateScore(account).call();
+          setTrustScore(parseInt(score));
+        }
+
+        // Fetch Active Loans
+        if (loanContract) {
+          const loanIds = await loanContract.methods.getUserLoans(account).call();
+          const activeLoanDetails = await Promise.all(
+            loanIds.map((id: string) => loanContract.methods.getLoan(id).call())
+          );
+          
+          const activeLoansCount = activeLoanDetails.filter(
+            (loan: any) => loan.status === '4' || loan.status === '5'
+          ).length;
+          
+          setActiveLoans(activeLoansCount);
+        }
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      }
+    };
+
+    fetchDashboardData();
+  }, [isConnected, account, getKYCStatus, trustScoreContract, loanContract]);
 
   return (
     <div className="space-y-6">
