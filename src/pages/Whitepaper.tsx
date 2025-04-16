@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -27,18 +26,18 @@ const Whitepaper = () => {
       
       <main className="flex-grow">
         {/* Hero Section */}
-        <section className="bg-gradient-to-r from-cryptolock-primary to-cryptolock-secondary text-white py-20 px-4">
+        <section className="bg-gradient-to-r from-trustbond-primary to-trustbond-secondary text-white py-20 px-4">
           <div className="container mx-auto">
             <div className="max-w-4xl mx-auto">
-              <Badge variant="crypto" className="mb-4 bg-white/20 backdrop-blur-sm">Technical Whitepaper</Badge>
+              <Badge variant="trustbond" className="mb-4 bg-white/20 backdrop-blur-sm">Technical Whitepaper</Badge>
               <h1 className="text-4xl md:text-5xl font-bold mb-6">
-                CRYPTO-LOCK: Blockchain-Powered KYC Verification & Trust Score Creation
+                TRUSTBOND: Blockchain-Powered KYC Verification & Trust Score Creation
               </h1>
               <p className="text-xl mb-8 opacity-90">
                 A comprehensive technical overview of our blockchain solution for secure, efficient, and transparent KYC verification and trust score generation.
               </p>
               <div className="flex flex-wrap gap-4">
-                <Button variant="default" className="bg-white text-cryptolock-primary hover:bg-gray-100" size="lg">
+                <Button variant="default" className="bg-white text-trustbond-primary hover:bg-gray-100" size="lg">
                   <Download className="mr-2 h-4 w-4" />
                   Download PDF
                 </Button>
@@ -57,36 +56,36 @@ const Whitepaper = () => {
               <h2 className="text-2xl font-bold mb-4">Table of Contents</h2>
               <ol className="space-y-2 list-decimal list-inside">
                 <li className="text-gray-700">
-                  <a href="#abstract" className="hover:text-cryptolock-primary">Abstract</a>
+                  <a href="#abstract" className="hover:text-trustbond-primary">Abstract</a>
                 </li>
                 <li className="text-gray-700">
-                  <a href="#introduction" className="hover:text-cryptolock-primary">Introduction</a>
+                  <a href="#introduction" className="hover:text-trustbond-primary">Introduction</a>
                 </li>
                 <li className="text-gray-700">
-                  <a href="#literature-review" className="hover:text-cryptolock-primary">Literature Review</a>
+                  <a href="#literature-review" className="hover:text-trustbond-primary">Literature Review</a>
                 </li>
                 <li className="text-gray-700">
-                  <a href="#problem-statement" className="hover:text-cryptolock-primary">Problem Statement</a>
+                  <a href="#problem-statement" className="hover:text-trustbond-primary">Problem Statement</a>
                 </li>
                 <li className="text-gray-700">
-                  <a href="#proposed-solution" className="hover:text-cryptolock-primary">Proposed Solution</a>
+                  <a href="#proposed-solution" className="hover:text-trustbond-primary">Proposed Solution</a>
                   <ul className="pl-5 mt-1 list-disc list-inside">
                     <li className="text-gray-600">
-                      <a href="#architecture" className="hover:text-cryptolock-primary">System Architecture</a>
+                      <a href="#architecture" className="hover:text-trustbond-primary">System Architecture</a>
                     </li>
                     <li className="text-gray-600">
-                      <a href="#technology-stack" className="hover:text-cryptolock-primary">Technology Stack</a>
+                      <a href="#technology-stack" className="hover:text-trustbond-primary">Technology Stack</a>
                     </li>
                     <li className="text-gray-600">
-                      <a href="#implementation" className="hover:text-cryptolock-primary">Implementation Details</a>
+                      <a href="#implementation" className="hover:text-trustbond-primary">Implementation Details</a>
                     </li>
                   </ul>
                 </li>
                 <li className="text-gray-700">
-                  <a href="#conclusion" className="hover:text-cryptolock-primary">Conclusion & Future Work</a>
+                  <a href="#conclusion" className="hover:text-trustbond-primary">Conclusion & Future Work</a>
                 </li>
                 <li className="text-gray-700">
-                  <a href="#references" className="hover:text-cryptolock-primary">References</a>
+                  <a href="#references" className="hover:text-trustbond-primary">References</a>
                 </li>
               </ol>
             </div>
@@ -94,7 +93,7 @@ const Whitepaper = () => {
             {/* Abstract */}
             <div id="abstract" className="mb-16">
               <h2 className="text-3xl font-bold mb-6 flex items-center">
-                <FileText className="mr-3 h-7 w-7 text-cryptolock-primary" />
+                <FileText className="mr-3 h-7 w-7 text-trustbond-primary" />
                 Abstract
               </h2>
               <div className="prose prose-lg max-w-none">
@@ -113,7 +112,7 @@ const Whitepaper = () => {
             {/* Introduction */}
             <div id="introduction" className="mb-16">
               <h2 className="text-3xl font-bold mb-6 flex items-center">
-                <Database className="mr-3 h-7 w-7 text-cryptolock-primary" />
+                <Database className="mr-3 h-7 w-7 text-trustbond-primary" />
                 Introduction
               </h2>
               <div className="prose prose-lg max-w-none">
@@ -128,29 +127,29 @@ const Whitepaper = () => {
                     <div className="bg-gray-100 p-6 rounded-lg inline-block">
                       <div className="flex items-center justify-center space-x-4">
                         <div className="text-center">
-                          <div className="w-16 h-16 rounded-full bg-cryptolock-primary/20 flex items-center justify-center mb-2">
-                            <FileText className="h-8 w-8 text-cryptolock-primary" />
+                          <div className="w-16 h-16 rounded-full bg-trustbond-primary/20 flex items-center justify-center mb-2">
+                            <FileText className="h-8 w-8 text-trustbond-primary" />
                           </div>
                           <p className="text-sm">Document<br/>Submission</p>
                         </div>
                         <div className="text-2xl">→</div>
                         <div className="text-center">
-                          <div className="w-16 h-16 rounded-full bg-cryptolock-primary/20 flex items-center justify-center mb-2">
-                            <Shield className="h-8 w-8 text-cryptolock-primary" />
+                          <div className="w-16 h-16 rounded-full bg-trustbond-primary/20 flex items-center justify-center mb-2">
+                            <Shield className="h-8 w-8 text-trustbond-primary" />
                           </div>
                           <p className="text-sm">Identity<br/>Verification</p>
                         </div>
                         <div className="text-2xl">→</div>
                         <div className="text-center">
-                          <div className="w-16 h-16 rounded-full bg-cryptolock-primary/20 flex items-center justify-center mb-2">
-                            <CheckSquare className="h-8 w-8 text-cryptolock-primary" />
+                          <div className="w-16 h-16 rounded-full bg-trustbond-primary/20 flex items-center justify-center mb-2">
+                            <CheckSquare className="h-8 w-8 text-trustbond-primary" />
                           </div>
                           <p className="text-sm">Compliance<br/>Checks</p>
                         </div>
                         <div className="text-2xl">→</div>
                         <div className="text-center">
-                          <div className="w-16 h-16 rounded-full bg-cryptolock-primary/20 flex items-center justify-center mb-2">
-                            <Database className="h-8 w-8 text-cryptolock-primary" />
+                          <div className="w-16 h-16 rounded-full bg-trustbond-primary/20 flex items-center justify-center mb-2">
+                            <Database className="h-8 w-8 text-trustbond-primary" />
                           </div>
                           <p className="text-sm">Record<br/>Storage</p>
                         </div>
@@ -171,7 +170,7 @@ const Whitepaper = () => {
             {/* Literature Review */}
             <div id="literature-review" className="mb-16">
               <h2 className="text-3xl font-bold mb-6 flex items-center">
-                <Layers className="mr-3 h-7 w-7 text-cryptolock-primary" />
+                <Layers className="mr-3 h-7 w-7 text-trustbond-primary" />
                 Literature Review
               </h2>
               <div className="prose prose-lg max-w-none">
@@ -190,7 +189,7 @@ const Whitepaper = () => {
                       <div className="flex items-center justify-center space-x-6">
                         <div className="text-center">
                           <div className="w-24 h-24 bg-white rounded-lg border border-gray-300 flex flex-col items-center justify-center">
-                            <Database className="h-8 w-8 text-cryptolock-primary mb-2" />
+                            <Database className="h-8 w-8 text-trustbond-primary mb-2" />
                             <p className="text-xs font-medium">Database</p>
                           </div>
                         </div>
@@ -200,7 +199,7 @@ const Whitepaper = () => {
                         </div>
                         <div className="text-center">
                           <div className="w-24 h-24 bg-white rounded-lg border border-gray-300 flex flex-col items-center justify-center">
-                            <Code className="h-8 w-8 text-cryptolock-secondary mb-2" />
+                            <Code className="h-8 w-8 text-trustbond-secondary mb-2" />
                             <p className="text-xs font-medium">Application</p>
                           </div>
                         </div>
@@ -221,7 +220,7 @@ const Whitepaper = () => {
             {/* Problem Statement */}
             <div id="problem-statement" className="mb-16">
               <h2 className="text-3xl font-bold mb-6 flex items-center">
-                <AlertTriangle className="mr-3 h-7 w-7 text-cryptolock-primary" />
+                <AlertTriangle className="mr-3 h-7 w-7 text-trustbond-primary" />
                 Problem Statement
               </h2>
               <div className="prose prose-lg max-w-none">
@@ -278,7 +277,7 @@ const Whitepaper = () => {
             {/* Proposed Solution */}
             <div id="proposed-solution" className="mb-16">
               <h2 className="text-3xl font-bold mb-6 flex items-center">
-                <Shield className="mr-3 h-7 w-7 text-cryptolock-primary" />
+                <Shield className="mr-3 h-7 w-7 text-trustbond-primary" />
                 Proposed Solution
               </h2>
               <div className="prose prose-lg max-w-none">
@@ -307,9 +306,9 @@ const Whitepaper = () => {
                         <div className="w-full p-4 bg-white rounded-lg border border-gray-300">
                           <h4 className="font-medium text-center mb-2">Frontend Applications</h4>
                           <div className="flex justify-center space-x-4">
-                            <div className="px-3 py-1 bg-cryptolock-primary/10 rounded-md text-sm">User App</div>
-                            <div className="px-3 py-1 bg-cryptolock-primary/10 rounded-md text-sm">Bank Portal</div>
-                            <div className="px-3 py-1 bg-cryptolock-primary/10 rounded-md text-sm">Admin Dashboard</div>
+                            <div className="px-3 py-1 bg-trustbond-primary/10 rounded-md text-sm">User App</div>
+                            <div className="px-3 py-1 bg-trustbond-primary/10 rounded-md text-sm">Bank Portal</div>
+                            <div className="px-3 py-1 bg-trustbond-primary/10 rounded-md text-sm">Admin Dashboard</div>
                           </div>
                         </div>
                         <div className="text-center text-xl">↓</div>
@@ -320,15 +319,15 @@ const Whitepaper = () => {
                         <div className="flex w-full space-x-4">
                           <div className="flex-1 p-4 bg-white rounded-lg border border-gray-300">
                             <h4 className="font-medium text-center mb-2">Blockchain Network</h4>
-                            <div className="px-3 py-1 bg-cryptolock-primary/10 rounded-md text-sm mx-auto w-fit">Smart Contracts</div>
+                            <div className="px-3 py-1 bg-trustbond-primary/10 rounded-md text-sm mx-auto w-fit">Smart Contracts</div>
                           </div>
                           <div className="flex-1 p-4 bg-white rounded-lg border border-gray-300">
                             <h4 className="font-medium text-center mb-2">Backend Services</h4>
-                            <div className="px-3 py-1 bg-cryptolock-primary/10 rounded-md text-sm mx-auto w-fit">ML Models</div>
+                            <div className="px-3 py-1 bg-trustbond-primary/10 rounded-md text-sm mx-auto w-fit">ML Models</div>
                           </div>
                           <div className="flex-1 p-4 bg-white rounded-lg border border-gray-300">
                             <h4 className="font-medium text-center mb-2">IPFS Storage</h4>
-                            <div className="px-3 py-1 bg-cryptolock-primary/10 rounded-md text-sm mx-auto w-fit">Document Hashes</div>
+                            <div className="px-3 py-1 bg-trustbond-primary/10 rounded-md text-sm mx-auto w-fit">Document Hashes</div>
                           </div>
                         </div>
                       </div>
@@ -464,7 +463,7 @@ contract KYCRegistry {
                       <div className="flex flex-col items-center justify-center space-y-4">
                         <div className="w-full p-4 bg-white rounded-lg border border-gray-300 flex items-center justify-center space-x-4">
                           <div>
-                            <FileText className="h-8 w-8 text-cryptolock-primary" />
+                            <FileText className="h-8 w-8 text-trustbond-primary" />
                           </div>
                           <div className="text-left">
                             <h4 className="font-medium">Original Document</h4>
@@ -474,7 +473,7 @@ contract KYCRegistry {
                         <div className="text-center text-xl">↓</div>
                         <div className="w-full p-4 bg-white rounded-lg border border-gray-300 flex items-center justify-center space-x-4">
                           <div>
-                            <Lock className="h-8 w-8 text-cryptolock-secondary" />
+                            <Lock className="h-8 w-8 text-trustbond-secondary" />
                           </div>
                           <div className="text-left">
                             <h4 className="font-medium">Encryption & Hashing</h4>
@@ -484,12 +483,12 @@ contract KYCRegistry {
                         <div className="text-center text-xl">↓</div>
                         <div className="flex w-full space-x-4">
                           <div className="flex-1 p-4 bg-white rounded-lg border border-gray-300 flex flex-col items-center">
-                            <Database className="h-8 w-8 text-cryptolock-accent mb-2" />
+                            <Database className="h-8 w-8 text-trustbond-accent mb-2" />
                             <h4 className="font-medium text-center">IPFS Storage</h4>
                             <p className="text-xs text-gray-500">Document content stored</p>
                           </div>
                           <div className="flex-1 p-4 bg-white rounded-lg border border-gray-300 flex flex-col items-center">
-                            <Layers className="h-8 w-8 text-cryptolock-primary mb-2" />
+                            <Layers className="h-8 w-8 text-trustbond-primary mb-2" />
                             <h4 className="font-medium text-center">Blockchain</h4>
                             <p className="text-xs text-gray-500">Hash & access rights stored</p>
                           </div>
@@ -580,118 +579,4 @@ contract KYCRegistry {
                     </tr>
                     <tr>
                       <td className="border border-gray-300 px-4 py-2">Adaptability</td>
-                      <td className="border border-gray-300 px-4 py-2">Static</td>
-                      <td className="border border-gray-300 px-4 py-2">Dynamic</td>
-                    </tr>
-                    <tr>
-                      <td className="border border-gray-300 px-4 py-2">Data Sources</td>
-                      <td className="border border-gray-300 px-4 py-2">Limited</td>
-                      <td className="border border-gray-300 px-4 py-2">Multiple</td>
-                    </tr>
-                    <tr>
-                      <td className="border border-gray-300 px-4 py-2">Accuracy</td>
-                      <td className="border border-gray-300 px-4 py-2">Moderate</td>
-                      <td className="border border-gray-300 px-4 py-2">High</td>
-                    </tr>
-                    <tr>
-                      <td className="border border-gray-300 px-4 py-2">Scalability</td>
-                      <td className="border border-gray-300 px-4 py-2">Limited</td>
-                      <td className="border border-gray-300 px-4 py-2">High</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            
-            {/* Conclusion */}
-            <div id="conclusion" className="mb-16">
-              <h2 className="text-3xl font-bold mb-6 flex items-center">
-                <CheckSquare className="mr-3 h-7 w-7 text-cryptolock-primary" />
-                Conclusion & Future Work
-              </h2>
-              <div className="prose prose-lg max-w-none">
-                <p className="mb-4">
-                  This paper has explored the technological implications and potential of using Blockchain technology for secure Know Your Customer (KYC) data sharing, with a focus on enhancing the process through Trust Score generation. The integration of Blockchain offers an innovative solution to address the various challenges currently faced in KYC verification systems, such as high operational costs, inefficiency, data security risks, and compliance burdens.
-                </p>
-                <p className="mb-4">
-                  By leveraging Blockchain's inherent characteristics—decentralization, immutability, and transparency—this approach ensures that KYC data is securely stored and shared across financial institutions, while maintaining customer privacy and regulatory compliance.
-                </p>
-                <p className="mb-4">
-                  The key components of this project include the user authentication mechanisms, routing of data between various banks and institutions, the design of an intuitive user interface (UI), and the critical interaction with the Blockchain network for storing KYC data. These elements were carefully integrated into a robust system aimed at streamlining and securing the KYC process. The addition of a machine learning-driven Trust Score generation further strengthens the system, as it enables real-time risk assessments for loan applications and other financial decisions, ultimately improving decision-making accuracy and operational efficiency.
-                </p>
-                <p className="mb-6">
-                  Looking forward, there are several exciting avenues for future work:
-                </p>
-                <ul className="list-disc list-inside mb-4">
-                  <li className="mb-2">Integrating more advanced cryptographic techniques for enhanced data protection</li>
-                  <li className="mb-2">Incorporating additional machine learning models for better prediction accuracy</li>
-                  <li className="mb-2">Exploring potential use cases in other industries where secure identity verification and trust assessments are crucial</li>
-                  <li className="mb-2">Expanding interoperability with global financial systems</li>
-                  <li className="mb-2">Enhancing the platform with advanced analytics capabilities</li>
-                </ul>
-                <p>
-                  In conclusion, the proposed Blockchain-based KYC verification system offers a promising and secure alternative to traditional methods, reducing operational inefficiencies, enhancing data security, and improving customer experience. By combining Blockchain with machine learning for real-time risk assessment, the system holds the potential to revolutionize the way financial institutions verify identities and assess financial trustworthiness. This work serves as a step towards more secure, transparent, and efficient financial ecosystems, with the potential for wide-scale adoption and further development in the coming years.
-                </p>
-              </div>
-            </div>
-            
-            {/* References */}
-            <div id="references" className="mb-16">
-              <h2 className="text-3xl font-bold mb-6 flex items-center">
-                <FileText className="mr-3 h-7 w-7 text-cryptolock-primary" />
-                References
-              </h2>
-              <div className="prose prose-lg max-w-none">
-                <ol className="list-decimal list-outside ml-5 space-y-3">
-                  <li>
-                    Rajasekhar, Y., K. Chandra Sekhar, G. Ranil, L. V. N. Maneesh, and K. Venu. "Enabling trust and privacy preserving e-KYC." International Journal of Research in Engineering, IT and Social Sciences 13, no. 5 (2023): 250-261.
-                  </li>
-                  <li>
-                    Mansoor, Nafees, Kaniz Fatema Antora, Priyata Deb, Tarek Ahammed Arman, Azizah Abdul Manaf, and Mahdi Zareei. "A review of blockchain approaches for kyc." IEEE Access (2023).
-                  </li>
-                  <li>
-                    Hannan, Md Abdul, Md Atik Shahriar, Md Sadek Ferdous, Mohammad Jabed Morshed Chowdhury, and Mohammad Shahriar Rahman. "A systematic literature review of blockchain-based e-KYC systems." Computing 105, no. 10 (2023): 2089-2118.
-                  </li>
-                  <li>
-                    Karadag, Bulut, A. Halim Zaim, and Akhan Akbulut. "Blockchain Based KYC Model for Credit Allocation in Banking." IEEE Access (2024).
-                  </li>
-                  <li>
-                    Kawamura, Leena. "How can Financial Service Providers improve the KYC onboarding experience?: challenges and technological solutions." (2022).
-                  </li>
-                  <li>
-                    Kapsoulis, Nikolaos, Alexandros Psychas, Georgios Palaiokrassas, Achilleas Marinakis, Antonios Litke, and Theodora Varvarigou. "Know your customer (KYC) implementation with smart contracts on a privacy-oriented decentralized architecture." Future Internet 12, no. 2 (2020): 41.
-                  </li>
-                  <li>
-                    Singhal, Nikita, Mohit Kumar Sharma, Sandeep Singh Samant, Prajwal Goswami, and Yammanuru Abhilash Reddy. "Smart KYC using blockchain and IPFS." Advances in cybernetics, cognition, and machine learning for communication technologies (2020): 77-84.
-                  </li>
-                  <li>
-                    Al Mamun, Abdullah, Sheikh Riad Hasan, Md Salahuddin Bhuiyan, M. Shamim Kaiser, and Mohammad Abu Yousuf. "Secure and transparent KYC for banking system using IPFS and blockchain technology." In 2020 IEEE region 10 symposium (TENSYMP), pp. 348-351. IEEE, 2020.
-                  </li>
-                  <li>
-                    Phatangare, Sheetal, Omkar Patil, Pratik Patil, Tanishk Patil, and Pranav Waghmare. "Blockchain and IPFS-Based Solution for KYC." In International Conference on Machine Learning, Deep Learning and Computational Intelligence for Wireless Communication, pp. 177-185. Cham: Springer Nature Switzerland, 2023.
-                  </li>
-                </ol>
-              </div>
-            </div>
-            
-            <div className="mt-12 pt-8 border-t border-gray-200">
-              <div className="flex justify-between items-center">
-                <Button variant="outline" asChild>
-                  <Link to="/about">← Back to About</Link>
-                </Button>
-                <Button variant="crypto">
-                  <Download className="mr-2 h-4 w-4" />
-                  Download Full Whitepaper
-                </Button>
-              </div>
-            </div>
-          </div>
-        </section>
-      </main>
-      
-      <Footer />
-    </div>
-  );
-};
-
-export default Whitepaper;
+                      <td className="border border-gray-300 px-4
