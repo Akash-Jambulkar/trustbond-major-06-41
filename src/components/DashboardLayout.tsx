@@ -10,7 +10,6 @@ import {
 import { SidebarNav } from "./dashboard/navigation/SidebarNav";
 import { DashboardHeader } from "./dashboard/navigation/DashboardHeader";
 import { useRealTimeUpdates } from "@/hooks/useRealTimeUpdates";
-import { cn } from "@/lib/utils";
 
 interface DashboardLayoutProps {
   children?: ReactNode;
@@ -35,8 +34,8 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="flex h-screen w-full overflow-hidden bg-gray-50">
-        {/* Main Sidebar - Reduced width */}
-        <Sidebar className="border-r border-gray-200 w-56 flex-shrink-0 shadow-sm">
+        {/* Main Sidebar - More compact */}
+        <Sidebar className="border-r border-gray-200 w-52 flex-shrink-0 shadow-sm">
           <SidebarNav user={user} onLogout={logout} />
         </Sidebar>
 
@@ -44,7 +43,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <SidebarInset className="p-0 flex-1 overflow-hidden">
           <div className="flex flex-col h-full">
             <DashboardHeader user={user} className="border-b border-gray-200 bg-white shadow-sm" />
-            {/* Content Area - With proper padding */}
+            {/* Content Area - With proper padding and overflow handling */}
             <div className="flex-1 overflow-y-auto">
               {children}
             </div>

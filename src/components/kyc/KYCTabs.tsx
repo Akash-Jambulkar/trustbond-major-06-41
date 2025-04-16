@@ -13,14 +13,14 @@ export const KYCTabs = () => {
   
   return (
     <Tabs defaultValue="upload" className="w-full">
-      <TabsList className="w-full border-b px-6 pt-4">
-        <TabsTrigger value="upload" className="px-8 py-2">Document Upload</TabsTrigger>
-        <TabsTrigger value="history" className="px-8 py-2">Verification History</TabsTrigger>
+      <TabsList className="grid w-full grid-cols-2 px-2 pt-2">
+        <TabsTrigger value="upload">Document Upload</TabsTrigger>
+        <TabsTrigger value="history">Verification History</TabsTrigger>
       </TabsList>
       
-      <TabsContent value="upload" className="p-6">
+      <TabsContent value="upload" className="p-4">
         {!isConnected && (
-          <Alert variant="destructive" className="mb-6">
+          <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               Please connect your wallet to submit KYC documents.
@@ -31,9 +31,9 @@ export const KYCTabs = () => {
         <KYCDocumentUpload />
       </TabsContent>
       
-      <TabsContent value="history" className="p-6">
+      <TabsContent value="history" className="p-4">
         {!isConnected && (
-          <Alert variant="destructive" className="mb-6">
+          <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               Please connect your wallet to view your verification history.
