@@ -17,14 +17,17 @@ export const FeatureCard = ({
 }: FeatureCardProps) => {
   return (
     <div className={cn(
-      "bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300",
+      "bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden group",
       className
     )}>
-      <div className="bg-trustbond-primary/10 w-14 h-14 flex items-center justify-center rounded-lg mb-5">
-        <Icon className="h-7 w-7 text-trustbond-primary" />
+      <div className="p-6 relative z-10">
+        <div className="bg-gradient-to-br from-trustbond-primary/20 to-trustbond-secondary/20 w-16 h-16 flex items-center justify-center rounded-lg mb-5 group-hover:scale-110 transition-transform">
+          <Icon className="h-8 w-8 text-trustbond-primary" />
+        </div>
+        <h3 className="text-xl font-semibold mb-3">{title}</h3>
+        <p className="text-gray-600">{description}</p>
       </div>
-      <h3 className="text-xl font-semibold mb-3">{title}</h3>
-      <p className="text-gray-600">{description}</p>
+      <div className="absolute inset-0 bg-gradient-to-br from-trustbond-primary/5 to-trustbond-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
     </div>
   );
 };

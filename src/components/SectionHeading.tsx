@@ -16,15 +16,18 @@ export const SectionHeading = ({
 }: SectionHeadingProps) => {
   return (
     <div className={cn(
-      "mb-12", 
+      "mb-16", 
       centered && "text-center",
       className
     )}>
-      <h2 className="text-3xl md:text-4xl font-bold mb-4">
-        {title}
-      </h2>
+      <div className="inline-block">
+        <h2 className="text-3xl md:text-4xl font-bold mb-2 relative">
+          {title}
+          <div className="h-1 w-1/3 bg-gradient-to-r from-trustbond-primary to-trustbond-secondary rounded-full mt-2"></div>
+        </h2>
+      </div>
       {subtitle && (
-        <p className="text-lg text-gray-600 max-w-3xl">
+        <p className="text-lg text-gray-600 max-w-3xl mt-4">
           {subtitle}
         </p>
       )}
