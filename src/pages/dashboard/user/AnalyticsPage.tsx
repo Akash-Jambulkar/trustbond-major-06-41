@@ -24,7 +24,8 @@ const AnalyticsPage = () => {
             </p>
           </CardContent>
         </Card>
-      )
+      </div>
+    );
   }
 
   return (
