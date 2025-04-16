@@ -4,7 +4,13 @@ import { LoanAnalyticsDashboard } from "@/components/analytics/LoanAnalyticsDash
 
 const AnalyticsPage = () => {
   return (
-    <div className="w-full max-w-[1400px] mx-auto p-4 md:p-6">
+    <div className="w-full p-6">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">Loan Analytics</h1>
+        <p className="text-muted-foreground">
+          View personalized analytics about your loan activity and performance
+        </p>
+      </div>
       <LoanAnalyticsDashboard />
     </div>
   );
