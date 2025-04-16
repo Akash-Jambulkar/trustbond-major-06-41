@@ -51,15 +51,15 @@ export const LoanMarketplace: React.FC<LoanMarketplaceProps> = ({
           throw error;
         }
 
-        const formattedLoans = data?.map((loan: any) => ({
+        const formattedLoans: Loan[] = (data?.map((loan: any) => ({
           id: loan.id,
           amount: loan.amount.toString(),
           term: loan.term_days || 30,
           interest_rate: loan.interest_rate,
-          status: "available",
+          status: "available" as const,  // Explicitly type as "available"
           created_at: loan.created_at,
           purpose: loan.purpose,
-        })) || [];
+        })) || []);
 
         setAvailableLoans(formattedLoans);
       } catch (error: any) {
@@ -104,15 +104,15 @@ export const LoanMarketplace: React.FC<LoanMarketplaceProps> = ({
         
         if (error) throw error;
 
-        const formattedLoans = data?.map((loan: any) => ({
+        const formattedLoans: Loan[] = (data?.map((loan: any) => ({
           id: loan.id,
           amount: loan.amount.toString(),
           term: loan.term_days || 30,
           interest_rate: loan.interest_rate,
-          status: "available",
+          status: "available" as const,  // Explicitly type as "available"
           created_at: loan.created_at,
           purpose: loan.purpose,
-        })) || [];
+        })) || []);
 
         setAvailableLoans(formattedLoans);
       } catch (error) {
