@@ -187,12 +187,33 @@ export const LoanAnalyticsDashboard: React.FC = () => {
     const months = getRecentMonths(6);
     
     return months.map(month => {
-      // In real implementation, you'd query actual payment history for each month
+      // Using actual loan data instead of random generation
+      // This is a simplified calculation based on available loan data
+      const relevantLoans = loans.filter(loan => {
+        const loanMonth = new Date(loan.created_at).toLocaleString('default', { month: 'short' });
+        return loanMonth === month;
+      });
+      
+      // Default to zeros if no loans in this month
+      if (relevantLoans.length === 0) {
+        return {
+          month,
+          onTime: 0,
+          late: 0,
+          default: 0
+        };
+      }
+      
+      // Calculate based on loan status
+      const onTime = relevantLoans.filter(l => l.status === 'active' || l.status === 'completed').length;
+      const late = relevantLoans.filter(l => l.status === 'late').length;
+      const defaultCount = relevantLoans.filter(l => l.status === 'defaulted').length;
+      
       return {
         month,
-        onTime: 85 + Math.floor(Math.random() * 10),
-        late: 5 + Math.floor(Math.random() * 10),
-        default: Math.floor(Math.random() * 5),
+        onTime,
+        late,
+        default: defaultCount
       };
     });
   };

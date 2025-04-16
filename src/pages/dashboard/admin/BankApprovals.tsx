@@ -34,8 +34,8 @@ export default function BankApprovals() {
       } catch (error) {
         console.error("Error fetching banks:", error);
         toast.error("Failed to fetch bank registrations");
-        // Fallback to mock data when there's an error
-        setBanks(mockBanks);
+        // Return empty array instead of mock data
+        setBanks([]);
       } finally {
         setIsLoading(false);
       }
@@ -87,42 +87,8 @@ export default function BankApprovals() {
     }
   };
 
-  // Generate mock data for demonstration
-  const mockBanks: BankRegistrationType[] = [
-    {
-      id: "bank-1",
-      name: "First National Bank",
-      email: "contact@fnb.com",
-      registration_number: "FNB12345",
-      wallet_address: "0x1234567890123456789012345678901234567890",
-      status: "pending",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    {
-      id: "bank-2",
-      name: "City Trust Bank",
-      email: "info@citytrust.com",
-      registration_number: "CTB67890",
-      wallet_address: "0x2345678901234567890123456789012345678901",
-      status: "approved",
-      created_at: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-      updated_at: new Date().toISOString()
-    },
-    {
-      id: "bank-3",
-      name: "Metro Finance",
-      email: "support@metrofinance.com",
-      registration_number: "MF54321",
-      wallet_address: "0x3456789012345678901234567890123456789012",
-      status: "rejected",
-      created_at: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
-      updated_at: new Date(Date.now() - 86400000).toISOString() // 1 day ago
-    }
-  ];
-
-  // Use mock data only when we have no real data
-  const displayBanks = banks.length > 0 ? banks : mockBanks;
+  // No mock data, use real data only
+  const displayBanks = banks;
 
   return (
     <DashboardLayout>

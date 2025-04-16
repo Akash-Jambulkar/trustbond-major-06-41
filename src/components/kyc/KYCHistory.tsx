@@ -27,12 +27,12 @@ export const KYCHistory = () => {
         if (data && data.length > 0) {
           setSubmissions(data);
         } else {
-          // If no data, use mock data
-          setSubmissions(getMockSubmissions());
+          // No mock data - use empty array
+          setSubmissions([]);
         }
       } catch (error) {
         console.error("Error fetching KYC history:", error);
-        setSubmissions(getMockSubmissions());
+        setSubmissions([]);
       } finally {
         setIsLoading(false);
       }
@@ -40,46 +40,6 @@ export const KYCHistory = () => {
 
     fetchSubmissions();
   }, [account]);
-
-  // Generate mock submissions for demo
-  const getMockSubmissions = (): KycDocumentSubmissionType[] => {
-    const now = Date.now();
-    return [
-      {
-        id: "1",
-        user_id: account || "",
-        document_type: "National ID",
-        document_number: "ID12345678",
-        document_hash: "0x7a8b9c0d1e2f3g4h5i6j7k8l9m0n1o2p3q4r5s6t7u8v9w0x",
-        submitted_at: new Date(now - 1000 * 60 * 60 * 24 * 7).toISOString(), // 7 days ago
-        verification_status: "verified",
-        verified_at: new Date(now - 1000 * 60 * 60 * 24 * 5).toISOString(), // 5 days ago
-        blockchain_tx_hash: "0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z",
-      },
-      {
-        id: "2",
-        user_id: account || "",
-        document_type: "Passport",
-        document_number: "P987654321",
-        document_hash: "0x0a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z",
-        submitted_at: new Date(now - 1000 * 60 * 60 * 24 * 14).toISOString(), // 14 days ago
-        verification_status: "rejected",
-        verified_at: new Date(now - 1000 * 60 * 60 * 24 * 12).toISOString(), // 12 days ago
-        rejection_reason: "Document appears to be modified or invalid",
-        blockchain_tx_hash: "0x9a8b7c6d5e4f3g2h1i0j9k8l7m6n5o4p3q2r1s0t9u8v7w6x5",
-      },
-      {
-        id: "3",
-        user_id: account || "",
-        document_type: "Driving License",
-        document_number: "DL567890123",
-        document_hash: "0x5z4y3x2w1v0u9t8s7r6q5p4o3n2m1l0k9j8i7h6g5f4e3d2c1b0a",
-        submitted_at: new Date(now - 1000 * 60 * 60).toISOString(), // 1 hour ago
-        verification_status: "pending",
-        blockchain_tx_hash: "0x3a2b1c0d9e8f7g6h5i4j3k2l1m0n9o8p7q6r5s4t3u2v1w0x",
-      }
-    ];
-  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
