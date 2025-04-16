@@ -34,6 +34,7 @@ export interface BlockchainContextType {
   connectionError: string | null;
   networkId?: number;
   web3?: any;
+  kycStatus?: 'not_verified' | 'pending' | 'verified' | 'rejected'; // Add this property
   
   // Smart contracts
   kycContract?: any;

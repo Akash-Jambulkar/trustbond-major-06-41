@@ -21,6 +21,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
   const [isGanache, setIsGanache] = useState<boolean>(false);
   const [isBlockchainLoading, setIsBlockchainLoading] = useState<boolean>(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [kycStatus, setKycStatus] = useState<'not_verified' | 'pending' | 'verified' | 'rejected'>('not_verified');
 
   // Initialize blockchain connection if enabled
   useEffect(() => {
@@ -43,6 +44,33 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
       setIsGanache(false);
     }
   }, [enableBlockchain]);
+
+  // Check KYC status when account changes
+  useEffect(() => {
+    const checkKycStatus = async () => {
+      if (isConnected && account && user) {
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('kyc_status')
+            .eq('user_id', user.user_id)
+            .single();
+          
+          if (error) throw error;
+          
+          if (data && data.kyc_status) {
+            setKycStatus(data.kyc_status as 'not_verified' | 'pending' | 'verified' | 'rejected');
+          }
+        } catch (error) {
+          console.error("Error checking KYC status:", error);
+        }
+      } else {
+        setKycStatus('not_verified');
+      }
+    };
+    
+    checkKycStatus();
+  }, [isConnected, account, user]);
 
   // Connect wallet function
   const connectWallet = async (): Promise<string | false> => {
@@ -181,6 +209,9 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         toast.error("Failed to update KYC status");
         return false;
       }
+
+      // Update local state
+      setKycStatus('pending');
 
       // Record transaction
       try {
@@ -598,6 +629,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         isGanache,
         isBlockchainLoading,
         connectionError,
+        kycStatus,
         connectWallet,
         disconnectWallet,
         switchNetwork,
