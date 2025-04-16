@@ -27,10 +27,10 @@ const About = () => {
       
       <main className="flex-grow">
         {/* Hero Section */}
-        <section className="bg-gradient-to-r from-cryptolock-primary to-cryptolock-secondary text-white py-20 px-4">
+        <section className="bg-gradient-to-r from-trustbond-primary to-trustbond-secondary text-white py-20 px-4">
           <div className="container mx-auto">
             <div className="max-w-3xl mx-auto text-center">
-              <Badge variant="crypto" className="mb-4 bg-white/20 backdrop-blur-sm">About CRYPTO-LOCK</Badge>
+              <Badge variant="default" className="mb-4 bg-white/20 backdrop-blur-sm">About TrustBond</Badge>
               <h1 className="text-4xl md:text-5xl font-extrabold mb-6">
                 Revolutionizing KYC Verification with Blockchain
               </h1>
@@ -38,7 +38,7 @@ const About = () => {
                 A secure, efficient, and transparent system that transforms how financial institutions verify identities and assess risk.
               </p>
               <div className="flex flex-wrap justify-center gap-4">
-                <Button variant="default" className="bg-white text-cryptolock-primary hover:bg-gray-100" asChild>
+                <Button variant="default" className="bg-white text-trustbond-primary hover:bg-gray-100" asChild>
                   <Link to="/whitepaper">Read Whitepaper</Link>
                 </Button>
                 <Button variant="outline" className="border-white text-white hover:bg-white/10" asChild>
@@ -59,7 +59,7 @@ const About = () => {
                   We envision a financial ecosystem where identity verification is done once, securely stored on the blockchain, and reusable across services. Where trust scores provide an objective measure of creditworthiness that follows individuals throughout their financial journey. Where loans are transparent, fair, and accessible to all.
                 </p>
                 <p className="text-gray-700">
-                  CRYPTO-LOCK is building the infrastructure for this future, one block at a time.
+                  TrustBond is building the infrastructure for this future, one block at a time.
                 </p>
               </div>
               
@@ -70,23 +70,23 @@ const About = () => {
                 </p>
                 <ul className="space-y-2">
                   <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-cryptolock-primary mr-2" />
+                    <CheckCircle className="h-5 w-5 text-trustbond-primary mr-2" />
                     <span><strong>Secure:</strong> Protecting user data and privacy above all else</span>
                   </li>
                   <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-cryptolock-primary mr-2" />
+                    <CheckCircle className="h-5 w-5 text-trustbond-primary mr-2" />
                     <span><strong>Efficient:</strong> Eliminating redundant processes and waiting periods</span>
                   </li>
                   <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-cryptolock-primary mr-2" />
+                    <CheckCircle className="h-5 w-5 text-trustbond-primary mr-2" />
                     <span><strong>Transparent:</strong> Providing clear visibility into all processes</span>
                   </li>
                   <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-cryptolock-primary mr-2" />
+                    <CheckCircle className="h-5 w-5 text-trustbond-primary mr-2" />
                     <span><strong>Inclusive:</strong> Making financial services accessible to more people</span>
                   </li>
                   <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-cryptolock-primary mr-2" />
+                    <CheckCircle className="h-5 w-5 text-trustbond-primary mr-2" />
                     <span><strong>User-Controlled:</strong> Giving individuals control over their data</span>
                   </li>
                 </ul>
@@ -100,7 +100,7 @@ const About = () => {
           <div className="container mx-auto">
             <SectionHeading 
               title="Key Features" 
-              subtitle="CRYPTO-LOCK combines blockchain technology with machine learning to create a revolutionary KYC verification and trust score platform."
+              subtitle="TrustBond combines blockchain technology with machine learning to create a revolutionary KYC verification and trust score platform."
               centered={true}
             />
             
@@ -143,15 +143,15 @@ const About = () => {
         <section className="py-16 px-4">
           <div className="container mx-auto">
             <SectionHeading 
-              title="How CRYPTO-LOCK Works" 
+              title="How TrustBond Works" 
               subtitle="Our platform connects individuals, banks, and blockchain technology to create a seamless verification and lending ecosystem."
               centered={true}
             />
             
             <div className="grid md:grid-cols-3 gap-10 mt-12">
               <div className="text-center">
-                <div className="bg-cryptolock-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Shield className="h-8 w-8 text-cryptolock-primary" />
+                <div className="bg-trustbond-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Shield className="h-8 w-8 text-trustbond-primary" />
                 </div>
                 <h3 className="text-xl font-semibold mb-3">1. Document Submission</h3>
                 <p className="text-gray-600">
@@ -160,8 +160,8 @@ const About = () => {
               </div>
               
               <div className="text-center">
-                <div className="bg-cryptolock-secondary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <FileText className="h-8 w-8 text-cryptolock-secondary" />
+                <div className="bg-trustbond-secondary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <FileText className="h-8 w-8 text-trustbond-secondary" />
                 </div>
                 <h3 className="text-xl font-semibold mb-3">2. Verification by Banks</h3>
                 <p className="text-gray-600">
@@ -170,8 +170,8 @@ const About = () => {
               </div>
               
               <div className="text-center">
-                <div className="bg-cryptolock-accent/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <TrendingUp className="h-8 w-8 text-cryptolock-accent" />
+                <div className="bg-trustbond-accent/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <TrendingUp className="h-8 w-8 text-trustbond-accent" />
                 </div>
                 <h3 className="text-xl font-semibold mb-3">3. Trust Score Generation</h3>
                 <p className="text-gray-600">
@@ -183,27 +183,27 @@ const About = () => {
             <div className="mt-16 p-6 bg-gray-50 rounded-lg border border-gray-200">
               <h3 className="text-xl font-semibold mb-4">Technical Implementation</h3>
               <p className="text-gray-700 mb-4">
-                CRYPTO-LOCK is built on a robust technology stack that includes:
+                TrustBond is built on a robust technology stack that includes:
               </p>
               <ul className="space-y-2 text-gray-600">
                 <li className="flex items-start">
-                  <div className="mt-1 mr-2 text-cryptolock-primary">•</div>
+                  <div className="mt-1 mr-2 text-trustbond-primary">•</div>
                   <span><strong>Backend:</strong> Node.js/Express and Python/Flask for handling KYC data requests and processing</span>
                 </li>
                 <li className="flex items-start">
-                  <div className="mt-1 mr-2 text-cryptolock-primary">•</div>
+                  <div className="mt-1 mr-2 text-trustbond-primary">•</div>
                   <span><strong>Blockchain Integration:</strong> Web3.js/Ethers.js for blockchain interactions and smart contracts</span>
                 </li>
                 <li className="flex items-start">
-                  <div className="mt-1 mr-2 text-cryptolock-primary">•</div>
+                  <div className="mt-1 mr-2 text-trustbond-primary">•</div>
                   <span><strong>Machine Learning:</strong> Python libraries like TensorFlow and Scikit-learn for trust score generation</span>
                 </li>
                 <li className="flex items-start">
-                  <div className="mt-1 mr-2 text-cryptolock-primary">•</div>
+                  <div className="mt-1 mr-2 text-trustbond-primary">•</div>
                   <span><strong>Frontend:</strong> React.js and Web3.js for user interfaces and blockchain interaction</span>
                 </li>
                 <li className="flex items-start">
-                  <div className="mt-1 mr-2 text-cryptolock-primary">•</div>
+                  <div className="mt-1 mr-2 text-trustbond-primary">•</div>
                   <span><strong>Security:</strong> Multi-factor authentication, encryption, and access control mechanisms</span>
                 </li>
               </ul>
@@ -216,7 +216,7 @@ const About = () => {
           <div className="container mx-auto">
             <SectionHeading 
               title="Our Team" 
-              subtitle="Meet the dedicated team behind CRYPTO-LOCK"
+              subtitle="Meet the dedicated team behind TrustBond"
               centered={true}
             />
             
@@ -224,28 +224,28 @@ const About = () => {
               <div className="bg-white p-6 rounded-lg shadow-md text-center">
                 <div className="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-4"></div>
                 <h3 className="text-lg font-semibold">Aadesh Sharma</h3>
-                <p className="text-cryptolock-primary text-sm mb-2">Team Lead</p>
+                <p className="text-trustbond-primary text-sm mb-2">Team Lead</p>
                 <p className="text-gray-500 text-sm">0108IC211001</p>
               </div>
               
               <div className="bg-white p-6 rounded-lg shadow-md text-center">
                 <div className="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-4"></div>
                 <h3 className="text-lg font-semibold">Akash Jambulkar</h3>
-                <p className="text-cryptolock-primary text-sm mb-2">Blockchain Developer</p>
+                <p className="text-trustbond-primary text-sm mb-2">Blockchain Developer</p>
                 <p className="text-gray-500 text-sm">0108IC211005</p>
               </div>
               
               <div className="bg-white p-6 rounded-lg shadow-md text-center">
                 <div className="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-4"></div>
                 <h3 className="text-lg font-semibold">Jahnvi Chourey</h3>
-                <p className="text-cryptolock-primary text-sm mb-2">ML Developer</p>
+                <p className="text-trustbond-primary text-sm mb-2">ML Developer</p>
                 <p className="text-gray-500 text-sm">0108IC211023</p>
               </div>
               
               <div className="bg-white p-6 rounded-lg shadow-md text-center">
                 <div className="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-4"></div>
                 <h3 className="text-lg font-semibold">Shivam Soni</h3>
-                <p className="text-cryptolock-primary text-sm mb-2">Frontend Developer</p>
+                <p className="text-trustbond-primary text-sm mb-2">Frontend Developer</p>
                 <p className="text-gray-500 text-sm">0108IC211053</p>
               </div>
             </div>
@@ -259,13 +259,13 @@ const About = () => {
         </section>
         
         {/* Contact CTA */}
-        <section className="py-16 px-4 bg-gradient-to-r from-cryptolock-primary to-cryptolock-secondary text-white">
+        <section className="py-16 px-4 bg-gradient-to-r from-trustbond-primary to-trustbond-secondary text-white">
           <div className="container mx-auto text-center">
             <h2 className="text-3xl font-bold mb-6">Ready to Transform KYC Verification?</h2>
             <p className="text-xl max-w-3xl mx-auto mb-8 opacity-90">
               Whether you're a financial institution looking to streamline your KYC process or a developer interested in our technology, we'd love to hear from you.
             </p>
-            <Button variant="default" className="bg-white text-cryptolock-primary hover:bg-gray-100" size="lg" asChild>
+            <Button variant="default" className="bg-white text-trustbond-primary hover:bg-gray-100" size="lg" asChild>
               <Link to="/contact">Contact Us Today</Link>
             </Button>
           </div>
@@ -278,3 +278,4 @@ const About = () => {
 };
 
 export default About;
+

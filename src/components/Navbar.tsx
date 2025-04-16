@@ -15,19 +15,19 @@ const Navbar = () => {
           {/* Logo and brand */}
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-cryptolock-primary to-cryptolock-secondary flex items-center justify-center">
-                <span className="text-white font-bold">CL</span>
+              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-trustbond-primary to-trustbond-secondary flex items-center justify-center">
+                <span className="text-white font-bold">TB</span>
               </div>
-              <span className="text-xl font-bold">CRYPTO-LOCK</span>
+              <span className="text-xl font-bold">TrustBond</span>
             </Link>
           </div>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link to="/" className="px-3 py-2 text-gray-700 hover:text-cryptolock-primary transition-colors">
+            <Link to="/" className="px-3 py-2 text-gray-700 hover:text-trustbond-primary transition-colors">
               Home
             </Link>
-            <Link to="/about" className="px-3 py-2 text-gray-700 hover:text-cryptolock-primary transition-colors">
+            <Link to="/about" className="px-3 py-2 text-gray-700 hover:text-trustbond-primary transition-colors">
               About
             </Link>
             
@@ -35,7 +35,7 @@ const Navbar = () => {
             <div className="relative">
               <button 
                 onClick={() => setIsResourcesOpen(!isResourcesOpen)}
-                className="px-3 py-2 text-gray-700 hover:text-cryptolock-primary transition-colors flex items-center"
+                className="px-3 py-2 text-gray-700 hover:text-trustbond-primary transition-colors flex items-center"
               >
                 Resources
                 <ChevronDown className="ml-1 w-4 h-4" />
@@ -45,14 +45,14 @@ const Navbar = () => {
                 <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 shadow-md rounded-md w-48 py-1 z-10">
                   <Link 
                     to="/whitepaper" 
-                    className="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-cryptolock-primary"
+                    className="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-trustbond-primary"
                     onClick={() => setIsResourcesOpen(false)}
                   >
                     Whitepaper
                   </Link>
                   <Link 
                     to="/contact" 
-                    className="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-cryptolock-primary"
+                    className="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-trustbond-primary"
                     onClick={() => setIsResourcesOpen(false)}
                   >
                     Contact
@@ -62,10 +62,10 @@ const Navbar = () => {
             </div>
             
             <Link to="/login">
-              <Button variant="cryptoOutline" className="ml-2">Log in</Button>
+              <Button variant="outline" className="ml-2">Log in</Button>
             </Link>
             <Link to="/register">
-              <Button variant="crypto">Register</Button>
+              <Button variant="default">Register</Button>
             </Link>
           </div>
 
@@ -86,38 +86,38 @@ const Navbar = () => {
             <div className="flex flex-col space-y-2 pt-2 pb-3">
               <Link 
                 to="/" 
-                className="px-4 py-2 text-base text-gray-700 hover:bg-gray-100 hover:text-cryptolock-primary rounded-md"
+                className="px-4 py-2 text-base text-gray-700 hover:bg-gray-100 hover:text-trustbond-primary rounded-md"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Home
               </Link>
               <Link 
                 to="/about" 
-                className="px-4 py-2 text-base text-gray-700 hover:bg-gray-100 hover:text-cryptolock-primary rounded-md"
+                className="px-4 py-2 text-base text-gray-700 hover:bg-gray-100 hover:text-trustbond-primary rounded-md"
                 onClick={() => setIsMenuOpen(false)}
               >
                 About
               </Link>
               <Link 
                 to="/whitepaper" 
-                className="px-4 py-2 text-base text-gray-700 hover:bg-gray-100 hover:text-cryptolock-primary rounded-md"
+                className="px-4 py-2 text-base text-gray-700 hover:bg-gray-100 hover:text-trustbond-primary rounded-md"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Whitepaper
               </Link>
               <Link 
                 to="/contact" 
-                className="px-4 py-2 text-base text-gray-700 hover:bg-gray-100 hover:text-cryptolock-primary rounded-md"
+                className="px-4 py-2 text-base text-gray-700 hover:bg-gray-100 hover:text-trustbond-primary rounded-md"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Contact
               </Link>
               <div className="pt-2 flex flex-col space-y-2">
                 <Link to="/login">
-                  <Button variant="cryptoOutline" className="w-full">Log in</Button>
+                  <Button variant="outline" className="w-full">Log in</Button>
                 </Link>
                 <Link to="/register">
-                  <Button variant="crypto" className="w-full">Register</Button>
+                  <Button variant="default" className="w-full">Register</Button>
                 </Link>
               </div>
             </div>

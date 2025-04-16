@@ -9,10 +9,10 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <Link to="/" className="flex items-center space-x-2 mb-4">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-cryptolock-primary to-cryptolock-secondary flex items-center justify-center">
-                <span className="text-white font-bold">CL</span>
+              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-trustbond-primary to-trustbond-secondary flex items-center justify-center">
+                <span className="text-white font-bold">TB</span>
               </div>
-              <span className="text-xl font-bold">CRYPTO-LOCK</span>
+              <span className="text-xl font-bold">TrustBond</span>
             </Link>
             <p className="text-gray-400 mb-4">
               Blockchain-powered KYC verification and trust score generation for secure, efficient, and transparent financial services.
@@ -53,7 +53,7 @@ const Footer = () => {
           <div>
             <h3 className="font-semibold text-lg mb-4">Contact</h3>
             <ul className="space-y-2">
-              <li className="text-gray-400">infoTrustbond@trustbond.com</li>
+              <li className="text-gray-400">info@trustbond.com</li>
               <li className="text-gray-400">+91 9854742954</li>
               <li><Link to="/contact" className="text-gray-400 hover:text-white">Contact Form</Link></li>
               <li><a href="#" className="text-gray-400 hover:text-white">Support</a></li>
@@ -62,7 +62,7 @@ const Footer = () => {
         </div>
         
         <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-gray-400 text-sm">© 2025 CRYPTO-LOCK. All rights reserved.</p>
+          <p className="text-gray-400 text-sm">© 2025 TrustBond. All rights reserved.</p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <a href="#" className="text-sm text-gray-400 hover:text-white">Privacy Policy</a>
             <a href="#" className="text-sm text-gray-400 hover:text-white">Terms of Service</a>
