@@ -1,64 +1,22 @@
 
-import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBlockchain } from "@/contexts/BlockchainContext";
-import { Shield, CreditCard, AlertTriangle, CheckCircle, Clock } from "lucide-react";
+import { Shield, CreditCard, AlertTriangle } from "lucide-react";
 import { LoanAnalyticsDashboard } from "@/components/analytics/LoanAnalyticsDashboard";
+import { useDashboardData } from "@/hooks/useDashboardData";
+import { useKYCStatusUI } from "@/hooks/useKYCStatusUI";
 
 const UserHome = () => {
   const { user } = useAuth();
-  const { 
-    isConnected, 
-    account, 
-    getKYCStatus, 
-    trustScoreContract, 
-    loanContract, 
-    web3 
-  } = useBlockchain();
+  const { isConnected } = useBlockchain();
   const navigate = useNavigate();
-
-  const [kycStatus, setKYCStatus] = useState<'pending' | 'verified' | 'not_submitted'>('not_submitted');
-  const [trustScore, setTrustScore] = useState<number>(0);
-  const [activeLoans, setActiveLoans] = useState<number>(0);
-
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      if (!isConnected || !account) return;
-
-      try {
-        // Fetch KYC Status
-        const status = await getKYCStatus(account);
-        setKYCStatus(status ? 'verified' : 'pending');
-
-        // Fetch Trust Score
-        if (trustScoreContract) {
-          const score = await trustScoreContract.methods.calculateScore(account).call();
-          setTrustScore(parseInt(score));
-        }
-
-        // Fetch Active Loans
-        if (loanContract) {
-          const loanIds = await loanContract.methods.getUserLoans(account).call();
-          const activeLoanDetails = await Promise.all(
-            loanIds.map((id: string) => loanContract.methods.getLoan(id).call())
-          );
-          
-          const activeLoansCount = activeLoanDetails.filter(
-            (loan: any) => loan.status === '4' || loan.status === '5'
-          ).length;
-          
-          setActiveLoans(activeLoansCount);
-        }
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error);
-      }
-    };
-
-    fetchDashboardData();
-  }, [isConnected, account, getKYCStatus, trustScoreContract, loanContract]);
+  
+  // Use custom hooks
+  const { kycStatus, trustScore, activeLoans, isLoading, error } = useDashboardData();
+  const { getStatusIcon, getStatusText, getStatusDescription, needsAction } = useKYCStatusUI(kycStatus);
 
   return (
     <div className="space-y-6">
@@ -88,38 +46,36 @@ const UserHome = () => {
         </Card>
       )}
 
+      {error && (
+        <Card className="bg-red-50 border-red-200">
+          <CardContent className="pt-6">
+            <div className="flex items-start space-x-4">
+              <AlertTriangle className="mt-0.5 text-red-600" />
+              <div>
+                <h3 className="font-medium text-red-800">Data Loading Error</h3>
+                <p className="text-sm text-red-700 mt-1">
+                  {error}. Please try refreshing the page.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">KYC Status</CardTitle>
-            {kycStatus === 'verified' ? (
-              <CheckCircle className="h-4 w-4 text-green-500" />
-            ) : kycStatus === 'pending' ? (
-              <Clock className="h-4 w-4 text-amber-500" />
-            ) : (
-              <AlertTriangle className="h-4 w-4 text-red-500" />
-            )}
+            {getStatusIcon()}
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {kycStatus === 'verified' ? (
-                <span className="text-green-500">Verified</span>
-              ) : kycStatus === 'pending' ? (
-                <span className="text-amber-500">Pending Verification</span>
-              ) : (
-                <span className="text-red-500">Not Submitted</span>
-              )}
+              {getStatusText()}
             </div>
             <p className="text-xs text-muted-foreground">
-              {kycStatus === 'verified' ? (
-                'Your identity has been verified'
-              ) : kycStatus === 'pending' ? (
-                'Waiting for bank verification'
-              ) : (
-                'Submit your documents to get verified'
-              )}
+              {getStatusDescription()}
             </p>
-            {kycStatus !== 'verified' && (
+            {needsAction && (
               <Button 
                 variant="link" 
                 className="p-0 h-auto mt-2 text-sm"
