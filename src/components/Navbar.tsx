@@ -44,11 +44,11 @@ const Navbar = () => {
               About
             </Link>
             
-            {/* Resources Dropdown */}
+            {/* Resources Dropdown - fixed by improving the dropdown behavior */}
             <div className="relative">
               <button 
                 onClick={() => setIsResourcesOpen(!isResourcesOpen)}
-                className="px-3 py-2 text-gray-700 hover:text-trustbond-primary transition-colors flex items-center cursor-pointer"
+                className={`px-3 py-2 ${location.pathname === '/whitepaper' || location.pathname === '/contact' ? 'text-trustbond-primary font-medium' : 'text-gray-700'} hover:text-trustbond-primary transition-colors flex items-center cursor-pointer`}
                 aria-expanded={isResourcesOpen}
                 aria-haspopup="true"
               >
