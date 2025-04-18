@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { User, UserRole } from "./types";
@@ -28,6 +27,25 @@ export const createUserWithProfile = async (
   role: UserRole = 'user'
 ): Promise<boolean> => {
   try {
+    // Validate input parameters
+    if (!email || !password || !name) {
+      toast.error("Please fill in all required fields");
+      return false;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error("Please enter a valid email address");
+      return false;
+    }
+
+    // Password strength validation
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters long");
+      return false;
+    }
+
     // First, sign up the user with Supabase Auth
     const { data, error } = await supabase.auth.signUp({
       email: email,
@@ -43,18 +61,24 @@ export const createUserWithProfile = async (
     });
 
     if (error) {
-      console.error("Registration error:", error);
-      toast.error("Registration failed: " + error.message);
+      // Handle specific auth errors
+      if (error.message.includes("already registered")) {
+        toast.error("This email is already registered. Please try logging in instead.");
+      } else if (error.message.includes("invalid password")) {
+        toast.error("Invalid password format. Password must be at least 6 characters long.");
+      } else if (error.message.includes("email")) {
+        toast.error("Invalid email format. Please check your email address.");
+      } else {
+        console.error("Registration error:", error);
+        toast.error(`Registration failed: ${error.message}`);
+      }
       return false;
     }
 
     if (!data.user) {
-      console.error("No user returned from signUp");
-      toast.error("Registration failed: No user created");
+      toast.error("Registration failed: Could not create user account");
       return false;
     }
-
-    console.log("User created successfully:", data.user.id);
 
     // Create a user profile in the profiles table
     const { error: profileError } = await supabase
@@ -62,7 +86,7 @@ export const createUserWithProfile = async (
       .insert([
         {
           id: data.user.id,
-          user_id: data.user.id,  // Explicitly set user_id to match auth.uid()
+          user_id: data.user.id,
           email: email,
           name: name,
           role: role,
@@ -73,15 +97,22 @@ export const createUserWithProfile = async (
 
     if (profileError) {
       console.error("Profile creation error:", profileError);
-      toast.error("Failed to create user profile: " + profileError.message);
+      if (profileError.code === '23505') { // Unique violation
+        toast.error("A profile with this email already exists");
+      } else if (profileError.code === '42501') { // RLS violation
+        toast.error("Permission denied: Could not create user profile");
+      } else {
+        toast.error(`Failed to create user profile: ${profileError.message}`);
+      }
       return false;
     }
 
     toast.success("Registration successful! Please check your email to verify your account.");
     return true;
+
   } catch (error) {
     console.error("Registration submission error:", error);
-    toast.error("Registration failed: " + (error instanceof Error ? error.message : "Unknown error"));
+    toast.error("Registration failed: " + (error instanceof Error ? error.message : "An unexpected error occurred"));
     return false;
   }
 };
