@@ -12,12 +12,12 @@ const AboutHero = () => {
             Transforming KYC verification and loan processes through blockchain technology to create a more secure, efficient, and inclusive financial ecosystem.
           </p>
           <div className="flex justify-center gap-4 flex-wrap">
-            <Button asChild className="bg-white text-trustbond-primary hover:bg-gray-100">
+            <Button className="bg-white text-trustbond-primary hover:bg-gray-100" asChild>
               <Link to="/whitepaper">
                 Read Our Whitepaper
               </Link>
             </Button>
-            <Button asChild variant="outline" className="border-white text-white hover:bg-white/10">
+            <Button variant="outline" className="border-white text-white hover:bg-white/10" asChild>
               <Link to="/contact">
                 Contact Us
               </Link>

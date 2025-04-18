@@ -16,16 +16,16 @@ const HeroSection = () => {
             TrustBond enables secure sharing of KYC information between banks while protecting user privacy and generating trusted digital identities.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <Link to="/register">
-              <Button size="lg" className="bg-gradient-to-r from-trustbond-primary to-trustbond-secondary hover:opacity-90 text-white font-semibold px-8 py-6 text-lg h-auto">
+            <Button size="lg" className="bg-gradient-to-r from-trustbond-primary to-trustbond-secondary hover:opacity-90 text-white font-semibold px-8 py-6 text-lg h-auto" asChild>
+              <Link to="/register">
                 Get Started
-              </Button>
-            </Link>
-            <Link to="/whitepaper">
-              <Button size="lg" variant="outline" className="border-2 px-8 py-6 text-lg h-auto hover:bg-gray-50">
+              </Link>
+            </Button>
+            <Button size="lg" variant="outline" className="border-2 px-8 py-6 text-lg h-auto hover:bg-gray-50" asChild>
+              <Link to="/whitepaper">
                 Read Whitepaper
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
           <div className="mt-12 animate-bounce">
             <ChevronDown className="mx-auto h-6 w-6 text-gray-400" />
