@@ -11,11 +11,11 @@ const ContactHero = () => {
           Have questions about TrustBond? We'd love to hear from you. Reach out to our team using the contact information below or fill out the form.
         </p>
         <div className="flex justify-center gap-6 flex-wrap animate-fade-in">
-          <Link to="/whitepaper">
+          <Link to="/about">
             <Button 
               className="bg-white text-trustbond-primary hover:bg-gray-100 transform transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl font-semibold px-8 py-3"
             >
-              Learn More in Whitepaper
+              Learn More About Us
             </Button>
           </Link>
           <Link to="/register">

@@ -25,8 +25,8 @@ const CTASection = () => {
             variant="outline" 
             className="border-2 border-white hover:bg-white/20 text-white font-semibold px-8 py-6 text-lg h-auto hover:shadow-lg hover:scale-105 transform transition-all duration-300 w-full sm:w-auto"
           >
-            <Link to="/contact" className="w-full block">
-              Contact Us
+            <Link to="/about" className="w-full block">
+              Learn More
             </Link>
           </Button>
         </div>

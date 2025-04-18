@@ -4,6 +4,13 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
 
 const HeroSection = () => {
+  const scrollToFeatures = () => {
+    const featuresSection = document.getElementById('features-section');
+    if (featuresSection) {
+      featuresSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-gradient-to-br from-trustbond-primary/5 via-trustbond-secondary/5 to-white">
       <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
@@ -24,17 +31,17 @@ const HeroSection = () => {
                 Get Started Now
               </Button>
             </Link>
-            <Link to="/whitepaper">
+            <Link to="/about">
               <Button 
                 size="lg" 
                 variant="outline" 
                 className="border-2 border-trustbond-primary px-8 py-6 text-lg h-auto hover:bg-trustbond-primary/10 transform transition-all duration-300 hover:scale-105 w-full sm:w-auto shadow-md hover:shadow-lg"
               >
-                Read Whitepaper
+                Learn More
               </Button>
             </Link>
           </div>
-          <div className="mt-16 animate-bounce cursor-pointer">
+          <div className="mt-16 animate-bounce cursor-pointer" onClick={scrollToFeatures}>
             <ChevronDown className="mx-auto h-8 w-8 text-trustbond-primary" />
           </div>
         </div>

@@ -5,6 +5,10 @@ import Footer from "@/components/Footer";
 import FeatureCard from "@/components/FeatureCard";
 import { Button } from "@/components/ui/button";
 import { Shield, Lock, TrendingUp, Database, FileText, Layers, Users, Activity, ChevronRight, CheckCircle, Award, Star } from "lucide-react";
+import HeroSection from "@/components/home/HeroSection";
+import FeaturesSection from "@/components/home/FeaturesSection";
+import HowItWorksSection from "@/components/home/HowItWorksSection";
+import CTASection from "@/components/home/CTASection";
 
 const Index = () => {
   return (
@@ -12,89 +16,7 @@ const Index = () => {
       <Navbar />
       
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-trustbond-primary to-trustbond-secondary text-white py-20 px-4">
-        <div className="container mx-auto">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="animate-fade-in">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-                Secure KYC Verification Powered by Blockchain
-              </h1>
-              <p className="text-xl mb-8 text-white/90 max-w-lg">
-                TrustBond connects banks and users through a decentralized platform for secure identity verification, trust scoring, and loan processing.
-              </p>
-              <div className="flex flex-wrap gap-4">
-                <Link to="/register">
-                  <Button className="bg-white text-trustbond-primary hover:bg-gray-100 font-medium text-base px-6 py-3 h-auto">
-                    Get Started
-                    <ChevronRight className="ml-2 h-5 w-5" />
-                  </Button>
-                </Link>
-                <Link to="/about">
-                  <Button variant="outline" className="border-white text-white hover:bg-white/10 font-medium text-base px-6 py-3 h-auto">
-                    Learn More
-                  </Button>
-                </Link>
-              </div>
-              
-              <div className="mt-12 grid grid-cols-3 gap-6">
-                <div className="text-center">
-                  <h3 className="text-3xl font-bold">100%</h3>
-                  <p className="text-white/80 text-sm">Secure Verification</p>
-                </div>
-                <div className="text-center">
-                  <h3 className="text-3xl font-bold">50+</h3>
-                  <p className="text-white/80 text-sm">Banking Partners</p>
-                </div>
-                <div className="text-center">
-                  <h3 className="text-3xl font-bold">10K+</h3>
-                  <p className="text-white/80 text-sm">Verified Users</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="rounded-xl bg-white/10 backdrop-blur-sm p-6 animate-fade-in shadow-xl border border-white/20 hidden md:block">
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 mb-4">
-                <div className="flex items-center mb-3">
-                  <Shield className="h-5 w-5 text-trustbond-accent mr-2" />
-                  <h3 className="font-semibold">KYC Verification</h3>
-                </div>
-                <div className="h-2 w-full bg-white/20 rounded-full overflow-hidden">
-                  <div className="h-full bg-trustbond-accent w-4/5 rounded-full"></div>
-                </div>
-                <p className="text-right text-sm mt-1">80% Complete</p>
-              </div>
-              
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 mb-4">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center">
-                    <Activity className="h-5 w-5 text-green-400 mr-2" />
-                    <h3 className="font-semibold">Trust Score</h3>
-                  </div>
-                  <span className="text-lg font-bold">85/100</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span>Good</span>
-                  <span className="text-green-400">↑ +5 points this month</span>
-                </div>
-              </div>
-              
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                <div className="flex items-center mb-3">
-                  <Layers className="h-5 w-5 text-blue-300 mr-2" />
-                  <h3 className="font-semibold">Blockchain Transactions</h3>
-                </div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm">Recent KYC Verification</span>
-                  <span className="text-xs bg-green-400/20 text-green-400 px-2 py-1 rounded-full">Confirmed</span>
-                </div>
-                <div className="text-xs truncate font-mono bg-white/5 p-2 rounded border border-white/10">
-                  0x3a8d...7e91
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <HeroSection />
       
       {/* Trusted By Section */}
       <section className="py-12 px-4 bg-gray-50">
@@ -123,7 +45,7 @@ const Index = () => {
       </section>
       
       {/* Features Section */}
-      <section className="py-20 px-4">
+      <section className="py-20 px-4" id="features-section">
         <div className="container mx-auto">
           <div className="text-center mb-16">
             <span className="inline-block text-sm font-semibold text-trustbond-primary bg-trustbond-primary/10 px-4 py-1 rounded-full mb-4">
@@ -339,12 +261,12 @@ const Index = () => {
             <div className="flex flex-wrap justify-center gap-4">
               <Link to="/register">
                 <Button className="bg-white text-trustbond-primary hover:bg-gray-100 font-medium text-base px-8 py-3 h-auto">
-                  Create Account
+                  Get Started
                 </Button>
               </Link>
               <Link to="/contact">
                 <Button variant="outline" className="border-2 border-white text-white hover:bg-white/10 font-medium text-base px-8 py-3 h-auto">
-                  Contact Sales
+                  Learn More
                 </Button>
               </Link>
             </div>
