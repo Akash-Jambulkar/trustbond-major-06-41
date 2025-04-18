@@ -4,28 +4,28 @@ import { Button } from "@/components/ui/button";
 
 const ContactHero = () => {
   return (
-    <section className="bg-trustbond-primary text-white py-16 px-6">
+    <section className="bg-gradient-to-r from-trustbond-primary to-trustbond-secondary text-white py-20 px-6">
       <div className="container mx-auto text-center">
-        <h1 className="text-4xl font-bold mb-4">Contact Us</h1>
-        <p className="text-lg max-w-2xl mx-auto mb-6">
+        <h1 className="text-4xl md:text-5xl font-bold mb-6 animate-fade-in">Contact Us</h1>
+        <p className="text-lg md:text-xl max-w-2xl mx-auto mb-10 opacity-90 animate-fade-in">
           Have questions about TrustBond? We'd love to hear from you. Reach out to our team using the contact information below or fill out the form.
         </p>
-        <div className="flex justify-center gap-4 flex-wrap">
-          <Button 
-            className="bg-white text-trustbond-primary hover:bg-gray-100 hover:scale-105 transform transition-all duration-300 shadow-md hover:shadow-lg"
-          >
-            <Link to="/whitepaper" className="px-6 py-2 block">
+        <div className="flex justify-center gap-6 flex-wrap animate-fade-in">
+          <Link to="/whitepaper">
+            <Button 
+              className="bg-white text-trustbond-primary hover:bg-gray-100 transform transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl font-semibold px-8 py-3"
+            >
               Learn More in Whitepaper
-            </Link>
-          </Button>
-          <Button 
-            variant="outline" 
-            className="border-white text-white hover:bg-white/20 hover:scale-105 transform transition-all duration-300 shadow-md hover:shadow-lg"
-          >
-            <Link to="/register" className="px-6 py-2 block">
+            </Button>
+          </Link>
+          <Link to="/register">
+            <Button 
+              variant="outline" 
+              className="border-2 border-white text-white hover:bg-white/20 transform transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl font-semibold px-8 py-3"
+            >
               Create Account
-            </Link>
-          </Button>
+            </Button>
+          </Link>
         </div>
       </div>
     </section>
