@@ -69,23 +69,23 @@ const About = () => {
                   Our mission is to revolutionize how identity verification and loan processes work in the digital age by making these essential financial services:
                 </p>
                 <ul className="space-y-2">
-                  <li className="flex items-center">
+                  <li className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-trustbond-primary mr-2" />
                     <span><strong>Secure:</strong> Protecting user data and privacy above all else</span>
                   </li>
-                  <li className="flex items-center">
+                  <li className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-trustbond-primary mr-2" />
                     <span><strong>Efficient:</strong> Eliminating redundant processes and waiting periods</span>
                   </li>
-                  <li className="flex items-center">
+                  <li className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-trustbond-primary mr-2" />
                     <span><strong>Transparent:</strong> Providing clear visibility into all processes</span>
                   </li>
-                  <li className="flex items-center">
+                  <li className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-trustbond-primary mr-2" />
                     <span><strong>Inclusive:</strong> Making financial services accessible to more people</span>
                   </li>
-                  <li className="flex items-center">
+                  <li className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-trustbond-primary mr-2" />
                     <span><strong>User-Controlled:</strong> Giving individuals control over their data</span>
                   </li>
@@ -278,4 +278,3 @@ const About = () => {
 };
 
 export default About;
-

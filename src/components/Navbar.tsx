@@ -3,16 +3,24 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X, ChevronDown } from "lucide-react";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
+import { cn } from "@/lib/utils";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isResourcesOpen, setIsResourcesOpen] = useState(false);
   const location = useLocation();
 
   // Close dropdown when route changes
   useEffect(() => {
     setIsMenuOpen(false);
-    setIsResourcesOpen(false);
   }, [location.pathname]);
 
   return (
@@ -44,38 +52,53 @@ const Navbar = () => {
               About
             </Link>
             
-            {/* Resources Dropdown - fixed by improving the dropdown behavior */}
-            <div className="relative">
-              <button 
-                onClick={() => setIsResourcesOpen(!isResourcesOpen)}
-                className={`px-3 py-2 ${location.pathname === '/whitepaper' || location.pathname === '/contact' ? 'text-trustbond-primary font-medium' : 'text-gray-700'} hover:text-trustbond-primary transition-colors flex items-center cursor-pointer`}
-                aria-expanded={isResourcesOpen}
-                aria-haspopup="true"
-              >
-                Resources
-                <ChevronDown className={`ml-1 w-4 h-4 transform transition-transform ${isResourcesOpen ? 'rotate-180' : ''}`} />
-              </button>
-              
-              {isResourcesOpen && (
-                <div 
-                  className="absolute top-full left-0 mt-1 bg-white border border-gray-200 shadow-md rounded-md w-48 py-1 z-10"
-                  onMouseLeave={() => setIsResourcesOpen(false)}
-                >
-                  <Link 
-                    to="/whitepaper" 
-                    className={`block px-4 py-2 ${location.pathname === '/whitepaper' ? 'text-trustbond-primary bg-gray-50' : 'text-gray-700'} hover:bg-gray-100 hover:text-trustbond-primary cursor-pointer`}
+            <NavigationMenu>
+              <NavigationMenuList>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger 
+                    className={`${location.pathname === '/whitepaper' || location.pathname === '/contact' ? 'text-trustbond-primary font-medium' : 'text-gray-700'} hover:text-trustbond-primary transition-colors cursor-pointer`}
                   >
-                    Whitepaper
-                  </Link>
-                  <Link 
-                    to="/contact" 
-                    className={`block px-4 py-2 ${location.pathname === '/contact' ? 'text-trustbond-primary bg-gray-50' : 'text-gray-700'} hover:bg-gray-100 hover:text-trustbond-primary cursor-pointer`}
-                  >
-                    Contact
-                  </Link>
-                </div>
-              )}
-            </div>
+                    Resources
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="grid w-[200px] gap-1 p-2">
+                      <li>
+                        <NavigationMenuLink asChild>
+                          <Link
+                            to="/whitepaper"
+                            className={cn(
+                              "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+                              location.pathname === '/whitepaper' ? "bg-accent text-accent-foreground" : "text-gray-700"
+                            )}
+                          >
+                            <div className="text-sm font-medium">Whitepaper</div>
+                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                              Read our technical paper
+                            </p>
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
+                      <li>
+                        <NavigationMenuLink asChild>
+                          <Link
+                            to="/contact"
+                            className={cn(
+                              "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+                              location.pathname === '/contact' ? "bg-accent text-accent-foreground" : "text-gray-700"
+                            )}
+                          >
+                            <div className="text-sm font-medium">Contact</div>
+                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                              Get in touch with our team
+                            </p>
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
+                    </ul>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
             
             <Link to="/login">
               <Button variant="outline" className="ml-2 cursor-pointer">Log in</Button>
