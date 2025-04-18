@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { User, Mail, LockKeyhole, CheckCircle2 } from "lucide-react";
 import { useRegisterForm, RegisterFormValues } from "@/hooks/useRegisterForm";
+import { useNavigate } from "react-router-dom";
 import {
   Form,
   FormControl,
@@ -20,13 +21,24 @@ export const RegisterForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
   const { form } = useRegisterForm();
+  const navigate = useNavigate();
 
   const handleSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true);
     try {
       // Pass the role parameter from the form
-      await register(data.email, data.password, data.name, data.role);
-      // Navigation is handled in the register function
+      const success = await register(data.email, data.password, data.name, data.role);
+      
+      if (success) {
+        // On success, redirect to login page since verification is needed
+        setTimeout(() => {
+          navigate("/login", { 
+            state: { 
+              message: "Registration successful! Please check your email to verify your account." 
+            } 
+          });
+        }, 2000); // Short delay to allow the toast to be seen
+      }
     } catch (error) {
       console.error("Registration error:", error);
     } finally {

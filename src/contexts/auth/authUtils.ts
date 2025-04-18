@@ -47,6 +47,20 @@ export const createUserWithProfile = async (
       return false;
     }
 
+    // Check if a user with this email already exists in the profiles table
+    const { data: existingProfiles, error: profileCheckError } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('email', email)
+      .maybeSingle();
+
+    if (profileCheckError) {
+      console.error("Error checking for existing profile:", profileCheckError);
+    } else if (existingProfiles) {
+      toast.error("This email is already registered. Please try logging in instead.");
+      return false;
+    }
+
     // First, sign up the user with Supabase Auth
     const { data, error } = await supabase.auth.signUp({
       email: email,
@@ -98,14 +112,16 @@ export const createUserWithProfile = async (
       console.error("Profile creation error:", profileError);
       
       if (profileError.code === '23505') { // Unique violation
-        toast.error("A profile with this email already exists");
+        // If we get a unique constraint violation after checking for existing profiles,
+        // it likely means there's a race condition or the database trigger already created the profile
+        console.log("A profile already exists for this user - continuing with login process");
+        toast.success("Registration successful! Please check your email to verify your account.");
+        return true;
       } else {
-        toast.error(`Failed to create user profile: ${profileError.message}`);
+        // For other errors, notify but don't block the registration
+        console.warn(`Profile creation warning: ${profileError.message}`);
+        toast.info("Account created, but your profile may need to be updated after login");
       }
-      
-      // Even if profile creation fails, we should return true since the user account was created
-      // The user can try to update their profile later
-      toast.info("Account created, but profile setup encountered an issue. You can update your profile after logging in.");
       return true;
     }
 
