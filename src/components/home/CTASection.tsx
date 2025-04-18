@@ -12,13 +12,22 @@ const CTASection = () => {
           Join our platform today and experience the security and efficiency of blockchain-based identity verification.
         </p>
         <div className="flex flex-wrap justify-center gap-6">
-          <Button size="lg" className="bg-white hover:bg-gray-50 text-trustbond-primary font-semibold border-white px-8 py-6 text-lg h-auto" asChild>
-            <Link to="/register">
+          <Button 
+            size="lg" 
+            className="bg-white hover:bg-gray-50 text-trustbond-primary font-semibold border-white px-8 py-6 text-lg h-auto hover:shadow-lg hover:scale-105 transform transition-all duration-300 w-full sm:w-auto"
+            asChild
+          >
+            <Link to="/register" className="w-full">
               Create Account
             </Link>
           </Button>
-          <Button size="lg" variant="outline" className="border-2 border-white hover:bg-white/20 text-white font-semibold px-8 py-6 text-lg h-auto" asChild>
-            <Link to="/contact">
+          <Button 
+            size="lg" 
+            variant="outline" 
+            className="border-2 border-white hover:bg-white/20 text-white font-semibold px-8 py-6 text-lg h-auto hover:shadow-lg hover:scale-105 transform transition-all duration-300 w-full sm:w-auto"
+            asChild
+          >
+            <Link to="/contact" className="w-full">
               Contact Us
             </Link>
           </Button>
