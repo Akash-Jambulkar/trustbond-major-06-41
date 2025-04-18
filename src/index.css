@@ -1,143 +1,83 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
- 
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 222 47% 11%;
     --primary: 221.2 83.2% 53.3%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 173 85% 32%;
+    --secondary-foreground: 210 40% 98%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 47 95% 53%;
+    --accent-foreground: 222 47% 11%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
-    --radius: 1rem;
+    --radius: 0.75rem;
   }
- 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
-  }
-}
- 
-@layer base {
+
   * {
-    @apply border-border selection:bg-trustbond-primary/10;
+    @apply border-border;
+    scroll-behavior: smooth;
   }
+
   body {
     @apply bg-background text-foreground antialiased;
-    font-feature-settings: "ss01", "ss02", "cv01", "cv02", "cv03";
-    font-family: 'Inter', sans-serif;
   }
 }
 
-/* Custom styles for CRYPTO-LOCK/TrustBond */
-.gradient-text {
-  @apply bg-gradient-to-r from-cryptolock-primary to-cryptolock-secondary text-transparent bg-clip-text;
-}
-
-.bg-gradient-custom {
-  @apply bg-gradient-to-r from-cryptolock-primary to-cryptolock-secondary;
-}
-
-.section-heading {
-  @apply text-3xl font-bold mb-6;
-}
-
-.section-subheading {
-  @apply text-xl font-semibold mb-4;
-}
-
-/* Animation for blockchain nodes */
-@keyframes pulse {
-  0% {
-    opacity: 0.6;
-    transform: scale(0.95);
+@layer components {
+  .btn-primary {
+    @apply bg-trustbond-primary hover:bg-trustbond-primary/90 text-white font-medium py-2 px-6 rounded-lg transition-all duration-300;
   }
-  70% {
+  
+  .btn-secondary {
+    @apply bg-trustbond-secondary hover:bg-trustbond-secondary/90 text-white font-medium py-2 px-6 rounded-lg transition-all duration-300;
+  }
+  
+  .btn-accent {
+    @apply bg-trustbond-accent hover:bg-trustbond-accent/90 text-trustbond-dark font-medium py-2 px-6 rounded-lg transition-all duration-300;
+  }
+  
+  .btn-outline {
+    @apply border-2 border-trustbond-primary text-trustbond-primary hover:bg-trustbond-primary/10 font-medium py-2 px-6 rounded-lg transition-all duration-300;
+  }
+  
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+  }
+  
+  .gradient-primary {
+    @apply bg-gradient-to-r from-trustbond-primary to-trustbond-secondary;
+  }
+
+  .gradient-accent {
+    @apply bg-gradient-to-r from-trustbond-secondary to-trustbond-accent;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
     opacity: 1;
-    transform: scale(1);
+    transform: translateY(0);
   }
-  100% {
-    opacity: 0.6;
-    transform: scale(0.95);
-  }
-}
-
-.node-animation {
-  animation: pulse 2s infinite;
-}
-
-.node-animation-delay-1 {
-  animation-delay: 0.5s;
-}
-
-.node-animation-delay-2 {
-  animation-delay: 1s;
-}
-
-.node-animation-delay-3 {
-  animation-delay: 1.5s;
-}
-
-/* Code block styling */
-.code-block {
-  @apply bg-gray-800 text-gray-100 p-4 rounded-md overflow-auto font-mono text-sm;
-}
-
-/* Grid pattern background */
-.bg-grid-pattern {
-  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-}
-
-/* Enhanced transitions */
-.hover-lift {
-  @apply transition-transform duration-300 ease-out hover:-translate-y-1;
-}
-
-.hover-shadow {
-  @apply transition-shadow duration-300 ease-out hover:shadow-lg;
-}
-
-/* Enhanced buttons */
-.btn-gradient {
-  @apply bg-gradient-to-r from-trustbond-primary to-trustbond-secondary text-white 
-         transition-all duration-300 hover:opacity-90 hover:shadow-md;
-}
-
-.btn-outline-gradient {
-  @apply border-2 border-trustbond-primary text-trustbond-primary 
-         transition-all duration-300 hover:bg-trustbond-primary/5;
 }

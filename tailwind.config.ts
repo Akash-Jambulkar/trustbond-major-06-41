@@ -1,24 +1,23 @@
 
-import type { Config } from "tailwindcss";
+import { type Config } from "tailwindcss";
 
-const config: Config = {
+export default {
   darkMode: ["class"],
   content: [
-    './pages/**/*.{ts,tsx}',
-    './components/**/*.{ts,tsx}',
-    './app/**/*.{ts,tsx}',
-    './src/**/*.{ts,tsx}',
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    container: {
-      center: true,
-      padding: "2rem",
-      screens: {
-        "2xl": "1400px",
-      },
-    },
     extend: {
       colors: {
+        trustbond: {
+          primary: "#2563EB",    // Deep blue
+          secondary: "#0D9488",  // Teal
+          accent: "#FACC15",     // Gold
+          dark: "#1F2937",       // Dark gray
+          light: "#F9FAFB",      // Light gray
+          muted: "#6B7280",      // Medium gray
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -52,26 +51,6 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Custom colors for TrustBond/CRYPTO-LOCK
-        trustbond: {
-          primary: "#3B82F6",
-          secondary: "#8B5CF6",
-          accent: "#10B981",
-          dark: "#1E293B",
-          light: "#F8FAFC"
-        },
-        cryptolock: {
-          primary: "#3B82F6", // Blue
-          secondary: "#8B5CF6", // Purple
-          accent: "#10B981", // Green
-          dark: "#1E293B", // Dark blue
-          light: "#F8FAFC" // Light gray
-        }
-      },
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
       },
       keyframes: {
         "accordion-down": {
@@ -82,14 +61,33 @@ const config: Config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "fade-in": {
+          "0%": {
+            opacity: "0",
+            transform: "translateY(10px)"
+          },
+          "100%": {
+            opacity: "1",
+            transform: "translateY(0)"
+          }
+        },
+        "slide-in": {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(0)" }
+        }
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "fade-in": "fade-in 0.5s ease-out forwards",
+        "slide-in": "slide-in 0.3s ease-out forwards"
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
       },
     },
   },
   plugins: [require("tailwindcss-animate")],
-};
-
-export default config;
+} satisfies Config;

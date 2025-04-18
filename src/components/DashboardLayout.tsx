@@ -28,16 +28,17 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-gray-50">
-      {/* Main Sidebar - More compact */}
-      <div className="flex-shrink-0 w-52 bg-white border-r border-gray-200 shadow-sm">
+      {/* Main Sidebar - Compact and modern */}
+      <div className="flex-shrink-0 w-60 bg-white border-r border-gray-200 shadow-sm">
         <SidebarNav user={user} onLogout={logout} />
       </div>
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <DashboardHeader user={user} className="border-b border-gray-200 bg-white shadow-sm" />
-        {/* Content Area - With proper padding and overflow handling */}
-        <div className="flex-1 overflow-y-auto">
+        
+        {/* Content Area with proper padding and overflow handling */}
+        <div className="flex-1 overflow-y-auto p-6">
           {children}
         </div>
       </div>

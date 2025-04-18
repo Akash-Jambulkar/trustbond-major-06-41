@@ -1,199 +1,285 @@
 
-import React from 'react';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { useState } from "react";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { toast } from "sonner";
-import { Mail, Phone, MapPin } from "lucide-react";
-
-// Form validation schema
-const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
-  }),
-  email: z.string().email({
-    message: "Please enter a valid email address.",
-  }),
-  subject: z.string().min(5, {
-    message: "Subject must be at least 5 characters.",
-  }),
-  message: z.string().min(10, {
-    message: "Message must be at least 10 characters.",
-  }),
-});
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/components/ui/use-toast";
+import { Mail, Phone, MapPin, MessageSquare, Send, CheckCircle } from "lucide-react";
 
 const Contact = () => {
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      subject: "",
-      message: "",
-    },
+  const { toast } = useToast();
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    topic: "",
+    message: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // In a real app, you would send the form data to your backend
-    console.log(values);
-    toast.success("Your message has been sent successfully!");
-    form.reset();
-  }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, topic: value }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    // Simulate API call
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setIsSubmitted(true);
+      toast({
+        title: "Message Sent!",
+        description: "We'll get back to you as soon as possible.",
+      });
+    }, 1500);
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      <main className="flex-grow">
-        <section className="py-12 bg-gradient-to-r from-trustbond-primary to-trustbond-secondary text-white">
-          <div className="container mx-auto px-4 text-center">
-            <h1 className="text-4xl font-bold mb-4">Contact Us</h1>
-            <p className="text-xl max-w-3xl mx-auto">
-              Have questions or need assistance? Our team is here to help. Reach out to us and we'll respond as soon as possible.
-            </p>
-          </div>
-        </section>
-        
-        <section className="py-16 px-4">
-          <div className="container mx-auto">
-            <div className="grid md:grid-cols-2 gap-10">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Send Us a Message</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                      <FormField
-                        control={form.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Full Name</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Your full name" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email Address</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Your email address" type="email" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="subject"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Subject</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Subject of your message" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="message"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Message</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="Write your message here..." 
-                                className="min-h-32"
-                                {...field} 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <Button type="submit" className="w-full">Send Message</Button>
-                    </form>
-                  </Form>
-                </CardContent>
-              </Card>
-              
-              <div className="space-y-8">
-                <div>
-                  <h2 className="text-2xl font-semibold mb-6">Contact Information</h2>
-                  <div className="space-y-4">
-                    <div className="flex items-start space-x-3">
-                      <Mail className="h-5 w-5 text-trustbond-primary mt-1" />
-                      <div>
-                        <p className="font-medium">Email Address</p>
-                        <p className="text-gray-600">info@trustbond.com</p>
-                      </div>
+      {/* Hero Section */}
+      <section className="bg-gradient-to-r from-trustbond-primary to-trustbond-secondary text-white py-20 px-4">
+        <div className="container mx-auto text-center">
+          <span className="inline-block text-sm font-semibold bg-white/20 px-4 py-1 rounded-full mb-6 backdrop-blur-sm">
+            Contact Us
+          </span>
+          <h1 className="text-4xl md:text-5xl font-bold mb-6">Get in Touch</h1>
+          <p className="text-xl max-w-2xl mx-auto mb-6 text-white/90">
+            Have questions about TrustBond? We're here to help you with any inquiries about our platform, services, or technology.
+          </p>
+        </div>
+      </section>
+      
+      {/* Contact Form Section */}
+      <section className="py-20 px-4">
+        <div className="container mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 items-start">
+            {/* Contact Info */}
+            <div className="md:col-span-1">
+              <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 sticky top-24">
+                <h2 className="text-2xl font-bold mb-6 text-trustbond-dark">Contact Information</h2>
+                <div className="space-y-6">
+                  <div className="flex items-start gap-4">
+                    <div className="bg-trustbond-primary/10 p-3 rounded-lg">
+                      <Mail className="h-6 w-6 text-trustbond-primary" />
                     </div>
-                    <div className="flex items-start space-x-3">
-                      <Phone className="h-5 w-5 text-trustbond-primary mt-1" />
-                      <div>
-                        <p className="font-medium">Phone Number</p>
-                        <p className="text-gray-600">+1 (555) 123-4567</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <MapPin className="h-5 w-5 text-trustbond-primary mt-1" />
-                      <div>
-                        <p className="font-medium">Office Address</p>
-                        <p className="text-gray-600">
-                          123 Blockchain Avenue<br />
-                          Suite 101<br />
-                          San Francisco, CA 94105
-                        </p>
-                      </div>
+                    <div>
+                      <h3 className="font-medium text-trustbond-dark">Email</h3>
+                      <p className="text-trustbond-muted mt-1">info@trustbond.com</p>
+                      <p className="text-trustbond-muted">support@trustbond.com</p>
                     </div>
                   </div>
-                </div>
-                
-                <div>
-                  <h2 className="text-2xl font-semibold mb-6">Office Hours</h2>
-                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <div className="flex justify-between py-2">
-                      <span className="font-medium">Monday - Friday</span>
-                      <span>9:00 AM - 6:00 PM</span>
+                  
+                  <div className="flex items-start gap-4">
+                    <div className="bg-trustbond-primary/10 p-3 rounded-lg">
+                      <Phone className="h-6 w-6 text-trustbond-primary" />
                     </div>
-                    <div className="flex justify-between py-2">
-                      <span className="font-medium">Saturday</span>
-                      <span>10:00 AM - 4:00 PM</span>
+                    <div>
+                      <h3 className="font-medium text-trustbond-dark">Phone</h3>
+                      <p className="text-trustbond-muted mt-1">+1 (555) 123-4567</p>
+                      <p className="text-trustbond-muted">Mon-Fri, 9AM-5PM IST</p>
                     </div>
-                    <div className="flex justify-between py-2">
-                      <span className="font-medium">Sunday</span>
-                      <span>Closed</span>
+                  </div>
+                  
+                  <div className="flex items-start gap-4">
+                    <div className="bg-trustbond-primary/10 p-3 rounded-lg">
+                      <MapPin className="h-6 w-6 text-trustbond-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-trustbond-dark">Address</h3>
+                      <p className="text-trustbond-muted mt-1">
+                        123 Tech Park, Indore
+                      </p>
+                      <p className="text-trustbond-muted">
+                        Madhya Pradesh, 452001, India
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-4">
+                    <div className="bg-trustbond-primary/10 p-3 rounded-lg">
+                      <MessageSquare className="h-6 w-6 text-trustbond-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-trustbond-dark">Social</h3>
+                      <div className="flex gap-4 mt-2">
+                        <a href="#" className="text-trustbond-muted hover:text-trustbond-primary">Twitter</a>
+                        <a href="#" className="text-trustbond-muted hover:text-trustbond-primary">LinkedIn</a>
+                        <a href="#" className="text-trustbond-muted hover:text-trustbond-primary">GitHub</a>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
+            
+            {/* Contact Form */}
+            <div className="md:col-span-2">
+              <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+                <h2 className="text-2xl font-bold mb-6 text-trustbond-dark">Send Us a Message</h2>
+                
+                {isSubmitted ? (
+                  <div className="text-center py-12">
+                    <div className="bg-green-100 text-green-700 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <CheckCircle className="h-8 w-8" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-trustbond-dark mb-2">Thank You!</h3>
+                    <p className="text-trustbond-muted max-w-md mx-auto">
+                      Your message has been sent successfully. We'll get back to you as soon as possible.
+                    </p>
+                    <Button 
+                      className="mt-6 bg-trustbond-primary hover:bg-trustbond-primary/90" 
+                      onClick={() => setIsSubmitted(false)}
+                    >
+                      Send Another Message
+                    </Button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="name">Full Name</Label>
+                        <Input 
+                          id="name"
+                          name="name"
+                          value={formData.name}
+                          onChange={handleChange}
+                          placeholder="Enter your name"
+                          required
+                          className="focus-visible:ring-trustbond-primary"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email Address</Label>
+                        <Input 
+                          id="email"
+                          name="email"
+                          type="email"
+                          value={formData.email}
+                          onChange={handleChange}
+                          placeholder="Enter your email"
+                          required
+                          className="focus-visible:ring-trustbond-primary"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="topic">Topic</Label>
+                      <Select 
+                        value={formData.topic} 
+                        onValueChange={handleSelectChange}
+                        required
+                      >
+                        <SelectTrigger id="topic" className="focus:ring-trustbond-primary">
+                          <SelectValue placeholder="Select a topic" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="general">General Inquiry</SelectItem>
+                          <SelectItem value="technical">Technical Support</SelectItem>
+                          <SelectItem value="partnership">Partnership Opportunities</SelectItem>
+                          <SelectItem value="kyc">KYC Verification</SelectItem>
+                          <SelectItem value="blockchain">Blockchain Technology</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="message">Message</Label>
+                      <Textarea 
+                        id="message"
+                        name="message"
+                        value={formData.message}
+                        onChange={handleChange}
+                        placeholder="Tell us about your inquiry in detail..."
+                        required
+                        className="min-h-32 focus-visible:ring-trustbond-primary"
+                      />
+                    </div>
+                    
+                    <Button 
+                      type="submit" 
+                      className="bg-trustbond-primary hover:bg-trustbond-primary/90 w-full sm:w-auto"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <span className="animate-spin mr-2">●</span>
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="mr-2 h-4 w-4" />
+                          Send Message
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                )}
+              </div>
+              
+              {/* FAQ Section */}
+              <div className="mt-8 bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+                <h2 className="text-2xl font-bold mb-6 text-trustbond-dark">Frequently Asked Questions</h2>
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="font-semibold text-trustbond-dark mb-2">What is TrustBond?</h3>
+                    <p className="text-trustbond-muted">
+                      TrustBond is a blockchain-based platform that provides secure KYC verification, trust scoring, and loan processing for users and financial institutions.
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-trustbond-dark mb-2">How does the KYC verification work?</h3>
+                    <p className="text-trustbond-muted">
+                      Users submit their KYC documents through our secure platform. The documents are verified by authorized banks, and the verification status is recorded on the blockchain.
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-trustbond-dark mb-2">Is my data secure on TrustBond?</h3>
+                    <p className="text-trustbond-muted">
+                      Yes, we employ advanced encryption and blockchain technology to ensure that your sensitive data is protected. Only the verification status is stored on the blockchain, not your actual documents.
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-trustbond-dark mb-2">How can banks join the TrustBond platform?</h3>
+                    <p className="text-trustbond-muted">
+                      Banks can apply for membership through our Bank Registration process. After approval, banks can participate in KYC verification and offer loans to verified users.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </section>
-      </main>
+        </div>
+      </section>
+      
+      {/* Map Section */}
+      <section className="py-12 px-4 bg-gray-50">
+        <div className="container mx-auto">
+          <div className="bg-gray-200 rounded-xl h-80 flex items-center justify-center">
+            <p className="text-trustbond-muted">Interactive Map Here</p>
+          </div>
+        </div>
+      </section>
       
       <Footer />
     </div>

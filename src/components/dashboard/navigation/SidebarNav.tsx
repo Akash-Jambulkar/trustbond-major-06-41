@@ -1,137 +1,257 @@
 
-import { useNavigate, useLocation } from "react-router-dom";
-import { 
-  Home, 
-  User, 
-  FileText, 
-  CreditCard, 
-  BarChart2, 
-  Shield, 
-  Settings, 
-  LogOut, 
-  Users, 
-  Building, 
-  CheckSquare,
+import { useLocation, Link } from "react-router-dom";
+import {
+  BarChart2,
+  FileText,
+  Home,
   Lock,
+  LogOut,
+  Search,
+  Settings,
+  Shield,
+  User,
+  CreditCard,
   Activity,
-  Database
+  Globe,
+  Landmark,
+  Building,
+  Users,
+  CheckCircle,
+  Database,
+  Layers
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { NetworkStatus } from "@/components/NetworkStatus";
-import { cn } from "@/lib/utils";
 
-export const SidebarNav = ({ user, onLogout }: { user: any; onLogout: () => void }) => {
-  const navigate = useNavigate();
+interface SidebarNavProps {
+  user: any;
+  onLogout: () => void;
+}
+
+export function SidebarNav({ user, onLogout }: SidebarNavProps) {
   const location = useLocation();
+  const role = user?.role || "user";
 
-  const userLinks = [
-    { href: "/dashboard/user", label: "Dashboard", icon: Home },
-    { href: "/dashboard/user/kyc", label: "KYC Verification", icon: CheckSquare },
-    { href: "/dashboard/user/loans", label: "My Loans", icon: CreditCard },
-    { href: "/dashboard/user/loan-application", label: "Apply for Loan", icon: FileText },
-    { href: "/dashboard/user/trust-score", label: "Trust Score", icon: Shield },
-    { href: "/dashboard/user/credit-score", label: "Credit Score", icon: Activity },
-    { href: "/dashboard/user/analytics", label: "Analytics", icon: BarChart2 },
-    { href: "/dashboard/user/profile", label: "Profile", icon: User },
-    { href: "/dashboard/user/security", label: "Security", icon: Lock },
-    { href: "/dashboard/user/transactions", label: "Transactions", icon: Database },
+  const userNavItems = [
+    {
+      title: "Dashboard",
+      href: "/dashboard/user",
+      icon: Home,
+    },
+    {
+      title: "KYC Verification",
+      href: "/dashboard/user/kyc",
+      icon: Shield,
+    },
+    {
+      title: "Loans",
+      href: "/dashboard/user/loans",
+      icon: CreditCard,
+    },
+    {
+      title: "Apply for Loan",
+      href: "/dashboard/user/loan-application",
+      icon: FileText,
+    },
+    {
+      title: "Trust Score",
+      href: "/dashboard/user/trust-score",
+      icon: Activity,
+    },
+    {
+      title: "Credit Score",
+      href: "/dashboard/user/credit-score",
+      icon: BarChart2,
+    },
+    {
+      title: "Compliance & Market",
+      href: "/dashboard/user/compliance-market",
+      icon: Globe,
+    },
+    {
+      title: "Analytics",
+      href: "/dashboard/user/analytics",
+      icon: BarChart2,
+    },
+    {
+      title: "Transactions",
+      href: "/dashboard/user/transactions",
+      icon: Activity,
+    },
+    {
+      title: "Security Settings",
+      href: "/dashboard/user/security",
+      icon: Lock,
+    },
+    {
+      title: "Profile",
+      href: "/dashboard/user/profile",
+      icon: User,
+    },
   ];
 
-  const bankLinks = [
-    { href: "/dashboard/bank", label: "Dashboard", icon: Home },
-    { href: "/dashboard/bank/verify-kyc", label: "Verify KYC", icon: CheckSquare },
-    { href: "/dashboard/bank/loans", label: "Loans", icon: CreditCard },
-    { href: "/dashboard/bank/manage-loans", label: "Manage Loans", icon: FileText },
-    { href: "/dashboard/bank/trust-scores", label: "Trust Scores", icon: Shield },
-    { href: "/dashboard/bank/consensus-verification", label: "Consensus", icon: Users },
-    { href: "/dashboard/bank/secure-sharing", label: "Secure Sharing", icon: Lock },
-    { href: "/dashboard/bank/profile", label: "Profile", icon: Building },
-    { href: "/dashboard/bank/transactions", label: "Transactions", icon: Database },
+  const bankNavItems = [
+    {
+      title: "Dashboard",
+      href: "/dashboard/bank",
+      icon: Home,
+    },
+    {
+      title: "Verify KYC",
+      href: "/dashboard/bank/verify-kyc",
+      icon: Shield,
+    },
+    {
+      title: "Manage Loans",
+      href: "/dashboard/bank/manage-loans",
+      icon: CreditCard,
+    },
+    {
+      title: "Trust Scores",
+      href: "/dashboard/bank/trust-scores",
+      icon: Activity,
+    },
+    {
+      title: "Consensus Verification",
+      href: "/dashboard/bank/consensus-verification",
+      icon: Users,
+    },
+    {
+      title: "Secure Sharing",
+      href: "/dashboard/bank/secure-sharing",
+      icon: Lock,
+    },
+    {
+      title: "Transactions",
+      href: "/dashboard/bank/transactions",
+      icon: Activity,
+    },
+    {
+      title: "Bank Profile",
+      href: "/dashboard/bank/profile",
+      icon: Landmark,
+    },
   ];
 
-  const adminLinks = [
-    { href: "/dashboard/admin", label: "Dashboard", icon: Home },
-    { href: "/dashboard/admin/users", label: "Users", icon: Users },
-    { href: "/dashboard/admin/bank-approvals", label: "Bank Approvals", icon: Building },
-    { href: "/dashboard/admin/settings", label: "Settings", icon: Settings },
-    { href: "/dashboard/admin/blockchain-setup", label: "Blockchain", icon: Database },
-    { href: "/dashboard/admin/profile", label: "Profile", icon: User },
-    { href: "/dashboard/admin/transactions", label: "Transactions", icon: Database },
+  const adminNavItems = [
+    {
+      title: "Dashboard",
+      href: "/dashboard/admin",
+      icon: Home,
+    },
+    {
+      title: "User Management",
+      href: "/dashboard/admin/users",
+      icon: Users,
+    },
+    {
+      title: "Bank Approvals",
+      href: "/dashboard/admin/bank-approvals",
+      icon: CheckCircle,
+    },
+    {
+      title: "Bank Registration",
+      href: "/dashboard/admin/bank-registration",
+      icon: Building,
+    },
+    {
+      title: "Blockchain Setup",
+      href: "/dashboard/admin/blockchain-setup",
+      icon: Database,
+    },
+    {
+      title: "Transactions",
+      href: "/dashboard/admin/transactions",
+      icon: Activity,
+    },
+    {
+      title: "Settings",
+      href: "/dashboard/admin/settings",
+      icon: Settings,
+    },
+    {
+      title: "Profile",
+      href: "/dashboard/admin/profile",
+      icon: User,
+    },
   ];
 
-  // Determine which navigation links to use based on the user's role
-  const navLinks = user?.role === "admin" 
-    ? adminLinks 
-    : user?.role === "bank" 
-      ? bankLinks 
-      : userLinks;
-
-  const getInitials = (name: string) => {
-    if (!name) return "U";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .substring(0, 2);
-  };
+  // Choose the appropriate navigation items based on user role
+  const navItems = role === "admin" 
+    ? adminNavItems 
+    : role === "bank" 
+      ? bankNavItems 
+      : userNavItems;
 
   return (
-    <div className="flex flex-col h-full py-3 bg-white">
-      <div className="px-4 py-2 flex items-center mb-4 border-b pb-3">
-        <div className="text-xl font-bold bg-gradient-to-r from-trustbond-primary to-trustbond-secondary bg-clip-text text-transparent">TrustBond</div>
+    <div className="h-full flex flex-col bg-white">
+      {/* Logo Area */}
+      <div className="px-3 py-4">
+        <Link 
+          to="/" 
+          className="inline-flex items-center justify-center gap-2"
+        >
+          <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center">
+            <span className="text-white font-bold text-sm">TB</span>
+          </div>
+          <span className="font-bold text-trustbond-dark">TrustBond</span>
+        </Link>
       </div>
 
-      <ScrollArea className="flex-1 px-3">
-        <nav className="space-y-0.5">
-          {navLinks.map((link) => (
-            <Button
-              key={link.href}
-              variant={location.pathname === link.href ? "default" : "ghost"}
-              size="sm"
+      {/* Role Indicator */}
+      <div className="px-3 mb-2">
+        <div className="inline-flex items-center px-2 py-1 rounded-md bg-trustbond-primary/10 text-xs font-medium text-trustbond-primary">
+          <Layers className="h-3 w-3 mr-1" />
+          {role.charAt(0).toUpperCase() + role.slice(1)} Dashboard
+        </div>
+      </div>
+      
+      {/* Navigation Items */}
+      <ScrollArea className="flex-1 px-3 py-2">
+        <div className="space-y-1">
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              to={item.href}
               className={cn(
-                "w-full justify-start mb-0.5 text-sm transition-all duration-200",
-                location.pathname === link.href 
-                  ? "bg-trustbond-primary hover:bg-trustbond-primary/90" 
-                  : "hover:bg-gray-100 hover:text-trustbond-primary hover:translate-x-1"
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                location.pathname === item.href
+                  ? "bg-trustbond-primary text-white"
+                  : "text-trustbond-dark hover:bg-trustbond-primary/10 hover:text-trustbond-primary"
               )}
-              onClick={() => navigate(link.href)}
             >
-              <link.icon className="mr-2 h-4 w-4" />
-              {link.label}
-            </Button>
+              <item.icon className={cn("h-4 w-4", location.pathname === item.href ? "text-white" : "text-trustbond-muted")} />
+              {item.title}
+            </Link>
           ))}
-        </nav>
+        </div>
       </ScrollArea>
 
-      <div className="px-3 mt-auto pt-3 border-t">
-        <div className="flex items-center mb-3">
-          <NetworkStatus />
-        </div>
-        
-        <div className="flex items-center gap-2 mb-3 bg-gray-50 p-2 rounded-lg">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={user?.avatar} alt={user?.name || "User"} />
-            <AvatarFallback>{getInitials(user?.name || "User")}</AvatarFallback>
-          </Avatar>
-          <div className="flex flex-col">
-            <p className="text-sm font-medium">{user?.name || "User"}</p>
-            <p className="text-xs text-muted-foreground capitalize">{user?.role || "user"}</p>
+      {/* User/Logout */}
+      <div className="mt-auto px-3 py-4 border-t border-gray-100">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-8 h-8 bg-trustbond-primary/10 rounded-full flex items-center justify-center">
+            <User className="h-4 w-4 text-trustbond-primary" />
+          </div>
+          <div className="truncate">
+            <p className="text-sm font-medium text-trustbond-dark truncate">
+              {user?.displayName || user?.email || "User"}
+            </p>
+            <p className="text-xs text-trustbond-muted truncate">
+              {user?.email || ""}
+            </p>
           </div>
         </div>
-        
         <Button 
-          variant="ghost" 
-          size="sm"
-          className="w-full justify-start text-red-500 hover:text-red-700 hover:bg-red-50 text-sm"
+          variant="outline" 
+          className="w-full justify-start text-red-500 border-red-100 hover:bg-red-50 hover:text-red-600 hover:border-red-200"
           onClick={onLogout}
         >
           <LogOut className="mr-2 h-4 w-4" />
-          Logout
+          Log out
         </Button>
       </div>
     </div>
   );
-};
+}
