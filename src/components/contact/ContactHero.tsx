@@ -12,19 +12,17 @@ const ContactHero = () => {
         </p>
         <div className="flex justify-center gap-4 flex-wrap">
           <Button 
-            className="bg-white text-trustbond-primary hover:bg-gray-100 hover:scale-105 transform transition-all duration-300"
-            asChild
+            className="bg-white text-trustbond-primary hover:bg-gray-100 hover:scale-105 transform transition-all duration-300 shadow-md hover:shadow-lg"
           >
-            <Link to="/whitepaper" className="px-6 py-2">
+            <Link to="/whitepaper" className="px-6 py-2 block">
               Learn More in Whitepaper
             </Link>
           </Button>
           <Button 
             variant="outline" 
-            className="border-white text-white hover:bg-white/20 hover:scale-105 transform transition-all duration-300"
-            asChild
+            className="border-white text-white hover:bg-white/20 hover:scale-105 transform transition-all duration-300 shadow-md hover:shadow-lg"
           >
-            <Link to="/register" className="px-6 py-2">
+            <Link to="/register" className="px-6 py-2 block">
               Create Account
             </Link>
           </Button>

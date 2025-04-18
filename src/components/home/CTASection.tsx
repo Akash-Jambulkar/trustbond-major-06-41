@@ -15,9 +15,8 @@ const CTASection = () => {
           <Button 
             size="lg" 
             className="bg-white hover:bg-gray-50 text-trustbond-primary font-semibold border-white px-8 py-6 text-lg h-auto hover:shadow-lg hover:scale-105 transform transition-all duration-300 w-full sm:w-auto"
-            asChild
           >
-            <Link to="/register" className="w-full">
+            <Link to="/register" className="w-full block">
               Create Account
             </Link>
           </Button>
@@ -25,9 +24,8 @@ const CTASection = () => {
             size="lg" 
             variant="outline" 
             className="border-2 border-white hover:bg-white/20 text-white font-semibold px-8 py-6 text-lg h-auto hover:shadow-lg hover:scale-105 transform transition-all duration-300 w-full sm:w-auto"
-            asChild
           >
-            <Link to="/contact" className="w-full">
+            <Link to="/contact" className="w-full block">
               Contact Us
             </Link>
           </Button>

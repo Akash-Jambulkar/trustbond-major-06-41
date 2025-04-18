@@ -18,20 +18,18 @@ const HeroSection = () => {
           <div className="flex flex-wrap justify-center gap-4">
             <Button 
               size="lg" 
-              className="bg-gradient-to-r from-trustbond-primary to-trustbond-secondary hover:opacity-90 hover:scale-105 transform transition-all duration-300 text-white font-semibold px-8 py-6 text-lg h-auto w-full sm:w-auto"
-              asChild
+              className="bg-gradient-to-r from-trustbond-primary to-trustbond-secondary hover:opacity-90 hover:scale-105 transform transition-all duration-300 text-white font-semibold px-8 py-6 text-lg h-auto w-full sm:w-auto shadow-md hover:shadow-lg"
             >
-              <Link to="/register" className="w-full">
+              <Link to="/register" className="w-full block">
                 Get Started
               </Link>
             </Button>
             <Button 
               size="lg" 
               variant="outline" 
-              className="border-2 border-trustbond-primary px-8 py-6 text-lg h-auto hover:bg-trustbond-primary/10 hover:scale-105 transform transition-all duration-300 w-full sm:w-auto"
-              asChild
+              className="border-2 border-trustbond-primary px-8 py-6 text-lg h-auto hover:bg-trustbond-primary/10 hover:scale-105 transform transition-all duration-300 w-full sm:w-auto shadow-md hover:shadow-lg"
             >
-              <Link to="/whitepaper" className="w-full">
+              <Link to="/whitepaper" className="w-full block">
                 Read Whitepaper
               </Link>
             </Button>

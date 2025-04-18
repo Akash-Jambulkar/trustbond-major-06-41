@@ -13,19 +13,17 @@ const ContactCTA = () => {
         <div className="flex justify-center flex-wrap gap-4">
           <Button 
             variant="default" 
-            className="bg-white text-trustbond-primary hover:bg-gray-100 hover:scale-105 transform transition-all duration-300"
+            className="bg-white text-trustbond-primary hover:bg-gray-100 hover:scale-105 transform transition-all duration-300 shadow-md hover:shadow-lg"
             size="lg" 
-            asChild
           >
-            <Link to="/contact" className="px-6 py-2">Contact Us Today</Link>
+            <Link to="/contact" className="px-6 py-2 block">Contact Us Today</Link>
           </Button>
           <Button 
             variant="outline" 
-            className="border-white text-white hover:bg-white/20 hover:scale-105 transform transition-all duration-300"
+            className="border-white text-white hover:bg-white/20 hover:scale-105 transform transition-all duration-300 shadow-md hover:shadow-lg"
             size="lg" 
-            asChild
           >
-            <Link to="/whitepaper" className="px-6 py-2">Read Our Whitepaper</Link>
+            <Link to="/whitepaper" className="px-6 py-2 block">Read Our Whitepaper</Link>
           </Button>
         </div>
       </div>

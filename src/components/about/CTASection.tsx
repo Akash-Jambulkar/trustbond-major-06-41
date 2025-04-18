@@ -11,13 +11,13 @@ const CTASection = () => {
           Whether you're an individual seeking secure KYC and loans, a bank looking to streamline verification, or a developer interested in our technology, we welcome you to our platform.
         </p>
         <div className="flex justify-center gap-4 flex-wrap">
-          <Button asChild className="bg-white text-trustbond-primary hover:bg-gray-100 hover:text-trustbond-primary/90">
-            <Link to="/register">
+          <Button className="bg-white text-trustbond-primary hover:bg-gray-100 hover:text-trustbond-primary/90 hover:scale-105 transform transition-all duration-300 shadow-md hover:shadow-lg">
+            <Link to="/register" className="px-6 py-2 block">
               Create an Account
             </Link>
           </Button>
-          <Button asChild variant="outline" className="border-white text-white hover:bg-white/10">
-            <Link to="/whitepaper">
+          <Button variant="outline" className="border-white text-white hover:bg-white/10 hover:scale-105 transform transition-all duration-300 shadow-md hover:shadow-lg">
+            <Link to="/whitepaper" className="px-6 py-2 block">
               Read Whitepaper
             </Link>
           </Button>
