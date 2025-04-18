@@ -1,3 +1,4 @@
+
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { User, UserRole } from "./types";
@@ -27,6 +28,7 @@ export const createUserWithProfile = async (
   role: UserRole = 'user'
 ): Promise<boolean> => {
   try {
+    // First, sign up the user with Supabase Auth
     const { data, error } = await supabase.auth.signUp({
       email: email,
       password: password,
@@ -52,13 +54,15 @@ export const createUserWithProfile = async (
       return false;
     }
 
+    console.log("User created successfully:", data.user.id);
+
     // Create a user profile in the profiles table
     const { error: profileError } = await supabase
       .from('profiles')
       .insert([
         {
           id: data.user.id,
-          user_id: data.user.id,  // Now explicitly setting user_id
+          user_id: data.user.id,  // Explicitly set user_id to match auth.uid()
           email: email,
           name: name,
           role: role,
