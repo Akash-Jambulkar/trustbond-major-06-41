@@ -87,7 +87,7 @@ export const LoanApplicationForm: React.FC<LoanApplicationFormProps> = ({
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="term">Loan Term (Days)</Label>
+            <Label htmlFor="term">Loan Term (Years)</Label>
             <Select 
               value={loanTerm} 
               onValueChange={setLoanTerm}
@@ -97,11 +97,9 @@ export const LoanApplicationForm: React.FC<LoanApplicationFormProps> = ({
                 <SelectValue placeholder="Select loan term" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="30">30 days</SelectItem>
-                <SelectItem value="60">60 days</SelectItem>
-                <SelectItem value="90">90 days</SelectItem>
-                <SelectItem value="180">180 days</SelectItem>
-                <SelectItem value="365">365 days</SelectItem>
+                <SelectItem value="1"> Short Term Loan (Within 1 year)</SelectItem>
+                <SelectItem value="1-5 Years"> Intermediate-term Loans </SelectItem>
+                <SelectItem value="More Than 5 years">More Than 5 Years</SelectItem>
               </SelectContent>
             </Select>
           </div>
