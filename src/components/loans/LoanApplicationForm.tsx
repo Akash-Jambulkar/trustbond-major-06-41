@@ -75,7 +75,7 @@ export const LoanApplicationForm: React.FC<LoanApplicationFormProps> = ({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="amount">Loan Amount (ETH)</Label>
+            <Label htmlFor="amount">Loan Amount (INR)</Label>
             <Input
               id="amount"
               type="number"
