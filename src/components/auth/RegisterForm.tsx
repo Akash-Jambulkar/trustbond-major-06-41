@@ -1,21 +1,11 @@
 
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { User, Mail, LockKeyhole, CheckCircle2 } from "lucide-react";
 import { useRegisterForm, RegisterFormValues } from "@/hooks/useRegisterForm";
 import { useNavigate } from "react-router-dom";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
+import { RegisterFormFields } from "./RegisterFormFields";
+import { RegisterSubmitButton } from "./RegisterSubmitButton";
 
 export const RegisterForm = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -26,18 +16,16 @@ export const RegisterForm = () => {
   const handleSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true);
     try {
-      // Pass the role parameter from the form
       const success = await register(data.email, data.password, data.name, data.role);
       
       if (success) {
-        // On success, redirect to login page since verification is needed
         setTimeout(() => {
           navigate("/login", { 
             state: { 
               message: "Registration successful! Please check your email to verify your account." 
             } 
           });
-        }, 2000); // Short delay to allow the toast to be seen
+        }, 2000);
       }
     } catch (error) {
       console.error("Registration error:", error);
@@ -49,151 +37,8 @@ export const RegisterForm = () => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem className="space-y-2">
-              <FormLabel htmlFor="name">Full Name</FormLabel>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User size={18} className="text-gray-400" />
-                </div>
-                <FormControl>
-                  <Input
-                    id="name"
-                    placeholder="John Doe"
-                    className="pl-10"
-                    {...field}
-                  />
-                </FormControl>
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem className="space-y-2">
-              <FormLabel htmlFor="email">Email</FormLabel>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail size={18} className="text-gray-400" />
-                </div>
-                <FormControl>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    className="pl-10"
-                    {...field}
-                  />
-                </FormControl>
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem className="space-y-2">
-              <FormLabel htmlFor="password">Password</FormLabel>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <LockKeyhole size={18} className="text-gray-400" />
-                </div>
-                <FormControl>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    className="pl-10"
-                    {...field}
-                  />
-                </FormControl>
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="confirmPassword"
-          render={({ field }) => (
-            <FormItem className="space-y-2">
-              <FormLabel htmlFor="confirmPassword">Confirm Password</FormLabel>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <CheckCircle2 size={18} className="text-gray-400" />
-                </div>
-                <FormControl>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder="••••••••"
-                    className="pl-10"
-                    {...field}
-                  />
-                </FormControl>
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="role"
-          render={({ field }) => (
-            <FormItem className="space-y-2">
-              <FormLabel>Account Type</FormLabel>
-              <FormControl>
-                <RadioGroup
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  className="flex space-x-4"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="user" id="user" />
-                    <Label htmlFor="user" className="cursor-pointer">Individual User</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="bank" id="bank" />
-                    <Label htmlFor="bank" className="cursor-pointer">Bank/Financial Institution</Label>
-                  </div>
-                </RadioGroup>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="pt-2">
-          <Button 
-            type="submit" 
-            className="w-full bg-trustbond-primary hover:bg-trustbond-primary/90"
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <span className="flex items-center gap-2">
-                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Creating Account...
-              </span>
-            ) : (
-              "Create Account"
-            )}
-          </Button>
-        </div>
+        <RegisterFormFields form={form} />
+        <RegisterSubmitButton isLoading={isLoading} />
       </form>
     </Form>
   );
