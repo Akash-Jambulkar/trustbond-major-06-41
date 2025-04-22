@@ -301,7 +301,7 @@ export const repayLoanRequest = async ({
     }
 
     // Convert repayment amount to wei
-    const amountInWei = web3.utils.toWei(amount, 'ether');
+    const amountInWei = web3.utils.toWei(amount.toString(), 'ether');
 
     // Call blockchain method to repay loan
     const tx = await loanContract.methods
@@ -319,7 +319,7 @@ export const repayLoanRequest = async ({
     const totalAmount = parseFloat(loanData.amount);
     const isFullyRepaid = newRepaidAmount >= totalAmount;
 
-    // Update loan in database - convert numeric values to strings
+    // Update loan in database - use proper types for Supabase
     const { error: loanUpdateError } = await supabase
       .from("loans")
       .update({
