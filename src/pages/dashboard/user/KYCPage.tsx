@@ -1,7 +1,7 @@
 
 import React from "react";
 import { KYCStatusDisplay } from "@/components/kyc/KYCStatusDisplay";
-import { KYCTabs } from "@/components/kyc/KYCTabs";
+import { KYCSubmission } from "@/components/kyc/KYCSubmission";
 import { useKYCStatus } from "@/hooks/useKYCStatus";
 import { Shield } from "lucide-react";
 
@@ -24,7 +24,7 @@ const KYCPage = () => {
             <h2 className="text-lg font-bold text-gray-800">KYC Verification</h2>
           </div>
           <p className="text-gray-500 mt-1 text-sm">
-            Submit and manage your KYC documents for secure blockchain identity verification.
+            Submit your document information for secure identity verification.
           </p>
         </div>
         
@@ -39,7 +39,7 @@ const KYCPage = () => {
           />
           
           <div className="mt-4">
-            <KYCTabs />
+            <KYCSubmission />
           </div>
         </div>
       </div>

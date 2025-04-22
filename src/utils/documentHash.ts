@@ -1,14 +1,4 @@
 
-// Create a Web Crypto API SHA-256 hash
-export const hashDocument = async (documentString: string): Promise<string> => {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(documentString);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  return `0x${hashHex}`;
-};
-
 // Document types
 export const DOCUMENT_TYPES = {
   AADHAAR: 'aadhaar',
@@ -39,18 +29,19 @@ export const validateDocument = (
 // Create a secure document hash
 export const createDocumentHash = async (
   documentType: DocumentType,
-  documentNumber: string,
-  fileHash: string
+  documentNumber: string
 ): Promise<string> => {
-  // Combine all three elements for a comprehensive hash
-  const combinedString = `${documentType}:${documentNumber}:${fileHash}`;
-  return await hashDocument(combinedString);
+  // Combine document type and number for a comprehensive hash
+  const combinedString = `${documentType}:${documentNumber}`;
+  const encoder = new TextEncoder();
+  const data = encoder.encode(combinedString);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return `0x${hashHex}`;
 };
 
-// Alias for backward compatibility
-export const calculateDocumentHash = createDocumentHash;
-
-// Check if a document hash is in the database
+// Check if a document hash is already used
 export const verifyHashInDatabase = async (hash: string): Promise<boolean> => {
   // This would check the hash against the database
   // For demo, assume valid
