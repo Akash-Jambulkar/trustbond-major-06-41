@@ -67,7 +67,7 @@ export const submitLoanRequest = async ({
         type: "loan",
         from_address: account,
         to_address: loanData.bankId,
-        amount: loanData.amount.toString(), // Convert number to string
+        amount: Number(loanData.amount), // Ensure it's a number for the database
         status: "confirmed",
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -158,7 +158,7 @@ export const approveLoanRequest = async ({
         type: "loan_approval",
         from_address: account,
         to_address: borrowerAddress,
-        amount: loanData.amount.toString(), // Convert number to string
+        amount: Number(loanData.amount), // Ensure it's a number for the database
         status: "confirmed",
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -323,7 +323,7 @@ export const repayLoanRequest = async ({
     const { error: loanUpdateError } = await supabase
       .from("loans")
       .update({
-        repaid_amount: newRepaidAmount.toString(), // Store as string
+        repaid_amount: newRepaidAmount,
         status: isFullyRepaid ? "repaid" : "approved",
         updated_at: new Date().toISOString()
       })
@@ -334,7 +334,7 @@ export const repayLoanRequest = async ({
       // But continue since the blockchain transaction was successful
     }
 
-    // Record transaction - ensure amount is a string
+    // Record transaction - ensure amount is correct type for database
     const { error: txError } = await supabase
       .from("transactions")
       .insert({
@@ -342,7 +342,7 @@ export const repayLoanRequest = async ({
         type: "repayment",
         from_address: account,
         to_address: loanData.bank_id,
-        amount: amount, // amount is already a string based on function params
+        amount: Number(amount), // Convert to number for the database
         status: "confirmed",
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
