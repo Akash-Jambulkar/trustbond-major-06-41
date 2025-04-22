@@ -5,11 +5,10 @@ import { useNavigate } from "react-router-dom";
 import { AuthContextType, User, UserRole } from "./types";
 import { fetchUserProfile, createUserWithProfile, mapUserWithProfile, mockWalletUser } from "./authUtils";
 import { setupUserMFA, verifyUserMFA, disableUserMFA } from "./mfaUtils";
+import { RoleSyncProvider } from "@/components/RoleSyncProvider";
 
-// Create auth context
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// Auth provider component
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -59,10 +58,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const profile = await fetchUserProfile(data.user.id);
       if (!profile) return false;
 
-      const userWithProfile = mapUserWithProfile(data.user, profile);
+      const { data: roleData } = await supabase
+        .from('user_role_assignments')
+        .select('role')
+        .eq('user_id', data.user.id)
+        .single();
+
+      const userWithProfile = mapUserWithProfile(data.user, {
+        ...profile,
+        role: roleData?.role || 'user'
+      });
+      
       setUser(userWithProfile);
       setIsAuthenticated(true);
-      
+
       if (userWithProfile.mfa_enabled) {
         setIsMFARequired(true);
         toast.info("Multi-factor authentication required");
@@ -85,6 +94,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(true);
     try {
       const success = await createUserWithProfile(email, password, name, role);
+      
+      if (success) {
+        const { error: roleError } = await supabase
+          .from('user_role_assignments')
+          .insert([
+            { 
+              user_id: (await supabase.auth.getUser()).data.user?.id,
+              role: role
+            }
+          ]);
+
+        if (roleError) {
+          console.error("Role assignment error:", roleError);
+          toast.error("Failed to assign user role");
+          return false;
+        }
+      }
+
       return success;
     } finally {
       setIsLoading(false);
@@ -173,12 +200,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         disableMFA
       }}
     >
-      {children}
+      <RoleSyncProvider>
+        {children}
+      </RoleSyncProvider>
     </AuthContext.Provider>
   );
 };
 
-// Hook to use auth context
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

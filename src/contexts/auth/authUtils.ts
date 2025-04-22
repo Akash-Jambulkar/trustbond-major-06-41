@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { User, UserRole } from "./types";
@@ -20,7 +19,29 @@ export const fetchUserProfile = async (userId: string): Promise<any> => {
   return profile;
 };
 
-// Create a user with profile in one utility function
+// Helper function to map user with profile and role
+export const mapUserWithProfile = (
+  supabaseUser: any, 
+  profile: any
+): User => {
+  return {
+    id: supabaseUser.id,
+    user_id: supabaseUser.id,
+    email: supabaseUser.email || '',
+    name: profile?.name,
+    role: profile?.role || 'user',
+    mfa_enabled: profile?.mfa_enabled || false,
+    kyc_status: profile?.kyc_status || 'not_submitted',
+    app_metadata: supabaseUser.app_metadata,
+    user_metadata: supabaseUser.user_metadata,
+    aud: supabaseUser.aud,
+    phone: profile?.phone,
+    address: profile?.address,
+    walletAddress: profile?.walletAddress
+  };
+};
+
+// Create a user with profile and role assignment
 export const createUserWithProfile = async (
   email: string, 
   password: string, 
@@ -61,8 +82,7 @@ export const createUserWithProfile = async (
       return false;
     }
 
-    // First, sign up the user with Supabase Auth
-    const { data, error } = await supabase.auth.signUp({
+    const { data: { user }, error } = await supabase.auth.signUp({
       email: email,
       password: password,
       options: {
@@ -90,8 +110,24 @@ export const createUserWithProfile = async (
       return false;
     }
 
-    if (!data.user) {
+    if (!user) {
       toast.error("Registration failed: Could not create user account");
+      return false;
+    }
+
+    // Create initial role assignment
+    const { error: roleError } = await supabase
+      .from('user_role_assignments')
+      .insert([
+        { 
+          user_id: user.id,
+          role: role
+        }
+      ]);
+
+    if (roleError) {
+      console.error("Role assignment error:", roleError);
+      toast.error("Failed to assign user role");
       return false;
     }
 
@@ -100,7 +136,7 @@ export const createUserWithProfile = async (
     // to bypass RLS policies when creating the profile
     const { error: profileError } = await supabase
       .rpc('create_profile_for_user', {
-        user_id_param: data.user.id,
+        user_id_param: user.id,
         email_param: email,
         name_param: name,
         role_param: role,
@@ -133,28 +169,6 @@ export const createUserWithProfile = async (
     toast.error("Registration failed: " + (error instanceof Error ? error.message : "An unexpected error occurred"));
     return false;
   }
-};
-
-// Helper function to map supabase user to our User type
-export const mapUserWithProfile = (
-  supabaseUser: any, 
-  profile: any
-): User => {
-  return {
-    id: supabaseUser.id,
-    user_id: supabaseUser.id,
-    email: supabaseUser.email || '',
-    name: profile?.name,
-    role: profile?.role || 'user',
-    mfa_enabled: profile?.mfa_enabled || false,
-    kyc_status: profile?.kyc_status || 'not_submitted',
-    app_metadata: supabaseUser.app_metadata,
-    user_metadata: supabaseUser.user_metadata,
-    aud: supabaseUser.aud,
-    phone: profile?.phone,
-    address: profile?.address,
-    walletAddress: profile?.walletAddress
-  };
 };
 
 export const mockWalletUser = (address: string): User => {
