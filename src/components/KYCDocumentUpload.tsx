@@ -1,3 +1,4 @@
+
 import { useState, useRef, ChangeEvent } from "react";
 import { 
   Card, 
@@ -58,7 +59,7 @@ type DocumentFormValues = z.infer<typeof documentSchema>;
 
 export const KYCDocumentUpload = () => {
   const { toast } = useToast();
-  const { submitKYC, isConnected } = useBlockchain();
+  const { submitKYC, isConnected, isContractsInitialized } = useBlockchain();
   const [activeTab, setActiveTab] = useState<DocumentType>(DOCUMENT_TYPES.AADHAAR);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -121,6 +122,15 @@ export const KYCDocumentUpload = () => {
         variant: "destructive",
         title: "Wallet not connected",
         description: "Please connect your wallet to submit KYC documents.",
+      });
+      return;
+    }
+
+    if (!isContractsInitialized) {
+      toast({
+        variant: "destructive",
+        title: "Contracts not initialized",
+        description: "Please wait for blockchain contracts to initialize or try refreshing the page.",
       });
       return;
     }
@@ -412,11 +422,21 @@ export const KYCDocumentUpload = () => {
                 </Alert>
               )}
 
+              {isConnected && !isContractsInitialized && (
+                <Alert className="mt-4 bg-amber-50 border-amber-200 text-amber-800">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Contracts not initialized</AlertTitle>
+                  <AlertDescription>
+                    Please wait for blockchain contracts to initialize. This may take a moment.
+                  </AlertDescription>
+                </Alert>
+              )}
+
               <div className="pt-4">
                 <Button 
                   type="submit" 
                   className="w-full" 
-                  disabled={isSubmitting || !isConnected}
+                  disabled={isSubmitting || !isConnected || !isContractsInitialized}
                 >
                   {isSubmitting ? (
                     <>
