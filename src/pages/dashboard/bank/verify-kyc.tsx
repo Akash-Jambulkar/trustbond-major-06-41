@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -55,7 +56,7 @@ const VerifyKYC = () => {
     try {
       setVerifying(true);
       const verificationStatus = approve ? 'verified' : 'rejected';
-      await verifyKYC(selectedDocument.id, verificationStatus);
+      await verifyKYC(selectedDocument.id, approve);
       toast.success(approve ? "Document verified!" : "Document rejected");
       setSelectedDocument(null);
       fetchDocuments();

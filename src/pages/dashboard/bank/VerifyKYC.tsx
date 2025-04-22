@@ -39,18 +39,17 @@ const VerifyKYCPage = () => {
         
         // In a real implementation, fetch from your database
         const { data, error } = await supabase
-          .from('kyc_submissions')
+          .from('kyc_documents')
           .select(`
             id,
             user_id,
             document_type,
             document_hash,
-            status,
+            verification_status as status,
             created_at,
-            blockchain_address,
             profiles(email, name)
           `)
-          .eq('status', 'pending');
+          .eq('verification_status', 'pending');
           
         if (error) throw error;
         
@@ -62,7 +61,7 @@ const VerifyKYCPage = () => {
           document_hash: sub.document_hash,
           status: sub.status,
           created_at: sub.created_at,
-          blockchain_address: sub.blockchain_address,
+          blockchain_address: sub.blockchain_address || "",
           user_email: sub.profiles?.email,
           user_name: sub.profiles?.name
         })) || [];
@@ -95,11 +94,11 @@ const VerifyKYCPage = () => {
       if (success) {
         // Update status in database
         const { error } = await supabase
-          .from('kyc_submissions')
+          .from('kyc_documents')
           .update({ 
-            status: approved ? 'verified' : 'rejected',
+            verification_status: approved ? 'verified' : 'rejected',
             verified_by: account,
-            verified_at: new Date().toISOString()
+            updated_at: new Date().toISOString()
           })
           .eq('id', submission.id);
           
