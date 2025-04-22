@@ -26,6 +26,16 @@ export const validateDocument = (
   return pattern.test(documentNumber);
 };
 
+// Create a hash from a document string (utility function)
+export const hashDocument = async (documentString: string): Promise<string> => {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(documentString);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return `0x${hashHex}`;
+};
+
 // Create a secure document hash
 export const createDocumentHash = async (
   documentType: DocumentType,

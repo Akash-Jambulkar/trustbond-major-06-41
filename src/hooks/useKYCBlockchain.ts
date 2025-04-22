@@ -36,7 +36,7 @@ export const useKYCBlockchain = () => {
 
   // Submit KYC documents to blockchain
   const submitKYC = useCallback(
-    async (documentHash: string, documentType: string) => {
+    async (documentHash: string) => {
       if (!isConnected || !kycContract || !account || !web3) {
         toast.error("Wallet not connected");
         return null;
@@ -44,7 +44,11 @@ export const useKYCBlockchain = () => {
 
       setIsSubmitting(true);
       try {
-        // Call the contract method that accepts document type
+        // Get the document type from the hash (optional)
+        // We use a default document type if it's not specified
+        const documentType = "generic";
+        
+        // Call the contract method
         const tx = await kycContract.methods
           .submitKYC(documentHash, documentType)
           .send({ from: account });

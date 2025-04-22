@@ -1,4 +1,3 @@
-
 import { useState, useRef, ChangeEvent } from "react";
 import { 
   Card, 
@@ -32,10 +31,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Loader2, Upload, FileText, CheckCircle2, AlertCircle, Info, Shield } from "lucide-react";
 import { 
-  hashDocument, 
+  createDocumentHash, 
   type DocumentType, 
   validateDocument, 
-  createDocumentHash,
   DOCUMENT_TYPES
 } from "@/utils/documentHash";
 import { useBlockchain } from "@/contexts/BlockchainContext";
@@ -94,11 +92,12 @@ export const KYCDocumentUpload = () => {
     try {
       // Read the file as an ArrayBuffer
       const fileBuffer = await file.arrayBuffer();
-      // Convert the ArrayBuffer to a string for hashing
-      const fileString = new TextDecoder().decode(new Uint8Array(fileBuffer));
-      // Hash the file content
-      const hash = await hashDocument(fileString);
+      // Hash the file content using SubtleCrypto
+      const hashBuffer = await crypto.subtle.digest('SHA-256', fileBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hash = "0x" + hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
       setFileHash(hash);
+      
       toast({
         title: "File hashed successfully",
         description: `Hash: ${hash.substring(0, 10)}...`,
@@ -117,15 +116,6 @@ export const KYCDocumentUpload = () => {
 
   // Create document hash and submit to blockchain
   const handleSubmit = async (values: DocumentFormValues) => {
-    if (!fileHash) {
-      toast({
-        variant: "destructive",
-        title: "No file uploaded",
-        description: "Please upload a document file first.",
-      });
-      return;
-    }
-
     if (!isConnected) {
       toast({
         variant: "destructive",
@@ -162,8 +152,8 @@ export const KYCDocumentUpload = () => {
 
     setIsSubmitting(true);
     try {
-      // Create a hash that combines document type, number, and file hash
-      const hash = await createDocumentHash(activeTab, documentNumber, fileHash);
+      // Create a hash that combines document type and number
+      const hash = await createDocumentHash(activeTab, documentNumber);
       setDocumentHash(hash);
 
       // Submit the hash to the blockchain
@@ -426,7 +416,7 @@ export const KYCDocumentUpload = () => {
                 <Button 
                   type="submit" 
                   className="w-full" 
-                  disabled={isSubmitting || isUploading || !fileHash || !isConnected}
+                  disabled={isSubmitting || !isConnected}
                 >
                   {isSubmitting ? (
                     <>

@@ -84,8 +84,8 @@ export function KYCDocumentUpload() {
     
     setIsUploading(true);
     try {
-      // Generate the document hash using all three pieces of information
-      const documentHash = await createDocumentHash(documentType, documentNumber, fileHash);
+      // Generate the document hash using document type and number
+      const documentHash = await createDocumentHash(documentType, documentNumber);
       
       // Submit to blockchain
       const success = await submitKYC(documentHash);

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { useMode } from "@/contexts/ModeContext";
@@ -8,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Wallet } from "lucide-react";
-import { hashDocument } from "@/utils/documentHash";
+import { createDocumentHash } from "@/utils/documentHash";
 import { TransactionHistory } from "./TransactionHistory";
 
 export const BlockchainActions = () => {
@@ -38,7 +37,9 @@ export const BlockchainActions = () => {
 
     setIsHashing(true);
     try {
-      const hash = await hashDocument(documentId);
+      // Use createDocumentHash instead of hashDocument
+      // For simplicity, we'll just use 'pan' as a default document type here
+      const hash = await createDocumentHash('pan', documentId);
       setHashedDocument(hash);
     } catch (error) {
       console.error("Error hashing document:", error);
