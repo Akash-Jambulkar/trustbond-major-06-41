@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { 
   Card, 
@@ -64,9 +65,10 @@ export function KYCSubmission() {
       // Generate the document hash using document type and number
       const documentHash = await createDocumentHash(values.documentType, values.documentNumber);
       
-      // Submit to blockchain
+      // Submit to blockchain - note we're now expecting a boolean return value
       const success = await submitKYC(documentHash);
       
+      // Check for success properly
       if (success) {
         toast.success("Document information submitted successfully for verification!");
         form.reset();
