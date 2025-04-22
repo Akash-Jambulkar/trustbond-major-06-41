@@ -39,6 +39,7 @@ export type User = {
 
 export interface AuthContextType {
   user: User | null;
+  setUser: (user: User | null) => void; // Added setUser function
   isLoading: boolean;
   isAuthenticated: boolean;
   isMFARequired?: boolean;

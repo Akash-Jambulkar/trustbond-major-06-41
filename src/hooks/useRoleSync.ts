@@ -5,6 +5,20 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { UserRole } from '@/contexts/auth/types';
 
+// Define the payload type to properly handle the role property
+interface RoleAssignmentPayload {
+  new: {
+    role: UserRole;
+    user_id: string;
+    [key: string]: any;
+  };
+  old: {
+    role?: UserRole;
+    user_id?: string;
+    [key: string]: any;
+  };
+}
+
 export const useRoleSync = () => {
   const { user, setUser } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -44,10 +58,11 @@ export const useRoleSync = () => {
           table: 'user_role_assignments',
           filter: `user_id=eq.${user.id}`
         },
-        async (payload) => {
-          if (payload.new?.role && payload.new.role !== user.role) {
-            setUser({ ...user, role: payload.new.role as UserRole });
-            toast.info(`Your role has been updated to ${payload.new.role}`);
+        async (payload: any) => {
+          const typedPayload = payload as RoleAssignmentPayload;
+          if (typedPayload.new?.role && typedPayload.new.role !== user.role) {
+            setUser({ ...user, role: typedPayload.new.role });
+            toast.info(`Your role has been updated to ${typedPayload.new.role}`);
           }
         }
       )
@@ -59,7 +74,7 @@ export const useRoleSync = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user?.id]);
+  }, [user?.id, setUser, user]);
 
   return { loading };
 };
