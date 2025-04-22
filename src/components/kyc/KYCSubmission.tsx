@@ -28,8 +28,6 @@ import { DOCUMENT_TYPES, DocumentType, validateDocument, createDocumentHash } fr
 
 export function KYCSubmission() {
   const { submitKYC, isConnected } = useBlockchain();
-  const [documentType, setDocumentType] = useState<DocumentType>(DOCUMENT_TYPES.PAN);
-  const [documentNumber, setDocumentNumber] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Create form instance
@@ -40,28 +38,28 @@ export function KYCSubmission() {
     }
   });
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (values: { documentType: DocumentType; documentNumber: string }) => {
     if (!isConnected) {
       toast.error("Please connect your wallet first");
       return;
     }
 
-    if (!validateDocument(documentType, documentNumber)) {
-      toast.error(`Invalid ${documentType} number format`);
+    if (!validateDocument(values.documentType, values.documentNumber)) {
+      toast.error(`Invalid ${values.documentType} number format`);
       return;
     }
 
     setIsSubmitting(true);
     try {
       // Generate the document hash using document type and number
-      const documentHash = await createDocumentHash(documentType, documentNumber);
+      const documentHash = await createDocumentHash(values.documentType, values.documentNumber);
       
       // Submit to blockchain
       const success = await submitKYC(documentHash);
       
       if (success) {
         toast.success("Document information submitted successfully for verification!");
-        setDocumentNumber("");
+        form.reset();
       } else {
         toast.error("Failed to submit document information");
       }
@@ -86,51 +84,67 @@ export function KYCSubmission() {
       </CardHeader>
       <CardContent className="space-y-4">
         <Form {...form}>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <FormLabel htmlFor="document-type">Document Type</FormLabel>
-              <Select 
-                value={documentType} 
-                onValueChange={(value) => setDocumentType(value as DocumentType)}
-              >
-                <SelectTrigger id="document-type">
-                  <SelectValue placeholder="Select document type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={DOCUMENT_TYPES.PAN}>PAN Card</SelectItem>
-                  <SelectItem value={DOCUMENT_TYPES.AADHAAR}>Aadhaar Card</SelectItem>
-                  <SelectItem value={DOCUMENT_TYPES.VOTER_ID}>Voter ID</SelectItem>
-                  <SelectItem value={DOCUMENT_TYPES.DRIVING_LICENSE}>Driving License</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <FormLabel htmlFor="document-number">Document Number</FormLabel>
-              <Input
-                id="document-number"
-                placeholder={`Enter your ${documentType} number`}
-                value={documentNumber}
-                onChange={(e) => setDocumentNumber(e.target.value)}
-              />
-              {documentNumber && !validateDocument(documentType, documentNumber) && (
-                <p className="text-sm text-red-500 mt-1">
-                  Invalid format for {documentType}
-                </p>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="documentType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Document Type</FormLabel>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select document type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value={DOCUMENT_TYPES.PAN}>PAN Card</SelectItem>
+                      <SelectItem value={DOCUMENT_TYPES.AADHAAR}>Aadhaar Card</SelectItem>
+                      <SelectItem value={DOCUMENT_TYPES.VOTER_ID}>Voter ID</SelectItem>
+                      <SelectItem value={DOCUMENT_TYPES.DRIVING_LICENSE}>Driving License</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Select the type of identity document you want to verify.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
               )}
-            </div>
-          </div>
+            />
+
+            <FormField
+              control={form.control}
+              name="documentNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Document Number</FormLabel>
+                  <FormControl>
+                    <Input 
+                      {...field}
+                      placeholder={`Enter your document number`}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Enter the identification number exactly as it appears on your document.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <Button 
+              type="submit" 
+              disabled={!isConnected || isSubmitting}
+              className="w-full mt-4"
+            >
+              {isSubmitting ? "Submitting..." : "Submit for Verification"}
+            </Button>
+          </form>
         </Form>
       </CardContent>
-      <CardFooter>
-        <Button 
-          onClick={handleSubmit} 
-          disabled={!isConnected || !documentNumber || isSubmitting}
-          className="w-full"
-        >
-          {isSubmitting ? "Submitting..." : "Submit for Verification"}
-        </Button>
-      </CardFooter>
     </Card>
   );
 }
