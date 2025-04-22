@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Contract } from "web3-eth-contract";
@@ -66,7 +67,7 @@ export const submitLoanRequest = async ({
         type: "loan",
         from_address: account,
         to_address: loanData.bankId,
-        amount: loanData.amount,
+        amount: loanData.amount.toString(),
         status: "confirmed",
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -157,7 +158,7 @@ export const approveLoanRequest = async ({
         type: "loan_approval",
         from_address: account,
         to_address: borrowerAddress,
-        amount: loanData.amount,
+        amount: loanData.amount.toString(),
         status: "confirmed",
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),

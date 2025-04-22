@@ -181,9 +181,9 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
       value={{
         web3,
         account,
-        isConnected,
-        networkName,
         networkId,
+        networkName,
+        isConnected,
         isCorrectNetwork,
         isGanache,
         isBlockchainLoading,
