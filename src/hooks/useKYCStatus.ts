@@ -4,9 +4,11 @@ import { useBlockchain } from "@/contexts/BlockchainContext";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { KycDocumentSubmissionType } from "@/types/supabase-extensions";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const useKYCStatus = () => {
   const { account, isConnected, getKYCStatus, kycContract } = useBlockchain();
+  const { user } = useAuth();
   const [kycStatus, setKycStatus] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [verificationTimestamp, setVerificationTimestamp] = useState<number | null>(null);
@@ -28,96 +30,38 @@ export const useKYCStatus = () => {
         const status = await getKYCStatus(account);
         setKycStatus(status);
         
-        if (status) {
-          // For verified accounts, try to get verification timestamp from blockchain
-          if (kycContract) {
-            try {
-              const txEvents = await kycContract.getPastEvents('KYCVerified', {
-                filter: { user: account },
-                fromBlock: 0,
-                toBlock: 'latest'
-              });
-              
-              if (txEvents && txEvents.length > 0) {
-                const block = await window.web3.eth.getBlock(txEvents[0].blockNumber);
-                setVerificationTimestamp(block.timestamp * 1000); // Convert to milliseconds
-              } else {
-                // If no events found but status is true, use current time
-                setVerificationTimestamp(Date.now());
-              }
-            } catch (eventError) {
-              console.error("Error fetching verification events:", eventError);
-              // Fallback to current time
-              setVerificationTimestamp(Date.now());
-            }
-          }
-          
-          setIsRejected(false);
-          setRejectionReason(null);
-        } else {
-          // Check if it was rejected
-          if (kycContract) {
-            try {
-              const rejectionEvents = await kycContract.getPastEvents('KYCRejected', {
-                filter: { user: account },
-                fromBlock: 0,
-                toBlock: 'latest'
-              });
-              
-              if (rejectionEvents && rejectionEvents.length > 0) {
-                setIsRejected(true);
-                // If we have rejection reason in event, use it
-                setRejectionReason(rejectionEvents[0].returnValues.reason || "Document appears to be modified or invalid. Please resubmit with clearer documents.");
-              }
-            } catch (rejectionError) {
-              console.error("Error checking rejection status:", rejectionError);
-            }
-          }
-        }
-          
-        // Try to also get data from Supabase if available
+        // Try to get data from Supabase for more details
         try {
-          if (supabase) {
-            // Execute the query without TypeScript inference
-            // Using Function approach to completely bypass TypeScript's type checking
-            const fetchSubmissions = Function('supabase', 'account', `
-              return supabase
-                .from('kyc_document_submissions')
-                .select('*')
-                .eq('wallet_address', account)
-                .order('submitted_at', { ascending: false })
-                .limit(1);
-            `);
-            
-            const response = await fetchSubmissions(supabase, account);
-            
-            // Handle response data manually
-            if (response && response.data && response.data.length > 0) {
-              const submission = response.data[0];
+          if (user?.id) {
+            const { data, error } = await supabase
+              .from('kyc_document_submissions')
+              .select('*')
+              .eq('user_id', user.id)
+              .order('submitted_at', { ascending: false })
+              .limit(1);
               
-              // Check if we have a rejected status from database
-              if (!status && 
-                  submission && 
-                  submission.verification_status === 'rejected' && 
-                  !isRejected) {
-                setIsRejected(true);
-                // Safely access rejection_reason
-                if (submission.rejection_reason) {
-                  setRejectionReason(submission.rejection_reason);
+            if (!error && data && data.length > 0) {
+              const submission = data[0] as KycDocumentSubmissionType;
+              
+              // Update status based on the database entry
+              if (submission.verification_status === 'verified') {
+                setKycStatus(true);
+                if (submission.verified_at) {
+                  setVerificationTimestamp(new Date(submission.verified_at).getTime());
                 }
-              }
-              
-              // Set verification timestamp if available
-              if (status && 
-                  submission && 
-                  submission.verified_at && 
-                  !verificationTimestamp) {
-                setVerificationTimestamp(new Date(submission.verified_at).getTime());
+              } else if (submission.verification_status === 'rejected') {
+                setKycStatus(false);
+                setIsRejected(true);
+                setRejectionReason(submission.rejection_reason || "Document verification failed");
+              } else if (submission.verification_status === 'pending') {
+                setKycStatus(false);
+                setIsRejected(false);
               }
             }
           }
         } catch (dbError) {
           console.error("Error fetching KYC details from database:", dbError);
+          // Continue with blockchain status if database fails
         }
       } catch (error) {
         console.error("Error fetching KYC status:", error);
@@ -129,9 +73,8 @@ export const useKYCStatus = () => {
     };
 
     fetchKYCStatus();
-  }, [isConnected, account, getKYCStatus, kycContract]);
+  }, [isConnected, account, getKYCStatus, kycContract, user]);
 
-  // Make sure to include isConnected in the return object
   return { 
     kycStatus, 
     isLoading,
@@ -140,6 +83,6 @@ export const useKYCStatus = () => {
     isPending: isConnected && kycStatus === false && !isRejected,
     isRejected,
     rejectionReason,
-    isConnected // Add isConnected to the return object
+    isConnected
   };
 };

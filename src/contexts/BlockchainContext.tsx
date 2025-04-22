@@ -178,22 +178,23 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
       // Generate transaction hash
       const transactionHash = generateMockTransactionHash();
       
-      // Store KYC document in database
-      const { error: kycError } = await supabase
-        .from('kyc_documents')
+      // Store KYC document submission in database
+      const { error: submissionError } = await supabase
+        .from('kyc_document_submissions')
         .insert([
           {
             user_id: user.user_id,
             document_type: 'identity',
             document_hash: documentHash,
             verification_status: 'pending',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
+            submitted_at: new Date().toISOString(),
+            wallet_address: account,
+            blockchain_tx_hash: transactionHash
           }
         ]);
 
-      if (kycError) {
-        console.error("KYC document storage error:", kycError);
+      if (submissionError) {
+        console.error("KYC document submission error:", submissionError);
         toast.error("Failed to store KYC document");
         return false;
       }
@@ -229,13 +230,12 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
             }
           ]);
         toast.success("KYC document submitted successfully!");
+        return true;
       } catch (error) {
         console.error("Transaction record error:", error);
-        toast.error("Failed to submit KYC document");
+        toast.error("Failed to record KYC transaction");
         return false;
       }
-
-      return true;
     } catch (error) {
       console.error("KYC submission error:", error);
       toast.error("Failed to submit KYC document");
@@ -244,7 +244,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Verify KYC document (for bank users)
-  const verifyKYC = async (kycId: string, verificationStatus: 'verified' | 'rejected') => {
+  const verifyKYC = async (kycId: string, verificationStatus: 'verified' | 'rejected', rejectionReason?: string) => {
     if (!enableBlockchain || !isConnected) {
       toast.error("Wallet not connected");
       return false;
@@ -259,10 +259,10 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
       // Generate transaction hash
       const transactionHash = generateMockTransactionHash();
       
-      // Get KYC document
+      // Get KYC document submission
       const { data: kycData, error: kycFetchError } = await supabase
-        .from('kyc_documents')
-        .select('user_id')
+        .from('kyc_document_submissions')
+        .select('user_id, wallet_address')
         .eq('id', kycId)
         .single();
 
@@ -273,13 +273,20 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
       }
 
       // Update KYC document status
+      const updateData: any = {
+        verification_status: verificationStatus,
+        verifier_address: account,
+        verified_at: new Date().toISOString(),
+        verification_tx_hash: transactionHash
+      };
+      
+      if (verificationStatus === 'rejected' && rejectionReason) {
+        updateData.rejection_reason = rejectionReason;
+      }
+      
       const { error: kycUpdateError } = await supabase
-        .from('kyc_documents')
-        .update({
-          verification_status: verificationStatus,
-          verified_by: user.user_id,
-          updated_at: new Date().toISOString()
-        })
+        .from('kyc_document_submissions')
+        .update(updateData)
         .eq('id', kycId);
 
       if (kycUpdateError) {
@@ -291,7 +298,10 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
       // Update user profile KYC status
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({ kyc_status: verificationStatus })
+        .update({ 
+          kyc_status: verificationStatus,
+          updated_at: new Date().toISOString()
+        })
         .eq('user_id', kycData.user_id);
 
       if (profileError) {
@@ -309,8 +319,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
               transaction_hash: transactionHash,
               type: 'verification',
               from_address: account,
-              to_address: kycData.user_id,
-              amount: 0,
+              to_address: kycData.wallet_address || kycData.user_id,
               status: 'confirmed',
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
@@ -319,13 +328,12 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
             }
           ]);
         toast.success(`KYC document ${verificationStatus}`);
+        return true;
       } catch (error) {
         console.error("Transaction record error:", error);
-        toast.error("Failed to verify KYC document");
+        toast.error("Failed to record verification transaction");
         return false;
       }
-
-      return true;
     } catch (error) {
       console.error("KYC verification error:", error);
       toast.error("Failed to verify KYC document");
@@ -620,35 +628,49 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <BlockchainContext.Provider
-      value={{
-        account,
-        isConnected,
-        networkName,
-        isCorrectNetwork,
-        isGanache,
-        isBlockchainLoading,
-        connectionError,
-        kycStatus,
-        connectWallet,
-        disconnectWallet,
-        switchNetwork,
-        submitKYC,
-        verifyKYC,
-        getKYCStatus,
-        submitLoanApplication,
-        approveLoan,
-        rejectLoan,
-        getTransactionHistory,
-        simulateBlockchainEvent
-      }}
-    >
+    <BlockchainContext.Provider value={{
+      account,
+      isConnected,
+      networkName,
+      isCorrectNetwork,
+      isGanache,
+      isBlockchainLoading,
+      connectionError,
+      kycStatus,
+      connectWallet,
+      disconnectWallet,
+      switchNetwork,
+      submitKYC,
+      verifyKYC,
+      getKYCStatus: async (address: string) => {
+        // Implement a function to get KYC status
+        try {
+          if (!address) return false;
+          
+          const { data, error } = await supabase
+            .from('kyc_document_submissions')
+            .select('verification_status')
+            .eq('wallet_address', address)
+            .order('submitted_at', { ascending: false })
+            .limit(1)
+            .single();
+            
+          if (error) return false;
+          return data.verification_status === 'verified';
+        } catch (error) {
+          console.error("Error checking KYC status:", error);
+          return false;
+        }
+      },
+      kycContract: null, // Mock implementation
+      web3: window.web3 || null
+    }}>
       {children}
     </BlockchainContext.Provider>
   );
 };
 
-// Hook to use blockchain context
+// Custom hook to use blockchain context
 export const useBlockchain = () => {
   const context = useContext(BlockchainContext);
   if (!context) {

@@ -51,7 +51,6 @@ const useFormField = () => {
       formItemId: "",
       formDescriptionId: "",
       formMessageId: "",
-      description: "",
       fieldState: {
         invalid: false,
         isDirty: false,

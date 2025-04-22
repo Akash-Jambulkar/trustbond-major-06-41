@@ -4,7 +4,6 @@ import {
   Card, 
   CardContent, 
   CardDescription, 
-  CardFooter, 
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
@@ -25,22 +24,35 @@ import { Shield } from "lucide-react";
 import { toast } from "sonner";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { DOCUMENT_TYPES, DocumentType, validateDocument, createDocumentHash } from "@/utils/documentHash";
+import { useAuth } from "@/contexts/AuthContext";
+import { saveKycSubmission } from "@/utils/supabase/kycSubmissions";
+
+type FormValues = {
+  documentType: DocumentType;
+  documentNumber: string;
+};
 
 export function KYCSubmission() {
-  const { submitKYC, isConnected } = useBlockchain();
+  const { submitKYC, isConnected, account } = useBlockchain();
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Create form instance
-  const form = useForm({
+  const form = useForm<FormValues>({
     defaultValues: {
       documentType: DOCUMENT_TYPES.PAN,
       documentNumber: "",
     }
   });
 
-  const handleSubmit = async (values: { documentType: DocumentType; documentNumber: string }) => {
+  const handleSubmit = async (values: FormValues) => {
     if (!isConnected) {
       toast.error("Please connect your wallet first");
+      return;
+    }
+
+    if (!user) {
+      toast.error("Please log in to submit KYC");
       return;
     }
 
@@ -58,8 +70,24 @@ export function KYCSubmission() {
       const success = await submitKYC(documentHash);
       
       if (success) {
-        toast.success("Document information submitted successfully for verification!");
-        form.reset();
+        // Also save to Supabase directly (as a backup)
+        const submissionData = {
+          user_id: user.id,
+          document_type: values.documentType,
+          document_hash: documentHash,
+          verification_status: 'pending',
+          submitted_at: new Date().toISOString(),
+          wallet_address: account
+        };
+        
+        const submissionId = await saveKycSubmission(submissionData);
+        
+        if (submissionId) {
+          toast.success("Document information submitted successfully for verification!");
+          form.reset();
+        } else {
+          console.warn("Backup submission to database failed, but blockchain submission succeeded");
+        }
       } else {
         toast.error("Failed to submit document information");
       }
@@ -137,7 +165,7 @@ export function KYCSubmission() {
             
             <Button 
               type="submit" 
-              disabled={!isConnected || isSubmitting}
+              disabled={!isConnected || isSubmitting || !user}
               className="w-full mt-4"
             >
               {isSubmitting ? "Submitting..." : "Submit for Verification"}
