@@ -2,11 +2,12 @@
 import { supabase } from '@/integrations/supabase/client';
 import { BankRegistrationType } from '@/types/supabase-extensions';
 import { bankRegistrationsTable } from '@/utils/supabase-helper';
+import { generateMockTransactionHash } from '@/utils/mockBlockchain';
 
 /**
  * Get all bank registrations
  */
-export async function getAllBankRegistrations(): Promise<BankRegistrationType[]> {
+export async function getAllBankRegistrations(): Promise<any[]> {
   try {
     const { data, error } = await bankRegistrationsTable()
       .select('*')
@@ -17,7 +18,7 @@ export async function getAllBankRegistrations(): Promise<BankRegistrationType[]>
       return [];
     }
 
-    return (data || []) as BankRegistrationType[];
+    return data || [];
   } catch (error) {
     console.error("Exception in getAllBankRegistrations:", error);
     return [];
@@ -25,49 +26,50 @@ export async function getAllBankRegistrations(): Promise<BankRegistrationType[]>
 }
 
 /**
- * Get pending bank registrations
+ * Submit a new bank registration
  */
-export async function getPendingBankRegistrations(): Promise<BankRegistrationType[]> {
+export async function submitBankRegistration(registration: Omit<BankRegistrationType, 'id' | 'created_at' | 'updated_at' | 'status'>): Promise<string | null> {
   try {
     const { data, error } = await bankRegistrationsTable()
-      .select('*')
-      .eq('status', 'pending')
-      .order('created_at', { ascending: true });
-
-    if (error) {
-      console.error("Error fetching pending bank registrations:", error);
-      return [];
-    }
-
-    return (data || []) as BankRegistrationType[];
-  } catch (error) {
-    console.error("Exception in getPendingBankRegistrations:", error);
-    return [];
-  }
-}
-
-/**
- * Register a new bank
- */
-export async function registerBank(registration: Omit<BankRegistrationType, 'id' | 'created_at' | 'updated_at'>): Promise<string | null> {
-  try {
-    const { data, error } = await bankRegistrationsTable()
-      .insert([{
+      .insert({
         ...registration,
+        status: 'pending',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      }])
+      })
       .select('id')
       .single();
 
     if (error) {
-      console.error("Error registering bank:", error);
+      console.error("Error submitting bank registration:", error);
       return null;
     }
 
     return (data as any)?.id || null;
   } catch (error) {
-    console.error("Exception in registerBank:", error);
+    console.error("Exception in submitBankRegistration:", error);
+    return null;
+  }
+}
+
+/**
+ * Get bank registration by ID
+ */
+export async function getBankRegistrationById(id: string): Promise<any | null> {
+  try {
+    const { data, error } = await bankRegistrationsTable()
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error("Error fetching bank registration:", error);
+      return null;
+    }
+
+    return data || null;
+  } catch (error) {
+    console.error("Exception in getBankRegistrationById:", error);
     return null;
   }
 }

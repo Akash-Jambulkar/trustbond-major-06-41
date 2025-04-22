@@ -5,6 +5,7 @@ export type KycDocumentSubmissionType = {
   id: string;
   user_id: string;
   document_type: string;
+  document_number?: string | null; // Add document_number property
   document_hash: string;
   submitted_at: string;
   verification_status: 'pending' | 'verified' | 'rejected';
@@ -14,6 +15,7 @@ export type KycDocumentSubmissionType = {
   verification_tx_hash?: string | null;
   verifier_address?: string | null;
   blockchain_tx_hash?: string | null;
+  consensus_status?: 'pending' | 'in_progress' | 'approved' | 'rejected' | null; // Add consensus_status property
 };
 
 export type ProfileType = {
@@ -52,5 +54,55 @@ export type UserRoleAssignmentType = {
   role: 'user' | 'bank' | 'admin';
   assigned_at: string;
   assigned_by?: string | null;
+  updated_at: string;
+};
+
+// Add missing types for bank registration
+export type BankRegistrationType = {
+  id: string;
+  name: string;
+  registration_number: string;
+  wallet_address: string;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
+  updated_at: string;
+  document_url?: string | null;
+  blockchain_tx_hash?: string | null;
+};
+
+// Type for KYC verification votes
+export type KycVerificationVoteType = {
+  id: string;
+  document_id: string;
+  bank_id: string;
+  bank_name?: string | null;
+  approved: boolean;
+  notes?: string | null;
+  created_at: string;
+  updated_at?: string | null;
+};
+
+// For blockchain transactions
+export type BlockchainTransactionType = {
+  id: string;
+  transaction_hash: string;
+  type: string;
+  from_address: string;
+  to_address?: string | null;
+  amount?: number | null;
+  status: 'pending' | 'confirmed' | 'failed';
+  created_at: string;
+  updated_at: string;
+  user_id?: string | null;
+  bank_id?: string | null;
+  metadata?: any;
+};
+
+// User metadata type
+export type UsersMetadataType = {
+  id: string;
+  user_id: string;
+  metadata: any;
+  created_at: string;
   updated_at: string;
 };

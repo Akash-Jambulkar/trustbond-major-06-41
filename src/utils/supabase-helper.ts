@@ -7,6 +7,11 @@ export const profilesTable = () => supabase.from('profiles');
 export const transactionsTable = () => supabase.from('transactions');
 export const userRoleAssignmentsTable = () => supabase.from('user_role_assignments');
 
+// Adding missing table helpers
+export const bankRegistrationsTable = () => supabase.from('bank_registrations');
+export const kycVerificationVotesTable = () => supabase.from('kyc_verification_votes');
+export const usersMetadataTable = () => supabase.from('users_metadata');
+
 // Format date to display
 export const formatDate = (dateString?: string | null) => {
   if (!dateString) return 'N/A';

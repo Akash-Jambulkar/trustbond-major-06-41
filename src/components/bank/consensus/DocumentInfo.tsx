@@ -18,8 +18,8 @@ export function DocumentInfo({ document }: DocumentInfoProps) {
         <p className="font-medium">{document.document_type.toUpperCase()}</p>
       </div>
       <div>
-        <p className="text-sm font-medium text-muted-foreground">Document Number</p>
-        <p className="font-mono">{document.document_number}</p>
+        <p className="text-sm font-medium text-muted-foreground">Document ID</p>
+        <p className="font-mono">{document.document_number || 'Not available'}</p>
       </div>
       <div>
         <p className="text-sm font-medium text-muted-foreground">Submitted At</p>

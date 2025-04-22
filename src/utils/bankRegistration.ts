@@ -1,224 +1,71 @@
-import { supabase } from '@/integrations/supabase/client';
-import { BankRegistrationType, UsersMetadataType } from '@/types/supabase-extensions';
-import { bankRegistrationsTable, usersMetadataTable } from '@/utils/supabase-helper';
 
-/**
- * Get bank registrations
- */
-export async function getBankRegistrations(): Promise<BankRegistrationType[]> {
+import { supabase } from '@/integrations/supabase/client';
+import { BankRegistrationType } from '@/types/supabase-extensions';
+import { bankRegistrationsTable } from '@/utils/supabase-helper';
+import { generateMockTransactionHash } from '@/utils/mockBlockchain';
+
+// Get bank registrations
+export const getBankRegistrations = async (): Promise<BankRegistrationType[]> => {
   try {
     const { data, error } = await bankRegistrationsTable()
       .select('*')
       .order('created_at', { ascending: false });
-
+    
     if (error) {
       console.error("Error fetching bank registrations:", error);
       return [];
     }
-
-    // Use type assertion for the data to avoid type conversion errors
-    return (data || []) as unknown as BankRegistrationType[];
+    
+    return (data as any) || [];
   } catch (error) {
     console.error("Exception in getBankRegistrations:", error);
     return [];
   }
-}
+};
 
-/**
- * Get pending bank registrations
- */
-export async function getPendingBankRegistrations(): Promise<BankRegistrationType[]> {
+// Get bank registration status
+export const getBankRegistrationStatus = async (bankId: string): Promise<string> => {
   try {
     const { data, error } = await bankRegistrationsTable()
-      .select('*')
-      .eq('status', 'pending')
-      .order('created_at', { ascending: true });
-
+      .select('status')
+      .eq('id', bankId)
+      .single();
+    
     if (error) {
-      console.error("Error fetching pending bank registrations:", error);
-      return [];
+      console.error("Error fetching bank registration status:", error);
+      return 'unknown';
     }
-
-    // Use type assertion for the data to avoid type conversion errors
-    return (data || []) as unknown as BankRegistrationType[];
-  } catch (error) {
-    console.error("Exception in getPendingBankRegistrations:", error);
-    return [];
-  }
-}
-
-/**
- * Get bank registration status by wallet address
- */
-export async function getBankRegistrationStatus(walletAddress: string): Promise<{
-  exists: boolean;
-  status?: string;
-  bankId?: string;
-}> {
-  try {
-    const { data, error } = await bankRegistrationsTable()
-      .select('id, status')
-      .eq('wallet_address', walletAddress)
-      .maybeSingle();
-
-    if (error) {
-      console.error("Error checking bank registration status:", error);
-      return { exists: false };
-    }
-
-    if (!data) {
-      return { exists: false };
-    }
-
-    return {
-      exists: true,
-      status: (data as any).status,
-      bankId: (data as any).id
-    };
+    
+    return (data as any)?.status || 'unknown';
   } catch (error) {
     console.error("Exception in getBankRegistrationStatus:", error);
-    return { exists: false };
+    return 'unknown';
   }
-}
+};
 
-/**
- * Save a new bank registration
- */
-export async function saveBankRegistration(registration: Omit<BankRegistrationType, 'id' | 'created_at' | 'updated_at'>): Promise<string | null> {
+// Approve bank registration
+export const approveBankRegistration = async (bankId: string): Promise<boolean> => {
   try {
-    const registrationData = {
-      ...registration,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-
-    const { data, error } = await bankRegistrationsTable()
-      .insert([registrationData as any])
-      .select('id')
-      .single();
-
-    if (error) {
-      console.error("Error saving bank registration:", error);
-      return null;
-    }
-
-    return data?.id || null;
-  } catch (error) {
-    console.error("Exception in saveBankRegistration:", error);
-    return null;
-  }
-}
-
-/**
- * Update a bank registration
- */
-export async function updateBankRegistration(id: string, updates: Partial<BankRegistrationType>): Promise<boolean> {
-  try {
-    // Include updated_at time
-    const updatesWithTimestamp = {
-      ...updates,
-      updated_at: new Date().toISOString()
-    };
-
+    // Generate mock transaction hash for blockchain record
+    const transactionHash = generateMockTransactionHash();
+    
+    // Update bank registration status
     const { error } = await bankRegistrationsTable()
-      .update(updatesWithTimestamp as any)
-      .eq('id', id);
-
-    if (error) {
-      console.error("Error updating bank registration:", error);
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    console.error("Exception in updateBankRegistration:", error);
-    return false;
-  }
-}
-
-/**
- * Approve a bank and add it to users_metadata
- */
-export async function approveBankRegistration(bankId: string): Promise<boolean> {
-  try {
-    // First update the bank registration status
-    const { data: bankData, error: bankUpdateError } = await bankRegistrationsTable()
       .update({
         status: 'approved',
+        blockchain_tx_hash: transactionHash,
         updated_at: new Date().toISOString()
       } as any)
-      .eq('id', bankId)
-      .select('*')
-      .single();
-
-    if (bankUpdateError || !bankData) {
-      console.error("Error approving bank:", bankUpdateError);
+      .eq('id', bankId);
+    
+    if (error) {
+      console.error("Error approving bank registration:", error);
       return false;
     }
-
-    const bankDataTyped = bankData as unknown as BankRegistrationType;
-
-    // Then add bank to users_metadata table
-    const { error: userMetadataError } = await usersMetadataTable()
-      .insert({
-        id: bankDataTyped.id,
-        role: 'bank',
-        wallet_address: bankDataTyped.wallet_address,
-        is_verified: true
-      } as any);
-
-    if (userMetadataError) {
-      console.error("Error adding bank to users_metadata:", userMetadataError);
-      // Try to rollback bank registration approval
-      await bankRegistrationsTable()
-        .update({ status: 'pending' } as any)
-        .eq('id', bankId);
-        
-      return false;
-    }
-
+    
     return true;
   } catch (error) {
     console.error("Exception in approveBankRegistration:", error);
     return false;
   }
-}
-
-/**
- * Process bank registration 
- */
-export async function processBankRegistration(registrationId: string, approve: boolean): Promise<boolean> {
-  try {
-    // Get the registration details
-    const { data: registration, error: fetchError } = await bankRegistrationsTable()
-      .select('*')
-      .eq('id', registrationId)
-      .single();
-
-    if (fetchError || !registration) {
-      console.error("Error fetching bank registration:", fetchError);
-      return false;
-    }
-
-    // Update the registration status
-    const { error: updateError } = await bankRegistrationsTable()
-      .update({
-        status: approve ? 'approved' : 'rejected',
-        updated_at: new Date().toISOString()
-      } as any)
-      .eq('id', registrationId);
-
-    if (updateError) {
-      console.error("Error updating bank registration:", updateError);
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    console.error("Error in processBankRegistration:", error);
-    return false;
-  }
-}
-
-// Export BankRegistration component for the BankRegistration page
-export { getBankRegistrations as BankRegistration };
+};

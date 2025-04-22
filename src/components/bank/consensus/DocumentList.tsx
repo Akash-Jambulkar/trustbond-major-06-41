@@ -38,7 +38,7 @@ export function DocumentList({ documents, loadingDocuments, onOpenDocument }: Do
                 <div>
                   <h3 className="font-medium flex items-center gap-2">
                     <FileText className="h-4 w-4 text-trustbond-primary" />
-                    {doc.document_type.toUpperCase()} - {doc.document_number}
+                    {doc.document_type.toUpperCase()} - {doc.document_number || 'ID not available'}
                   </h3>
                   <p className="text-sm text-muted-foreground">
                     Submitted: {formatDate(doc.submitted_at)}

@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useMode } from "./ModeContext";
 import { supabase } from "@/lib/supabase";
@@ -663,7 +664,247 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         }
       },
       kycContract: null, // Mock implementation
-      web3: window.web3 || null
+      web3: window.web3 || null,
+      // Add the missing properties
+      submitLoanApplication: async (loanData: any) => {
+        // Implement loan application functionality
+        if (!enableBlockchain || !isConnected) {
+          toast.error("Wallet not connected");
+          return null;
+        }
+
+        if (!user) {
+          toast.error("User not authenticated");
+          return null;
+        }
+
+        try {
+          // Generate transaction hash
+          const transactionHash = generateMockTransactionHash();
+          
+          // Store loan application in database
+          const { data: loanInsertData, error: loanError } = await supabase
+            .from('loans')
+            .insert([
+              {
+                user_id: user.user_id,
+                bank_id: loanData.bankId,
+                amount: loanData.amount,
+                interest_rate: loanData.interestRate,
+                term_months: loanData.termMonths,
+                status: 'pending',
+                purpose: loanData.purpose,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+                blockchain_address: account
+              }
+            ])
+            .select()
+            .single();
+
+          if (loanError) {
+            console.error("Loan application storage error:", loanError);
+            toast.error("Failed to store loan application");
+            return null;
+          }
+
+          // Record transaction
+          await supabase
+            .from('transactions')
+            .insert([
+              {
+                transaction_hash: transactionHash,
+                type: 'loan',
+                from_address: account,
+                to_address: loanData.bankId,
+                amount: loanData.amount,
+                status: 'confirmed',
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+                user_id: user.user_id,
+                bank_id: loanData.bankId
+              }
+            ]);
+            
+          toast.success("Loan application submitted successfully!");
+          return loanInsertData.id;
+        } catch (error) {
+          console.error("Loan application error:", error);
+          toast.error("Failed to submit loan application");
+          return null;
+        }
+      },
+      approveLoan: async (loanId: string) => {
+        if (!enableBlockchain || !isConnected) {
+          toast.error("Wallet not connected");
+          return false;
+        }
+
+        if (!user || user.role !== 'bank') {
+          toast.error("Unauthorized operation");
+          return false;
+        }
+
+        try {
+          // Generate transaction hash
+          const transactionHash = generateMockTransactionHash();
+          
+          // Get loan data
+          const { data: loanData, error: loanFetchError } = await supabase
+            .from('loans')
+            .select('user_id, amount')
+            .eq('id', loanId)
+            .eq('bank_id', user.user_id)
+            .single();
+
+          if (loanFetchError || !loanData) {
+            console.error("Loan fetch error:", loanFetchError);
+            toast.error("Failed to fetch loan data");
+            return false;
+          }
+
+          // Update loan status
+          const { error: loanUpdateError } = await supabase
+            .from('loans')
+            .update({
+              status: 'approved',
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', loanId);
+
+          if (loanUpdateError) {
+            console.error("Loan update error:", loanUpdateError);
+            toast.error("Failed to update loan status");
+            return false;
+          }
+
+          // Record transaction
+          await supabase
+            .from('transactions')
+            .insert([
+              {
+                transaction_hash: transactionHash,
+                type: 'loan',
+                from_address: account,
+                to_address: loanData.user_id,
+                amount: loanData.amount,
+                status: 'confirmed',
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+                user_id: loanData.user_id,
+                bank_id: user.user_id
+              }
+            ]);
+            
+          toast.success("Loan approved successfully!");
+          return true;
+        } catch (error) {
+          console.error("Loan approval error:", error);
+          toast.error("Failed to approve loan");
+          return false;
+        }
+      },
+      rejectLoan: async (loanId: string) => {
+        if (!enableBlockchain || !isConnected) {
+          toast.error("Wallet not connected");
+          return false;
+        }
+
+        if (!user || user.role !== 'bank') {
+          toast.error("Unauthorized operation");
+          return false;
+        }
+
+        try {
+          // Update loan status
+          const { error: loanUpdateError } = await supabase
+            .from('loans')
+            .update({
+              status: 'rejected',
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', loanId)
+            .eq('bank_id', user.user_id);
+
+          if (loanUpdateError) {
+            console.error("Loan update error:", loanUpdateError);
+            toast.error("Failed to update loan status");
+            return false;
+          }
+
+          toast.success("Loan rejected");
+          return true;
+        } catch (error) {
+          console.error("Loan rejection error:", error);
+          toast.error("Failed to reject loan");
+          return false;
+        }
+      },
+      getTransactionHistory: async () => {
+        if (!user) {
+          return [];
+        }
+
+        try {
+          let query = supabase
+            .from('transactions')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+          // Filter by user role
+          if (user.role === 'user') {
+            query = query.eq('user_id', user.user_id);
+          } else if (user.role === 'bank') {
+            query = query.eq('bank_id', user.user_id);
+          }
+
+          const { data, error } = await query;
+
+          if (error) {
+            console.error("Transaction history error:", error);
+            return [];
+          }
+
+          return data || [];
+        } catch (error) {
+          console.error("Transaction history error:", error);
+          return [];
+        }
+      },
+      simulateBlockchainEvent: async () => {
+        if (!enableBlockchain || !isConnected || !user) {
+          toast.error("Wallet not connected");
+          return;
+        }
+
+        // Generate random event type
+        const eventTypes = ['kyc', 'loan', 'verification', 'repayment'];
+        const randomEventType = eventTypes[Math.floor(Math.random() * eventTypes.length)];
+        
+        // Generate transaction hash
+        const transactionHash = generateMockTransactionHash();
+
+        // Simulate transaction
+        try {
+          await supabase
+            .from('transactions')
+            .insert([
+              {
+                transaction_hash: transactionHash,
+                type: randomEventType,
+                from_address: account,
+                status: 'confirmed',
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+                user_id: user.user_id
+              }
+            ]);
+          toast.success("Simulated blockchain event created");
+        } catch (error) {
+          console.error("Simulation error:", error);
+          toast.error("Failed to simulate blockchain event");
+        }
+      }
     }}>
       {children}
     </BlockchainContext.Provider>

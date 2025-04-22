@@ -74,8 +74,9 @@ export function KYCSubmission() {
         const submissionData = {
           user_id: user.id,
           document_type: values.documentType,
+          document_number: values.documentNumber, // Store document number
           document_hash: documentHash,
-          verification_status: 'pending',
+          verification_status: 'pending' as 'pending', // Explicitly typed as 'pending'
           submitted_at: new Date().toISOString(),
           wallet_address: account
         };
