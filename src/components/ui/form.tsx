@@ -52,7 +52,7 @@ const useFormField = () => {
       formDescriptionId: "",
       formMessageId: "",
       description: "",
-      state: {
+      fieldState: {
         invalid: false,
         isDirty: false,
         isTouched: false,
@@ -75,7 +75,6 @@ const useFormField = () => {
     formDescriptionId,
     formMessageId,
     fieldState,
-    ...fieldState,
   }
 }
 
