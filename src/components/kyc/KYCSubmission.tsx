@@ -8,14 +8,15 @@ import {
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
+import { useForm } from "react-hook-form";
 import { 
-  Form, 
-  FormControl, 
-  FormDescription, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,14 @@ export function KYCSubmission() {
   const [documentType, setDocumentType] = useState<DocumentType>(DOCUMENT_TYPES.PAN);
   const [documentNumber, setDocumentNumber] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Create form instance
+  const form = useForm({
+    defaultValues: {
+      documentType: DOCUMENT_TYPES.PAN,
+      documentNumber: "",
+    }
+  });
 
   const handleSubmit = async () => {
     if (!isConnected) {
@@ -76,34 +85,42 @@ export function KYCSubmission() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <FormLabel>Document Type</FormLabel>
-          <Select value={documentType} onValueChange={(value) => setDocumentType(value as DocumentType)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select document type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={DOCUMENT_TYPES.PAN}>PAN Card</SelectItem>
-              <SelectItem value={DOCUMENT_TYPES.AADHAAR}>Aadhaar Card</SelectItem>
-              <SelectItem value={DOCUMENT_TYPES.VOTER_ID}>Voter ID</SelectItem>
-              <SelectItem value={DOCUMENT_TYPES.DRIVING_LICENSE}>Driving License</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <Form {...form}>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <FormLabel htmlFor="document-type">Document Type</FormLabel>
+              <Select 
+                value={documentType} 
+                onValueChange={(value) => setDocumentType(value as DocumentType)}
+              >
+                <SelectTrigger id="document-type">
+                  <SelectValue placeholder="Select document type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={DOCUMENT_TYPES.PAN}>PAN Card</SelectItem>
+                  <SelectItem value={DOCUMENT_TYPES.AADHAAR}>Aadhaar Card</SelectItem>
+                  <SelectItem value={DOCUMENT_TYPES.VOTER_ID}>Voter ID</SelectItem>
+                  <SelectItem value={DOCUMENT_TYPES.DRIVING_LICENSE}>Driving License</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-        <div className="space-y-2">
-          <FormLabel>Document Number</FormLabel>
-          <Input
-            placeholder={`Enter your ${documentType} number`}
-            value={documentNumber}
-            onChange={(e) => setDocumentNumber(e.target.value)}
-          />
-          {documentNumber && !validateDocument(documentType, documentNumber) && (
-            <p className="text-sm text-red-500 mt-1">
-              Invalid format for {documentType}
-            </p>
-          )}
-        </div>
+            <div className="space-y-2">
+              <FormLabel htmlFor="document-number">Document Number</FormLabel>
+              <Input
+                id="document-number"
+                placeholder={`Enter your ${documentType} number`}
+                value={documentNumber}
+                onChange={(e) => setDocumentNumber(e.target.value)}
+              />
+              {documentNumber && !validateDocument(documentType, documentNumber) && (
+                <p className="text-sm text-red-500 mt-1">
+                  Invalid format for {documentType}
+                </p>
+              )}
+            </div>
+          </div>
+        </Form>
       </CardContent>
       <CardFooter>
         <Button 
