@@ -2,245 +2,250 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./TrustScore.sol";
 import "./KYCVerifier.sol";
+import "./TrustScore.sol";
 
+/**
+ * @title LoanManager
+ * @dev Manages loan applications, approvals, and repayments
+ */
 contract LoanManager {
-    // Reference to other contracts
-    TrustScore private trustScoreContract;
-    KYCVerifier private kycVerifierContract;
+    address public owner;
+    KYCVerifier public kycVerifier;
+    TrustScore public trustScore;
     
-    // Loan application status
-    enum LoanStatus { Applied, Reviewing, Approved, Rejected, Funded, Repaying, Completed, Defaulted }
+    enum LoanStatus { Pending, Approved, Rejected, Funded, Repaid, Defaulted }
     
-    // Loan application structure
     struct Loan {
-        uint256 id;
         address borrower;
+        address bank;
         uint256 amount;
-        uint256 termDays;
-        uint256 interestRate; // Represented as basis points (1% = 100)
-        uint256 appliedDate;
-        uint256 approvalDate;
-        uint256 fundingDate;
-        uint256 repaymentDeadline;
+        uint256 termMonths;
+        uint256 interestRate;
+        uint256 createdAt;
+        uint256 fundedAt;
+        uint256 repaidAmount;
         LoanStatus status;
-        string purpose;
-        address lender;
-        uint256 amountRepaid;
     }
     
     // Counter for loan IDs
-    uint256 private loanIdCounter = 0;
+    uint256 public loanCounter;
     
-    // Mapping from loan ID to loan data
-    mapping(uint256 => Loan) private loans;
+    // Mapping from loan ID to loan details
+    mapping(uint256 => Loan) public loans;
     
     // Mapping from user address to their loan IDs
-    mapping(address => uint256[]) private userLoans;
+    mapping(address => uint256[]) public userLoans;
+    
+    // Mapping from bank address to their loan IDs
+    mapping(address => uint256[]) public bankLoans;
     
     // Events
-    event LoanApplied(uint256 indexed loanId, address indexed borrower, uint256 amount);
-    event LoanStatusChanged(uint256 indexed loanId, LoanStatus status);
-    event LoanFunded(uint256 indexed loanId, address indexed lender);
-    event LoanRepayment(uint256 indexed loanId, uint256 amount, uint256 remaining);
+    event LoanRequested(uint256 indexed loanId, address indexed borrower, uint256 amount);
+    event LoanApproved(uint256 indexed loanId, address indexed bank);
+    event LoanRejected(uint256 indexed loanId, address indexed bank);
+    event LoanFunded(uint256 indexed loanId, address indexed bank, address indexed borrower, uint256 amount);
+    event LoanRepaid(uint256 indexed loanId, address indexed borrower, uint256 amount);
+    event LoanDefaulted(uint256 indexed loanId, address indexed borrower);
     
-    /**
-     * @dev Constructor to initialize contract with required dependencies
-     * @param _trustScoreAddress Address of the TrustScore contract
-     * @param _kycVerifierAddress Address of the KYCVerifier contract
-     */
-    constructor(address _trustScoreAddress, address _kycVerifierAddress) {
-        trustScoreContract = TrustScore(_trustScoreAddress);
-        kycVerifierContract = KYCVerifier(_kycVerifierAddress);
+    constructor(address _kycVerifierAddress, address _trustScoreAddress) {
+        owner = msg.sender;
+        kycVerifier = KYCVerifier(_kycVerifierAddress);
+        trustScore = TrustScore(_trustScoreAddress);
+    }
+    
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only owner can call this function");
+        _;
+    }
+    
+    modifier onlyBorrower(uint256 loanId) {
+        require(loans[loanId].borrower == msg.sender, "Only borrower can call this function");
+        _;
+    }
+    
+    modifier onlyBank(uint256 loanId) {
+        require(loans[loanId].bank == msg.sender, "Only assigned bank can call this function");
+        _;
     }
     
     /**
-     * @dev Apply for a loan
-     * @param amount The amount of the loan requested
-     * @param termDays The loan term in days
-     * @param purpose Brief description of loan purpose
+     * @dev Request a loan
+     * @param amount The loan amount in wei
+     * @param termMonths The loan term in months
+     * @param bankId The address of the bank
      */
-    function applyForLoan(uint256 amount, uint256 termDays, string memory purpose) public {
-        // Ensure borrower has completed KYC
-        require(kycVerifierContract.getKYCStatus(msg.sender), "KYC verification required");
+    function requestLoan(uint256 amount, uint256 termMonths, address bankId) public {
+        require(amount > 0, "Loan amount must be greater than 0");
+        require(termMonths > 0, "Loan term must be greater than 0");
+        require(kycVerifier.isKYCVerified(msg.sender), "KYC verification required");
         
-        // Get the user's trust score
-        uint256 trustScore = trustScoreContract.calculateScore(msg.sender);
+        uint256 loanId = loanCounter++;
         
-        // Minimum trust score required to apply for a loan
-        require(trustScore >= 50, "Trust score too low for loan application");
-        
-        // Calculate interest rate based on trust score (simplified)
-        uint256 interestRate = calculateInterestRate(trustScore);
-        
-        // Create new loan
-        uint256 loanId = loanIdCounter++;
-        Loan memory newLoan = Loan({
-            id: loanId,
+        loans[loanId] = Loan({
             borrower: msg.sender,
+            bank: bankId,
             amount: amount,
-            termDays: termDays,
-            interestRate: interestRate,
-            appliedDate: block.timestamp,
-            approvalDate: 0,
-            fundingDate: 0,
-            repaymentDeadline: 0,
-            status: LoanStatus.Applied,
-            purpose: purpose,
-            lender: address(0),
-            amountRepaid: 0
+            termMonths: termMonths,
+            interestRate: 5, // Default interest rate, can be adjusted later
+            createdAt: block.timestamp,
+            fundedAt: 0,
+            repaidAmount: 0,
+            status: LoanStatus.Pending
         });
         
-        loans[loanId] = newLoan;
         userLoans[msg.sender].push(loanId);
+        bankLoans[bankId].push(loanId);
         
-        emit LoanApplied(loanId, msg.sender, amount);
+        // Record transaction for trust score
+        trustScore.addTransaction(msg.sender);
+        
+        emit LoanRequested(loanId, msg.sender, amount);
     }
     
     /**
-     * @dev Review and change the status of a loan application (only callable by admin)
+     * @dev Approve a loan request
+     * @param borrowerAddress The address of the borrower
+     * @param amount The loan amount in wei
+     */
+    function approveLoan(address borrowerAddress, uint256 amount) public {
+        // Find the loan from the borrower that matches this bank and amount
+        uint256 loanId = findLoan(borrowerAddress, msg.sender, amount);
+        require(loanId != type(uint256).max, "No matching loan found");
+        require(loans[loanId].status == LoanStatus.Pending, "Loan must be in pending status");
+        
+        loans[loanId].status = LoanStatus.Approved;
+        loans[loanId].fundedAt = block.timestamp;
+        
+        emit LoanApproved(loanId, msg.sender);
+    }
+    
+    /**
+     * @dev Reject a loan request
+     * @param borrowerAddress The address of the borrower
+     */
+    function rejectLoan(address borrowerAddress) public {
+        // Find the loan from the borrower that matches this bank
+        uint256 loanId = findLoanByBorrowerAndBank(borrowerAddress, msg.sender);
+        require(loanId != type(uint256).max, "No matching loan found");
+        require(loans[loanId].status == LoanStatus.Pending, "Loan must be in pending status");
+        
+        loans[loanId].status = LoanStatus.Rejected;
+        
+        emit LoanRejected(loanId, msg.sender);
+    }
+    
+    /**
+     * @dev Repay a loan
      * @param loanId The ID of the loan
-     * @param status The new status to set
+     * @param amount The amount to repay in wei
      */
-    function reviewLoan(uint256 loanId, LoanStatus status) public {
-        // In a production environment, add access control here
-        
-        require(status == LoanStatus.Approved || status == LoanStatus.Rejected, "Invalid loan review status");
-        require(loans[loanId].status == LoanStatus.Applied || loans[loanId].status == LoanStatus.Reviewing, "Loan not in reviewable state");
-        
-        loans[loanId].status = status;
-        
-        if (status == LoanStatus.Approved) {
-            loans[loanId].approvalDate = block.timestamp;
-        }
-        
-        emit LoanStatusChanged(loanId, status);
-    }
-    
-    /**
-     * @dev Fund an approved loan (can be called by any user with sufficient funds)
-     * @param loanId The ID of the loan to fund
-     */
-    function fundLoan(uint256 loanId) public payable {
-        require(loans[loanId].status == LoanStatus.Approved, "Loan not approved");
-        require(msg.value >= loans[loanId].amount, "Insufficient funds sent");
-        
-        loans[loanId].status = LoanStatus.Funded;
-        loans[loanId].lender = msg.sender;
-        loans[loanId].fundingDate = block.timestamp;
-        loans[loanId].repaymentDeadline = block.timestamp + (loans[loanId].termDays * 1 days);
-        
-        // Transfer funds to borrower
-        payable(loans[loanId].borrower).transfer(loans[loanId].amount);
-        
-        // Return any excess funds
-        if (msg.value > loans[loanId].amount) {
-            payable(msg.sender).transfer(msg.value - loans[loanId].amount);
-        }
-        
-        emit LoanFunded(loanId, msg.sender);
-        emit LoanStatusChanged(loanId, LoanStatus.Funded);
-    }
-    
-    /**
-     * @dev Make a repayment towards a loan
-     * @param loanId The ID of the loan
-     */
-    function repayLoan(uint256 loanId) public payable {
-        require(loans[loanId].status == LoanStatus.Funded || loans[loanId].status == LoanStatus.Repaying, "Loan not in repayable state");
+    function repayLoan(uint256 loanId, uint256 amount) public payable {
         require(loans[loanId].borrower == msg.sender, "Only borrower can repay loan");
+        require(loans[loanId].status == LoanStatus.Approved || loans[loanId].status == LoanStatus.Funded, "Loan must be approved or funded");
+        require(amount > 0, "Repayment amount must be greater than 0");
+        require(msg.value == amount, "Sent ETH must match repayment amount");
         
-        uint256 totalDue = calculateTotalDue(loanId);
-        uint256 remaining = totalDue - loans[loanId].amountRepaid;
+        // Transfer payment to the bank
+        payable(loans[loanId].bank).transfer(amount);
         
-        require(msg.value > 0, "Must send some funds");
-        uint256 paymentAmount = msg.value > remaining ? remaining : msg.value;
+        loans[loanId].repaidAmount += amount;
         
-        loans[loanId].amountRepaid += paymentAmount;
+        // Record repayment for trust score
+        trustScore.addRepayment(msg.sender);
         
-        if (loans[loanId].status == LoanStatus.Funded) {
-            loans[loanId].status = LoanStatus.Repaying;
-            emit LoanStatusChanged(loanId, LoanStatus.Repaying);
+        // If fully repaid, update loan status
+        if (loans[loanId].repaidAmount >= loans[loanId].amount) {
+            loans[loanId].status = LoanStatus.Repaid;
         }
         
-        // Check if loan is fully repaid
-        if (loans[loanId].amountRepaid >= totalDue) {
-            loans[loanId].status = LoanStatus.Completed;
-            emit LoanStatusChanged(loanId, LoanStatus.Completed);
-        }
-        
-        // Transfer payment to lender
-        payable(loans[loanId].lender).transfer(paymentAmount);
-        
-        // Return excess payment if any
-        if (msg.value > paymentAmount) {
-            payable(msg.sender).transfer(msg.value - paymentAmount);
-        }
-        
-        emit LoanRepayment(loanId, paymentAmount, totalDue - loans[loanId].amountRepaid);
+        emit LoanRepaid(loanId, msg.sender, amount);
     }
     
     /**
-     * @dev Mark a loan as defaulted (only callable by admin)
+     * @dev Mark a loan as defaulted
      * @param loanId The ID of the loan
      */
-    function markAsDefaulted(uint256 loanId) public {
-        // In a production environment, add access control here
-        
-        require(loans[loanId].status == LoanStatus.Funded || loans[loanId].status == LoanStatus.Repaying, "Loan not in active state");
-        require(block.timestamp > loans[loanId].repaymentDeadline, "Loan not yet overdue");
+    function markAsDefaulted(uint256 loanId) public onlyBank(loanId) {
+        require(loans[loanId].status == LoanStatus.Approved || loans[loanId].status == LoanStatus.Funded, "Loan must be approved or funded");
         
         loans[loanId].status = LoanStatus.Defaulted;
         
-        // Update borrower's trust score negatively
-        // This would ideally be implemented in the TrustScore contract
+        // Record default for trust score
+        trustScore.addDefault(loans[loanId].borrower);
         
-        emit LoanStatusChanged(loanId, LoanStatus.Defaulted);
+        emit LoanDefaulted(loanId, loans[loanId].borrower);
     }
     
     /**
-     * @dev Get the details of a specific loan
-     * @param loanId The ID of the loan
-     * @return Loan memory The loan details
-     */
-    function getLoan(uint256 loanId) public view returns (Loan memory) {
-        return loans[loanId];
-    }
-    
-    /**
-     * @dev Get all loans associated with a user
+     * @dev Get all loans for a user
      * @param user The address of the user
-     * @return uint256[] memory Array of loan IDs
+     * @return Array of loan IDs
      */
     function getUserLoans(address user) public view returns (uint256[] memory) {
         return userLoans[user];
     }
     
     /**
-     * @dev Calculate interest rate based on trust score (simplified)
-     * @param trustScore The trust score of the borrower
-     * @return uint256 The calculated interest rate in basis points
+     * @dev Get all loans for a bank
+     * @param bank The address of the bank
+     * @return Array of loan IDs
      */
-    function calculateInterestRate(uint256 trustScore) internal pure returns (uint256) {
-        // Example calculation:
-        // Trust score 100 (max) = 500 basis points (5%)
-        // Trust score 50 (min) = 2000 basis points (20%)
-        if (trustScore >= 100) return 500;
-        if (trustScore <= 50) return 2000;
-        
-        // Linear interpolation for scores in between
-        return 2000 - ((trustScore - 50) * 1500 / 50);
+    function getBankLoans(address bank) public view returns (uint256[] memory) {
+        return bankLoans[bank];
     }
     
     /**
-     * @dev Calculate the total amount due for a loan including interest
+     * @dev Get loan details
      * @param loanId The ID of the loan
-     * @return uint256 The total amount due
+     * @return Loan details
      */
-    function calculateTotalDue(uint256 loanId) public view returns (uint256) {
+    function getLoanDetails(uint256 loanId) public view returns (
+        address borrower,
+        address bank,
+        uint256 amount,
+        uint256 termMonths,
+        uint256 interestRate,
+        uint256 repaidAmount,
+        LoanStatus status
+    ) {
         Loan memory loan = loans[loanId];
-        uint256 interest = (loan.amount * loan.interestRate * loan.termDays) / (10000 * 365);
-        return loan.amount + interest;
+        return (
+            loan.borrower,
+            loan.bank,
+            loan.amount,
+            loan.termMonths,
+            loan.interestRate,
+            loan.repaidAmount,
+            loan.status
+        );
+    }
+    
+    /**
+     * @dev Helper function to find a loan by borrower, bank, and amount
+     */
+    function findLoan(address borrower, address bank, uint256 amount) internal view returns (uint256) {
+        uint256[] memory borrowerLoans = userLoans[borrower];
+        for (uint256 i = 0; i < borrowerLoans.length; i++) {
+            uint256 loanId = borrowerLoans[i];
+            if (loans[loanId].bank == bank && loans[loanId].amount == amount && loans[loanId].status == LoanStatus.Pending) {
+                return loanId;
+            }
+        }
+        return type(uint256).max; // Not found
+    }
+    
+    /**
+     * @dev Helper function to find a loan by borrower and bank
+     */
+    function findLoanByBorrowerAndBank(address borrower, address bank) internal view returns (uint256) {
+        uint256[] memory borrowerLoans = userLoans[borrower];
+        for (uint256 i = 0; i < borrowerLoans.length; i++) {
+            uint256 loanId = borrowerLoans[i];
+            if (loans[loanId].bank == bank && loans[loanId].status == LoanStatus.Pending) {
+                return loanId;
+            }
+        }
+        return type(uint256).max; // Not found
     }
 }

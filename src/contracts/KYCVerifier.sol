@@ -2,191 +2,120 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+/**
+ * @title KYCVerifier
+ * @dev Manages KYC document submissions and verification
+ */
 contract KYCVerifier {
-    // Mapping to store KYC status for each user
-    mapping(address => bool) private kycStatus;
+    address public owner;
     
-    // Mapping to store document hashes for each user
-    mapping(address => string) private documentHashes;
-    
-    // Mapping to store verifier addresses for each user
-    mapping(address => address) private verifiers;
-    
-    // Mapping to store verification timestamps
-    mapping(address => uint256) private verificationTimestamps;
-    
-    // Mapping to track document hash uniqueness
-    mapping(string => bool) private usedDocumentHashes;
-    
-    // Struct to store document details
-    struct DocumentInfo {
+    struct KYCDocument {
         string documentHash;
         string documentType;
-        uint256 submittedAt;
-        bool verified;
+        bool isVerified;
+        uint256 timestamp;
     }
     
-    // Mapping to store document details for each user
-    mapping(address => DocumentInfo[]) private userDocuments;
+    // Mapping from user address to their KYC document
+    mapping(address => KYCDocument) public kycDocuments;
+    // Check if a document hash has been used before
+    mapping(string => bool) public usedDocumentHashes;
     
-    // Event emitted when a user submits KYC documents
-    event KYCSubmitted(address indexed user, string documentHash, string documentType);
+    // Events
+    event KYCSubmitted(address indexed user, string documentHash);
+    event KYCVerified(address indexed user, bool status);
     
-    // Event emitted when a user's KYC status is verified
-    event KYCVerified(address indexed user, bool status, address verifier);
+    constructor() {
+        owner = msg.sender;
+    }
     
-    // Event emitted when a document is rejected
-    event DocumentRejected(address indexed user, string documentHash, address verifier, string reason);
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only owner can call this function");
+        _;
+    }
     
     /**
-     * @dev Submit KYC documents by providing a document hash
-     * @param documentHash The hash of the KYC document
-     * @param documentType The type of the document (e.g., "passport", "id_card")
+     * @dev Submits a KYC document hash
+     * @param documentHash The hash of the document
+     */
+    function submitKYC(string memory documentHash) public {
+        submitKYC(documentHash, "generic");
+    }
+    
+    /**
+     * @dev Submits a KYC document hash with type
+     * @param documentHash The hash of the document
+     * @param documentType The type of document (e.g., "passport", "drivers_license")
      */
     function submitKYC(string memory documentHash, string memory documentType) public {
         require(bytes(documentHash).length > 0, "Document hash cannot be empty");
-        require(!usedDocumentHashes[documentHash], "This document hash has already been used");
+        require(!usedDocumentHashes[documentHash], "Document hash already used");
         
-        documentHashes[msg.sender] = documentHash;
+        kycDocuments[msg.sender] = KYCDocument({
+            documentHash: documentHash,
+            documentType: documentType,
+            isVerified: false,
+            timestamp: block.timestamp
+        });
+        
         usedDocumentHashes[documentHash] = true;
         
-        // Add to user's documents array
-        userDocuments[msg.sender].push(
-            DocumentInfo({
-                documentHash: documentHash,
-                documentType: documentType,
-                submittedAt: block.timestamp,
-                verified: false
-            })
-        );
-        
-        emit KYCSubmitted(msg.sender, documentHash, documentType);
+        emit KYCSubmitted(msg.sender, documentHash);
     }
     
     /**
-     * @dev Submit KYC documents by providing only a document hash (for backward compatibility)
-     * @param documentHash The hash of the KYC document
-     */
-    function submitKYC(string memory documentHash) public {
-        submitKYC(documentHash, "unspecified");
-    }
-    
-    /**
-     * @dev Verify KYC status for a user (only callable by admin)
-     * @param user The address of the user to verify
-     * @param status The verification status (true for approved, false for rejected)
+     * @dev Verifies a user's KYC document
+     * @param user The address of the user
+     * @param status The verification status (true = verified, false = rejected)
      */
     function verifyKYC(address user, bool status) public {
-        // In a production environment, add access control here
-        kycStatus[user] = status;
-        verifiers[user] = msg.sender;
-        verificationTimestamps[user] = block.timestamp;
+        require(bytes(kycDocuments[user].documentHash).length > 0, "No KYC document found for user");
         
-        // Update the most recent document's verification status
-        if (userDocuments[user].length > 0) {
-            uint256 lastIndex = userDocuments[user].length - 1;
-            DocumentInfo storage lastDoc = userDocuments[user][lastIndex];
-            lastDoc.verified = status;
-        }
+        kycDocuments[user].isVerified = status;
         
-        emit KYCVerified(user, status, msg.sender);
+        emit KYCVerified(user, status);
     }
     
     /**
-     * @dev Reject a user's document with a reason
+     * @dev Checks if a user's KYC is verified
      * @param user The address of the user
-     * @param documentHash The hash of the document being rejected
-     * @param reason The reason for rejection
-     */
-    function rejectDocument(address user, string memory documentHash, string memory reason) public {
-        // In a production environment, add access control here
-        kycStatus[user] = false;
-        verifiers[user] = msg.sender;
-        verificationTimestamps[user] = block.timestamp;
-        
-        // Find and update the document's verification status
-        for (uint i = 0; i < userDocuments[user].length; i++) {
-            if (keccak256(bytes(userDocuments[user][i].documentHash)) == keccak256(bytes(documentHash))) {
-                userDocuments[user][i].verified = false;
-                break;
-            }
-        }
-        
-        emit DocumentRejected(user, documentHash, msg.sender, reason);
-        emit KYCVerified(user, false, msg.sender);
-    }
-    
-    /**
-     * @dev Get the KYC status for a specified user
-     * @param user The address of the user to check
-     * @return The KYC status of the user
+     * @return The verification status
      */
     function getKYCStatus(address user) public view returns (bool) {
-        return kycStatus[user];
+        return kycDocuments[user].isVerified;
     }
     
     /**
-     * @dev Get the document hash for a specified user
+     * @dev Gets the document hash for a user
      * @param user The address of the user
-     * @return The document hash of the user
+     * @return The document hash
      */
     function getDocumentHash(address user) public view returns (string memory) {
-        return documentHashes[user];
+        return kycDocuments[user].documentHash;
     }
     
     /**
-     * @dev Get the address of the verifier for a user
-     * @param user The address of the user
-     * @return The address of the verifier
-     */
-    function getVerifier(address user) public view returns (address) {
-        return verifiers[user];
-    }
-    
-    /**
-     * @dev Get the verification timestamp for a user
-     * @param user The address of the user
-     * @return The timestamp when the user was verified
-     */
-    function getVerificationTimestamp(address user) public view returns (uint256) {
-        return verificationTimestamps[user];
-    }
-    
-    /**
-     * @dev Check if a document hash has already been used
-     * @param documentHash The document hash to check
-     * @return True if the hash is already in use, false otherwise
+     * @dev Checks if a document hash has been used
+     * @param documentHash The hash to check
+     * @return Whether the hash is already used
      */
     function isDocumentHashUsed(string memory documentHash) public view returns (bool) {
         return usedDocumentHashes[documentHash];
     }
     
     /**
-     * @dev Get the number of documents submitted by a user
+     * @dev Checks if a user has submitted KYC documents
      * @param user The address of the user
-     * @return The number of documents submitted
+     * @return Whether the user has submitted documents
      */
-    function getUserDocumentCount(address user) public view returns (uint256) {
-        return userDocuments[user].length;
+    function isKYCSubmitted(address user) public view returns (bool) {
+        return bytes(kycDocuments[user].documentHash).length > 0;
     }
     
     /**
-     * @dev Get details of a specific document submitted by a user
-     * @param user The address of the user
-     * @param index The index of the document to retrieve
-     * @return documentHash The hash of the document
-     * @return documentType The type of the document
-     * @return submittedAt The timestamp when the document was submitted
-     * @return verified Whether the document has been verified
+     * @dev For compatibility with your frontend - same as getKYCStatus
      */
-    function getUserDocument(address user, uint256 index) public view returns (
-        string memory documentHash,
-        string memory documentType,
-        uint256 submittedAt,
-        bool verified
-    ) {
-        require(index < userDocuments[user].length, "Document index out of bounds");
-        DocumentInfo memory doc = userDocuments[user][index];
-        return (doc.documentHash, doc.documentType, doc.submittedAt, doc.verified);
+    function isKYCVerified(address user) public view returns (bool) {
+        return getKYCStatus(user);
     }
 }

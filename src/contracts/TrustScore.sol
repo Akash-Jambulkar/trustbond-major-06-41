@@ -2,156 +2,164 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+/**
+ * @title TrustScore
+ * @dev Manages user trust scores based on their financial behavior
+ */
 contract TrustScore {
-    // Mapping to store trust scores for each user
-    mapping(address => uint256) private scores;
+    address public owner;
     
-    // Mapping to store transaction counts
-    mapping(address => uint256) private transactionCounts;
+    struct UserScore {
+        uint256 score;
+        uint256 transactionCount;
+        uint256 repaymentCount;
+        uint256 defaultCount;
+        bool isInitialized;
+    }
     
-    // Mapping to store the number of successful loan repayments
-    mapping(address => uint256) private successfulLoanRepayments;
+    // Base score for new users
+    uint256 public constant BASE_SCORE = 650;
     
-    // Mapping to store loan defaults
-    mapping(address => uint256) private loanDefaults;
+    // Mapping from user address to their trust score data
+    mapping(address => UserScore) public userScores;
     
-    // Event emitted when a user's score is updated
+    // Events
     event ScoreUpdated(address indexed user, uint256 newScore);
+    event TransactionAdded(address indexed user, uint256 transactionCount);
+    event RepaymentAdded(address indexed user, uint256 repaymentCount);
+    event DefaultAdded(address indexed user, uint256 defaultCount);
     
-    // Event emitted when a transaction is added
-    event TransactionAdded(address indexed user, uint256 newTransactionCount);
+    constructor() {
+        owner = msg.sender;
+    }
     
-    // Event emitted when a loan repayment is recorded
-    event LoanRepaymentRecorded(address indexed user, uint256 newSuccessfulRepayments);
-    
-    // Event emitted when a loan default is recorded
-    event LoanDefaultRecorded(address indexed user, uint256 newDefaults);
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only owner can call this function");
+        _;
+    }
     
     /**
-     * @dev Update the trust score for a user (only callable by admin)
-     * @param user The address of the user whose score is being updated
-     * @param score The new trust score
+     * @dev Updates a user's trust score directly
+     * @param user The address of the user
+     * @param score The new score to set
      */
     function updateScore(address user, uint256 score) public {
-        // In a production environment, add access control here
-        require(score <= 100, "Score must be between 0 and 100");
-        scores[user] = score;
+        require(score > 0, "Score must be positive");
+        
+        if (!userScores[user].isInitialized) {
+            userScores[user] = UserScore({
+                score: score,
+                transactionCount: 0,
+                repaymentCount: 0,
+                defaultCount: 0,
+                isInitialized: true
+            });
+        } else {
+            userScores[user].score = score;
+        }
+        
         emit ScoreUpdated(user, score);
     }
     
     /**
-     * @dev Record a successful transaction for a user
+     * @dev Records a new transaction for a user
      * @param user The address of the user
      */
     function addTransaction(address user) public {
-        // In a production environment, add access control here
-        transactionCounts[user]++;
-        emit TransactionAdded(user, transactionCounts[user]);
-        
-        // Recalculate score
-        calculateAndUpdateScore(user);
-    }
-    
-    /**
-     * @dev Record a successful loan repayment
-     * @param user The address of the user
-     */
-    function addLoanRepayment(address user) public {
-        // In a production environment, add access control here
-        successfulLoanRepayments[user]++;
-        emit LoanRepaymentRecorded(user, successfulLoanRepayments[user]);
-        
-        // Recalculate score
-        calculateAndUpdateScore(user);
-    }
-    
-    /**
-     * @dev Record a loan default
-     * @param user The address of the user
-     */
-    function addLoanDefault(address user) public {
-        // In a production environment, add access control here
-        loanDefaults[user]++;
-        emit LoanDefaultRecorded(user, loanDefaults[user]);
-        
-        // Recalculate score
-        calculateAndUpdateScore(user);
-    }
-    
-    /**
-     * @dev Calculate and update the trust score for a user based on their history
-     * @param user The address of the user
-     */
-    function calculateAndUpdateScore(address user) internal {
-        uint256 baseScore = scores[user];
-        if (baseScore == 0) {
-            baseScore = 50; // Default starting score
+        if (!userScores[user].isInitialized) {
+            userScores[user] = UserScore({
+                score: BASE_SCORE,
+                transactionCount: 1,
+                repaymentCount: 0,
+                defaultCount: 0,
+                isInitialized: true
+            });
+        } else {
+            userScores[user].transactionCount += 1;
         }
         
-        // Calculate transaction bonus (max +10 points)
-        uint256 transactionBonus = 0;
-        if (transactionCounts[user] > 0) {
-            transactionBonus = transactionCounts[user] > 20 ? 10 : transactionCounts[user] / 2;
+        emit TransactionAdded(user, userScores[user].transactionCount);
+    }
+    
+    /**
+     * @dev Records a loan repayment for a user
+     * @param user The address of the user
+     */
+    function addRepayment(address user) public {
+        require(userScores[user].isInitialized, "User not initialized");
+        
+        userScores[user].repaymentCount += 1;
+        
+        // Increase score on repayment (basic algorithm)
+        if (userScores[user].score < 850) {
+            userScores[user].score += 5;
+            if (userScores[user].score > 850) {
+                userScores[user].score = 850;
+            }
         }
         
-        // Calculate loan repayment bonus (max +30 points)
-        uint256 repaymentBonus = 0;
-        if (successfulLoanRepayments[user] > 0) {
-            repaymentBonus = successfulLoanRepayments[user] > 10 ? 30 : successfulLoanRepayments[user] * 3;
+        emit RepaymentAdded(user, userScores[user].repaymentCount);
+        emit ScoreUpdated(user, userScores[user].score);
+    }
+    
+    /**
+     * @dev Records a loan default for a user
+     * @param user The address of the user
+     */
+    function addDefault(address user) public {
+        require(userScores[user].isInitialized, "User not initialized");
+        
+        userScores[user].defaultCount += 1;
+        
+        // Decrease score on default (basic algorithm)
+        if (userScores[user].score > 350) {
+            userScores[user].score -= 50;
+            if (userScores[user].score < 350) {
+                userScores[user].score = 350;
+            }
         }
         
-        // Calculate loan default penalty (max -50 points)
-        uint256 defaultPenalty = 0;
-        if (loanDefaults[user] > 0) {
-            defaultPenalty = loanDefaults[user] > 3 ? 50 : loanDefaults[user] * 15;
-        }
-        
-        // Calculate final score
-        int256 scoreChange = int256(transactionBonus) + int256(repaymentBonus) - int256(defaultPenalty);
-        int256 newScore = int256(baseScore) + scoreChange;
-        
-        // Cap score between 0 and 100
-        if (newScore < 0) newScore = 0;
-        if (newScore > 100) newScore = 100;
-        
-        // Update score
-        scores[user] = uint256(newScore);
-        emit ScoreUpdated(user, uint256(newScore));
+        emit DefaultAdded(user, userScores[user].defaultCount);
+        emit ScoreUpdated(user, userScores[user].score);
     }
     
     /**
-     * @dev Get the transaction count for a user
-     * @param user The address of the user
-     * @return The transaction count
-     */
-    function getTransactionCount(address user) public view returns (uint256) {
-        return transactionCounts[user];
-    }
-    
-    /**
-     * @dev Get the successful loan repayments for a user
-     * @param user The address of the user
-     * @return The number of successful loan repayments
-     */
-    function getSuccessfulLoanRepayments(address user) public view returns (uint256) {
-        return successfulLoanRepayments[user];
-    }
-    
-    /**
-     * @dev Get the loan defaults for a user
-     * @param user The address of the user
-     * @return The number of loan defaults
-     */
-    function getLoanDefaults(address user) public view returns (uint256) {
-        return loanDefaults[user];
-    }
-    
-    /**
-     * @dev Calculate the trust score for a user
+     * @dev Calculates and returns a user's current trust score
      * @param user The address of the user
      * @return The calculated trust score
      */
     function calculateScore(address user) public view returns (uint256) {
-        return scores[user];
+        if (!userScores[user].isInitialized) {
+            return BASE_SCORE;
+        }
+        
+        return userScores[user].score;
+    }
+    
+    /**
+     * @dev Gets all details of a user's trust score profile
+     * @param user The address of the user
+     * @return score The current trust score
+     * @return transactionCount Number of transactions
+     * @return repaymentCount Number of successful repayments
+     * @return defaultCount Number of defaults
+     */
+    function getUserScoreDetails(address user) public view returns (
+        uint256 score,
+        uint256 transactionCount,
+        uint256 repaymentCount,
+        uint256 defaultCount
+    ) {
+        if (!userScores[user].isInitialized) {
+            return (BASE_SCORE, 0, 0, 0);
+        }
+        
+        UserScore memory userScore = userScores[user];
+        return (
+            userScore.score,
+            userScore.transactionCount,
+            userScore.repaymentCount,
+            userScore.defaultCount
+        );
     }
 }
