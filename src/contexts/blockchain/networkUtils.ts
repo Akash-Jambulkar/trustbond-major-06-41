@@ -1,59 +1,57 @@
 
-import { NetworkName } from "./types";
-import { NETWORK_IDS } from "./types";
+import { NETWORK_IDS, NetworkType } from './types';
 
-// Map network IDs to names
-export const getNetworkName = (networkId?: number): NetworkName => {
-  if (!networkId) return "Unknown";
+// Contract addresses
+export const CONTRACT_ADDRESSES = {
+  KYC_VERIFIER: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+  TRUST_SCORE: "0x5FbDB2315678afecb367f032d93F642f64180aa4",
+  LOAN_MANAGER: "0x5FbDB2315678afecb367f032d93F642f64180aa5",
+};
+
+// Get human-readable network name
+export const getNetworkName = (networkId: number | null): string => {
+  if (!networkId) return "Not Connected";
   
   switch (networkId) {
     case NETWORK_IDS.MAINNET:
       return "Ethereum Mainnet";
     case NETWORK_IDS.GOERLI:
       return "Goerli Testnet";
-    case NETWORK_IDS.SEPOLIA:
-      return "Sepolia Testnet";
     case NETWORK_IDS.GANACHE:
     case NETWORK_IDS.LOCALHOST:
-      return "Local Network";
-    // Handle legacy networks that might appear in old code
-    case NETWORK_IDS.ROPSTEN:
-      return "Ropsten Testnet (Deprecated)";
-    case NETWORK_IDS.RINKEBY:
-      return "Rinkeby Testnet (Deprecated)";
-    case NETWORK_IDS.KOVAN:
-      return "Kovan Testnet (Deprecated)";
+      return "Ganache Local";
     default:
-      return "Unknown Network";
+      return `Unknown Network (ID: ${networkId})`;
   }
 };
 
-// Determine if a network is supported for the application
-export const isSupportedNetwork = (networkId?: number): boolean => {
+// Get network type
+export const getNetworkType = (networkId: number | null): NetworkType => {
+  if (!networkId) return "unknown";
+  
+  switch (networkId) {
+    case NETWORK_IDS.MAINNET:
+      return "mainnet";
+    case NETWORK_IDS.GOERLI:
+      return "testnet";
+    case NETWORK_IDS.GANACHE:
+    case NETWORK_IDS.LOCALHOST:
+      return "local";
+    default:
+      return "unknown";
+  }
+};
+
+// Check if network is supported
+export const isNetworkSupported = (networkId: number | null): boolean => {
   if (!networkId) return false;
   
-  return [
+  const supportedNetworks = [
     NETWORK_IDS.MAINNET,
     NETWORK_IDS.GOERLI,
-    NETWORK_IDS.SEPOLIA,
     NETWORK_IDS.GANACHE,
     NETWORK_IDS.LOCALHOST
-  ].includes(networkId as any);
-};
-
-// Get the chain ID to switch to for development
-export const getPreferredDevChainId = (): number => {
-  return NETWORK_IDS.GANACHE;
-};
-
-// Format chain ID for MetaMask
-export const formatChainIdForMetaMask = (chainId: number): string => {
-  return `0x${chainId.toString(16)}`;
-};
-
-// Contract addresses by network
-export const CONTRACT_ADDRESSES = {
-  KYC_VERIFIER: '0x0000000000000000000000000000000000000000',
-  TRUST_SCORE: '0x0000000000000000000000000000000000000000',
-  LOAN_MANAGER: '0x0000000000000000000000000000000000000000'
+  ];
+  
+  return supportedNetworks.includes(networkId);
 };

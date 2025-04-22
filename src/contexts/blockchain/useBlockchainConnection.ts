@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import Web3 from "web3";
 import { Contract } from "web3-eth-contract";
@@ -30,6 +31,7 @@ export const useBlockchainConnection = ({ enableBlockchain }: UseBlockchainConne
     : (networkId !== null && networkId !== NETWORK_IDS.GANACHE && networkId !== NETWORK_IDS.LOCALHOST);
   const isConnected = !!account;
 
+  // Initialize smart contracts when connected
   useEffect(() => {
     if (web3 && account) {
       try {
@@ -59,6 +61,7 @@ export const useBlockchainConnection = ({ enableBlockchain }: UseBlockchainConne
     }
   }, [web3, account, networkId]);
 
+  // Check for existing connection
   useEffect(() => {
     if (!enableBlockchain) {
       return;
@@ -88,6 +91,7 @@ export const useBlockchainConnection = ({ enableBlockchain }: UseBlockchainConne
     checkConnection();
   }, [enableBlockchain]);
 
+  // Listen for account and network changes
   useEffect(() => {
     if (window.ethereum && enableBlockchain) {
       window.ethereum.on("accountsChanged", (accounts: string[]) => {
@@ -116,13 +120,15 @@ export const useBlockchainConnection = ({ enableBlockchain }: UseBlockchainConne
     };
   }, [web3, enableBlockchain]);
 
-  const connectWallet = async (): Promise<string> => {
+  // Connect wallet
+  const connectWallet = async (): Promise<string | false> => {
     setIsBlockchainLoading(true);
     setConnectionError(null);
     try {
       if (!window.ethereum) {
         const error = "MetaMask not detected. Please install MetaMask.";
         setConnectionError(error);
+        toast.error(error);
         throw new Error(error);
       }
 
@@ -143,22 +149,37 @@ export const useBlockchainConnection = ({ enableBlockchain }: UseBlockchainConne
       toast.success("Wallet connected: " + accounts[0].substring(0, 6) + "..." + accounts[0].substring(accounts[0].length - 4));
       
       return accounts[0];
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to connect wallet:", error);
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       setConnectionError(errorMessage);
       toast.error("Failed to connect wallet: " + errorMessage);
-      throw error;
+      return false;
     } finally {
       setIsBlockchainLoading(false);
     }
   };
 
-  const switchNetwork = async (targetNetworkId: number): Promise<void> => {
+  // Disconnect wallet
+  const disconnectWallet = useCallback(() => {
+    setWeb3(null);
+    setAccount(null);
+    setNetworkId(null);
+    setKycContract(null);
+    setTrustScoreContract(null);
+    setLoanContract(null);
+    setConnectionError(null);
+    
+    toast.info("Wallet disconnected");
+  }, []);
+
+  // Switch network
+  const switchNetwork = async (targetNetworkId: number): Promise<boolean> => {
     if (!window.ethereum) {
       const error = "MetaMask not detected";
       setConnectionError(error);
-      throw new Error(error);
+      toast.error(error);
+      return false;
     }
 
     try {
@@ -191,23 +212,14 @@ export const useBlockchainConnection = ({ enableBlockchain }: UseBlockchainConne
         setNetworkId(newNetworkId);
         toast.success(`Switched to ${getNetworkName(newNetworkId)}`);
       }
+      
+      return true;
     } catch (error) {
       console.error("Failed to switch network:", error);
       toast.error("Failed to switch network: " + (error as Error).message);
+      return false;
     }
   };
-
-  const disconnectWallet = useCallback(() => {
-    setWeb3(null);
-    setAccount(null);
-    setNetworkId(null);
-    setKycContract(null);
-    setTrustScoreContract(null);
-    setLoanContract(null);
-    setConnectionError(null);
-    
-    toast.info("Wallet disconnected");
-  }, []);
 
   return {
     web3,

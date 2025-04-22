@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { 
   Card, 
@@ -25,7 +24,6 @@ import { toast } from "sonner";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { DOCUMENT_TYPES, DocumentType, validateDocument, createDocumentHash } from "@/utils/documentHash";
 import { useAuth } from "@/contexts/AuthContext";
-import { saveKycSubmission } from "@/utils/supabase/kycSubmissions";
 
 type FormValues = {
   documentType: DocumentType;
@@ -70,25 +68,8 @@ export function KYCSubmission() {
       const success = await submitKYC(documentHash);
       
       if (success) {
-        // Also save to Supabase directly (as a backup)
-        const submissionData = {
-          user_id: user.id,
-          document_type: values.documentType,
-          document_number: values.documentNumber, // Store document number
-          document_hash: documentHash,
-          verification_status: 'pending' as 'pending', // Explicitly typed as 'pending'
-          submitted_at: new Date().toISOString(),
-          wallet_address: account || ''
-        };
-        
-        const submissionId = await saveKycSubmission(submissionData);
-        
-        if (submissionId) {
-          toast.success("Document information submitted successfully for verification!");
-          form.reset();
-        } else {
-          console.warn("Backup submission to database failed, but blockchain submission succeeded");
-        }
+        toast.success("Document information submitted successfully for verification!");
+        form.reset();
       } else {
         toast.error("Failed to submit document information");
       }

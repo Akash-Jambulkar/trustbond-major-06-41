@@ -1,30 +1,18 @@
 
-// Network IDs
-export const NETWORK_IDS = {
-  MAINNET: 1,
-  GOERLI: 5,
-  SEPOLIA: 11155111,
-  GANACHE: 1337,
-  LOCALHOST: 31337,
-  // Legacy networks (deprecated but might be referenced in old code)
-  ROPSTEN: 3,
-  RINKEBY: 4,
-  KOVAN: 42
-} as const;
+import { Contract } from "web3-eth-contract";
+import Web3 from "web3";
 
-export type NetworkName = 
-  | "Ethereum Mainnet"
-  | "Goerli Testnet"
-  | "Sepolia Testnet"
-  | "Local Network"
-  | "Unknown Network"
-  | "Unknown"
-  | "Ropsten Testnet (Deprecated)"
-  | "Rinkeby Testnet (Deprecated)"
-  | "Kovan Testnet (Deprecated)";
+export enum NETWORK_IDS {
+  MAINNET = 1,
+  GOERLI = 5,
+  GANACHE = 1337,
+  LOCALHOST = 1337
+}
+
+export type NetworkType = 'mainnet' | 'testnet' | 'local' | 'unknown';
 
 export interface BlockchainContextType {
-  // Connection state
+  web3: Web3 | null;
   account: string | null;
   isConnected: boolean;
   networkName: string;
@@ -32,39 +20,31 @@ export interface BlockchainContextType {
   isGanache: boolean;
   isBlockchainLoading: boolean;
   connectionError: string | null;
-  networkId?: number;
-  web3?: any;
-  kycStatus?: 'not_verified' | 'pending' | 'verified' | 'rejected'; // Add this property
-  
-  // Smart contracts
-  kycContract?: any;
-  trustScoreContract?: any;
-  loanContract?: any;
-  
-  // Connection functions
+  kycContract: Contract | null;
+  trustScoreContract: Contract | null;
+  loanContract: Contract | null;
   connectWallet: () => Promise<string | false>;
   disconnectWallet: () => void;
   switchNetwork: (chainId: number) => Promise<boolean>;
-  
-  // KYC functions
   submitKYC: (documentHash: string) => Promise<boolean>;
   verifyKYC: (kycId: string, verificationStatus: 'verified' | 'rejected') => Promise<boolean>;
   getKYCStatus: (address: string) => Promise<boolean>;
-  
-  // Loan functions
   submitLoanApplication: (loanData: any) => Promise<string | null>;
   approveLoan: (loanId: string) => Promise<boolean>;
   rejectLoan: (loanId: string) => Promise<boolean>;
-  repayLoan?: (loanId: string, amount: number) => Promise<boolean>;
-  
-  // Bank functions
-  registerBank?: (bankData: any) => Promise<boolean>;
-  
-  // Transaction functions
   getTransactionHistory: () => Promise<any[]>;
-  refreshTransactions?: () => void;
-  transactions?: any[];
-  
-  // Development functions
-  simulateBlockchainEvent: () => Promise<void>;
+  simulateBlockchainEvent: () => Promise<boolean | void>;
+}
+
+export type TransactionType = 'kyc' | 'verification' | 'loan' | 'loan_approval' | 'loan_rejection' | 'repayment';
+
+export interface Transaction {
+  hash: string;
+  timestamp: number;
+  status: 'pending' | 'confirmed' | 'failed';
+  type: TransactionType;
+  description: string;
+  account: string;
+  network: string | number;
+  metadata?: any;
 }
