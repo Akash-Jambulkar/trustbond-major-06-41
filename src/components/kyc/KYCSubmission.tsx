@@ -5,7 +5,8 @@ import {
   CardContent, 
   CardDescription, 
   CardHeader, 
-  CardTitle 
+  CardTitle,
+  CardFooter
 } from "@/components/ui/card";
 import { useForm } from "react-hook-form";
 import { 
@@ -20,11 +21,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Shield } from "lucide-react";
+import { Shield, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { DOCUMENT_TYPES, DocumentType, validateDocument, createDocumentHash } from "@/utils/documentHash";
 import { useAuth } from "@/contexts/AuthContext";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { KYC_SUBMISSION_FEE } from "@/utils/contracts/contractConfig";
 
 type FormValues = {
   documentType: DocumentType;
@@ -32,7 +35,7 @@ type FormValues = {
 };
 
 export function KYCSubmission() {
-  const { submitKYC, isConnected, account } = useBlockchain();
+  const { submitKYC, isConnected, account, web3 } = useBlockchain();
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -65,8 +68,11 @@ export function KYCSubmission() {
       // Generate the document hash using document type and number
       const documentHash = await createDocumentHash(values.documentType, values.documentNumber);
       
-      // Submit to blockchain - note we're now expecting a boolean return value
-      const success = await submitKYC(documentHash);
+      // Calculate fee in wei
+      const feeInWei = web3?.utils.toWei(KYC_SUBMISSION_FEE, 'ether') || "10000000000000000"; // 0.01 ETH
+      
+      // Submit to blockchain with fee
+      const success = await submitKYC(documentHash, feeInWei);
       
       // Check for success properly
       if (success) {
@@ -95,6 +101,14 @@ export function KYCSubmission() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Verification Fee</AlertTitle>
+          <AlertDescription>
+            A fee of {KYC_SUBMISSION_FEE} ETH is required for document verification. This helps maintain security and prevent spam.
+          </AlertDescription>
+        </Alert>
+        
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <FormField
@@ -152,11 +166,15 @@ export function KYCSubmission() {
               disabled={!isConnected || isSubmitting || !user}
               className="w-full mt-4"
             >
-              {isSubmitting ? "Submitting..." : "Submit for Verification"}
+              {isSubmitting ? "Submitting..." : `Submit for Verification (${KYC_SUBMISSION_FEE} ETH)`}
             </Button>
           </form>
         </Form>
       </CardContent>
+      <CardFooter className="text-sm text-muted-foreground">
+        Once submitted, your document will be verified by authorized banks or administrators. 
+        You can check the status of your verification in the KYC section.
+      </CardFooter>
     </Card>
   );
 }

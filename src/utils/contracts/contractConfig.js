@@ -16,6 +16,9 @@ export const NETWORK_CONFIG = {
   rpcUrl: "http://localhost:8545"
 };
 
+// KYC submission fee in ETH
+export const KYC_SUBMISSION_FEE = "0.01"; // 0.01 ETH fee for KYC submission
+
 // Helper function to initialize contracts
 export const initializeContracts = (web3) => {
   if (!web3) return { kycContract: null, trustScoreContract: null, loanContract: null };

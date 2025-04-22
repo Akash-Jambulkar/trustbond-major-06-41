@@ -84,7 +84,7 @@ contract LoanManager {
         
         loans[loanId] = Loan({
             borrower: msg.sender,
-            bank: bankId,
+            bank: bankId, // Fixed: removed payable conversion as it's unnecessary here
             amount: amount,
             termMonths: termMonths,
             interestRate: 5, // Default interest rate, can be adjusted later

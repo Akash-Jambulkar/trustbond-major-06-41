@@ -1,7 +1,7 @@
-
 import React, { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { useMode } from "@/contexts/ModeContext";
+import { CONTRACT_ADDRESSES, initializeContracts } from "@/utils/contracts/contractConfig";
 
 interface BlockchainContextType {
   account: string | null;
@@ -15,17 +15,16 @@ interface BlockchainContextType {
   switchNetwork: (chainId: number) => Promise<void>;
   connectionError: string | null;
   blockNumber: number | null;
-  submitKYC: (documentHash: string) => Promise<boolean>;
+  submitKYC: (documentHash: string, fee?: string) => Promise<boolean>;
   isContractsInitialized: boolean;
   
-  // Adding missing properties from errors
   web3: any | null;
   networkId: number | null;
   kycContract: any | null;
   trustScoreContract: any | null;
   loanContract: any | null;
   kycStatus?: 'not_verified' | 'pending' | 'verified' | 'rejected';
-  verifyKYC: (kycId: string, verificationStatus: 'verified' | 'rejected') => Promise<boolean>;
+  verifyKYC: (address: string, verificationStatus: boolean) => Promise<boolean>;
   getKYCStatus: (address: string) => Promise<boolean>;
   submitLoanApplication: (loanData: any) => Promise<string | null>;
   approveLoan: (loanId: string) => Promise<boolean>;
@@ -51,7 +50,6 @@ export const BlockchainContext = createContext<BlockchainContextType>({
   submitKYC: async () => false,
   isContractsInitialized: false,
   
-  // Adding default values for missing properties
   web3: null,
   networkId: null,
   kycContract: null,
@@ -88,19 +86,16 @@ export const BlockchainProvider = ({ children }: BlockchainProviderProps) => {
   const [blockNumber, setBlockNumber] = useState<number | null>(null);
   const [isContractsInitialized, setIsContractsInitialized] = useState(false);
   
-  // Add additional states for new properties
   const [web3, setWeb3] = useState<any | null>(null);
   const [kycContract, setKycContract] = useState<any | null>(null);
   const [trustScoreContract, setTrustScoreContract] = useState<any | null>(null);
   const [loanContract, setLoanContract] = useState<any | null>(null);
   const [kycStatus, setKycStatus] = useState<'not_verified' | 'pending' | 'verified' | 'rejected'>('not_verified');
 
-  // Initialize blockchain connection
   useEffect(() => {
     if (enableBlockchain) {
       checkIfWalletIsConnected();
       
-      // Set up event listeners for account and network changes
       if (window.ethereum) {
         window.ethereum.on('accountsChanged', handleAccountsChanged);
         window.ethereum.on('chainChanged', handleChainChanged);
@@ -108,7 +103,6 @@ export const BlockchainProvider = ({ children }: BlockchainProviderProps) => {
     }
     
     return () => {
-      // Clean up event listeners
       if (window.ethereum) {
         window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
         window.ethereum.removeListener('chainChanged', handleChainChanged);
@@ -116,16 +110,14 @@ export const BlockchainProvider = ({ children }: BlockchainProviderProps) => {
     };
   }, [enableBlockchain]);
 
-  // Initialize contracts when account and network are ready
   useEffect(() => {
     if (isConnected && isCorrectNetwork) {
-      initializeContracts();
+      initializeBlockchainContracts();
     } else {
       setIsContractsInitialized(false);
     }
   }, [isConnected, isCorrectNetwork]);
 
-  // Check if wallet is already connected
   const checkIfWalletIsConnected = async () => {
     try {
       if (!window.ethereum) {
@@ -139,7 +131,6 @@ export const BlockchainProvider = ({ children }: BlockchainProviderProps) => {
         setAccount(accounts[0]);
         setIsConnected(true);
         
-        // Get current network
         await checkNetwork();
       }
     } catch (error) {
@@ -147,32 +138,26 @@ export const BlockchainProvider = ({ children }: BlockchainProviderProps) => {
       setConnectionError("Error checking wallet connection.");
     }
   };
-  
-  // Handle account changes
+
   const handleAccountsChanged = (accounts: string[]) => {
     if (accounts.length === 0) {
-      // User has disconnected all accounts
       disconnectWallet();
     } else {
       setAccount(accounts[0]);
       setIsConnected(true);
     }
   };
-  
-  // Handle network/chain changes
+
   const handleChainChanged = () => {
-    // Refresh the page when the network changes
     window.location.reload();
   };
 
-  // Check current network
   const checkNetwork = async () => {
     try {
       const chainId = await window.ethereum.request({ method: 'eth_chainId' });
       const networkIdDecimal = parseInt(chainId, 16);
       setNetworkId(networkIdDecimal);
       
-      // Set network name based on chainId
       let name = "";
       let correctNetwork = false;
       let ganache = false;
@@ -204,7 +189,6 @@ export const BlockchainProvider = ({ children }: BlockchainProviderProps) => {
       setIsCorrectNetwork(correctNetwork);
       setIsGanache(ganache);
       
-      // Get current block number
       const blockNumber = await window.ethereum.request({ 
         method: 'eth_blockNumber'
       });
@@ -215,7 +199,6 @@ export const BlockchainProvider = ({ children }: BlockchainProviderProps) => {
     }
   };
 
-  // Connect wallet
   const connectWallet = async () => {
     try {
       setIsBlockchainLoading(true);
@@ -226,7 +209,6 @@ export const BlockchainProvider = ({ children }: BlockchainProviderProps) => {
         throw new Error("No Ethereum wallet found. Please install MetaMask.");
       }
       
-      // Request account access
       const accounts = await window.ethereum.request({ 
         method: 'eth_requestAccounts'
       });
@@ -234,7 +216,6 @@ export const BlockchainProvider = ({ children }: BlockchainProviderProps) => {
       setAccount(accounts[0]);
       setIsConnected(true);
       
-      // Check network after connecting
       await checkNetwork();
       
       toast({
@@ -257,8 +238,7 @@ export const BlockchainProvider = ({ children }: BlockchainProviderProps) => {
       setIsBlockchainLoading(false);
     }
   };
-  
-  // Disconnect wallet
+
   const disconnectWallet = () => {
     setAccount(null);
     setIsConnected(false);
@@ -270,8 +250,7 @@ export const BlockchainProvider = ({ children }: BlockchainProviderProps) => {
       description: "Your wallet has been disconnected.",
     });
   };
-  
-  // Switch network
+
   const switchNetwork = async (chainId: number) => {
     try {
       if (!window.ethereum) return;
@@ -282,7 +261,6 @@ export const BlockchainProvider = ({ children }: BlockchainProviderProps) => {
       });
       
     } catch (switchError: any) {
-      // This error code indicates that the chain has not been added to MetaMask
       if (switchError.code === 4902) {
         try {
           await addNetwork(chainId);
@@ -294,16 +272,14 @@ export const BlockchainProvider = ({ children }: BlockchainProviderProps) => {
       }
     }
   };
-  
-  // Add network to MetaMask
+
   const addNetwork = async (chainId: number) => {
     try {
       if (!window.ethereum) return;
       
-      // Define network parameters based on chainId
       let params;
       switch (chainId) {
-        case 1: // Ethereum Mainnet
+        case 1:
           params = {
             chainId: '0x1',
             chainName: 'Ethereum Mainnet',
@@ -316,7 +292,7 @@ export const BlockchainProvider = ({ children }: BlockchainProviderProps) => {
             blockExplorerUrls: ['https://etherscan.io']
           };
           break;
-        case 5: // Goerli Testnet
+        case 5:
           params = {
             chainId: '0x5',
             chainName: 'Goerli Testnet',
@@ -329,7 +305,7 @@ export const BlockchainProvider = ({ children }: BlockchainProviderProps) => {
             blockExplorerUrls: ['https://goerli.etherscan.io']
           };
           break;
-        case 1337: // Ganache
+        case 1337:
           params = {
             chainId: '0x539',
             chainName: 'Ganache',
@@ -356,22 +332,27 @@ export const BlockchainProvider = ({ children }: BlockchainProviderProps) => {
     }
   };
 
-  // Initialize smart contracts
-  const initializeContracts = async () => {
+  const initializeBlockchainContracts = async () => {
     try {
-      // In a real implementation, you would initialize your contract instances here
-      console.log("Initializing contracts...");
+      if (!window.ethereum || !account) return;
       
-      // Simulate contract initialization
-      setTimeout(() => {
-        setIsContractsInitialized(true);
-        console.log("Contracts initialized successfully");
-        
-        toast({
-          title: "Contracts initialized",
-          description: "Smart contracts are ready to use.",
-        });
-      }, 1500);
+      const Web3 = require('web3');
+      const web3Instance = new Web3(window.ethereum);
+      setWeb3(web3Instance);
+      
+      const contracts = initializeContracts(web3Instance);
+      setKycContract(contracts.kycContract);
+      setTrustScoreContract(contracts.trustScoreContract);
+      setLoanContract(contracts.loanContract);
+      
+      console.log("Contracts initialized with addresses:", CONTRACT_ADDRESSES);
+      
+      setIsContractsInitialized(true);
+      
+      toast({
+        title: "Contracts initialized",
+        description: "Smart contracts are ready to use.",
+      });
       
     } catch (error) {
       console.error("Error initializing contracts:", error);
@@ -384,24 +365,38 @@ export const BlockchainProvider = ({ children }: BlockchainProviderProps) => {
       });
     }
   };
-  
-  // Submit KYC document hash to blockchain
-  const submitKYC = async (documentHash: string): Promise<boolean> => {
-    if (!isConnected || !isContractsInitialized) {
+
+  const submitKYC = async (documentHash: string, fee: string = "10000000000000000"): Promise<boolean> => {
+    if (!isConnected || !isContractsInitialized || !kycContract || !web3) {
       throw new Error("Wallet not connected or contracts not initialized");
     }
     
     try {
-      // In a real implementation, you would call your contract method here
-      console.log(`Submitting KYC document hash: ${documentHash}`);
+      console.log(`Submitting KYC document hash: ${documentHash} with fee: ${fee} wei`);
       
-      // Simulate blockchain interaction
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const tx = await kycContract.methods.submitKYC(documentHash).send({ 
+        from: account,
+        value: fee
+      });
+      
+      console.log("KYC submission transaction:", tx);
+      
+      const transactionRecord = {
+        hash: tx.transactionHash,
+        from: account,
+        to: CONTRACT_ADDRESSES.KYCVerifier,
+        value: fee,
+        timestamp: Date.now(),
+        type: 'KYC_SUBMISSION'
+      };
+      console.log("Transaction recorded:", transactionRecord);
       
       toast({
         title: "KYC document submitted",
-        description: "Your document has been submitted to the blockchain.",
+        description: "Your document has been submitted to the blockchain with fee payment.",
       });
+      
+      setKycStatus('pending');
       
       return true;
     } catch (error) {
@@ -409,51 +404,143 @@ export const BlockchainProvider = ({ children }: BlockchainProviderProps) => {
       throw error;
     }
   };
-  
-  // Add implementations for new methods
-  const verifyKYC = async (kycId: string, verificationStatus: 'verified' | 'rejected'): Promise<boolean> => {
-    // Implementation for verifyKYC
-    return Promise.resolve(true);
+
+  const verifyKYC = async (userAddress: string, verificationStatus: boolean): Promise<boolean> => {
+    if (!isConnected || !isContractsInitialized || !kycContract || !web3) {
+      throw new Error("Wallet not connected or contracts not initialized");
+    }
+    
+    try {
+      console.log(`Verifying KYC for ${userAddress} with status: ${verificationStatus ? 'Verified' : 'Rejected'}`);
+      
+      const tx = await kycContract.methods.verifyKYC(userAddress, verificationStatus).send({
+        from: account
+      });
+      
+      console.log("KYC verification transaction:", tx);
+      
+      const transactionRecord = {
+        hash: tx.transactionHash,
+        from: account,
+        to: CONTRACT_ADDRESSES.KYCVerifier,
+        value: '0',
+        timestamp: Date.now(),
+        type: verificationStatus ? 'KYC_VERIFICATION_APPROVED' : 'KYC_VERIFICATION_REJECTED'
+      };
+      console.log("Verification transaction recorded:", transactionRecord);
+      
+      toast({
+        title: `KYC ${verificationStatus ? 'verified' : 'rejected'}`,
+        description: `The user's KYC has been ${verificationStatus ? 'verified' : 'rejected'}.`,
+      });
+      
+      return true;
+    } catch (error) {
+      console.error("Error verifying KYC:", error);
+      throw error;
+    }
   };
 
   const getKYCStatus = async (address: string): Promise<boolean> => {
-    // Implementation for getKYCStatus
-    return Promise.resolve(false);
+    if (!isConnected || !isContractsInitialized || !kycContract) {
+      return false;
+    }
+    
+    try {
+      const status = await kycContract.methods.isKYCVerified(address).call();
+      return status;
+    } catch (error) {
+      console.error("Error getting KYC status:", error);
+      return false;
+    }
   };
 
   const submitLoanApplication = async (loanData: any): Promise<string | null> => {
-    // Implementation for submitLoanApplication
-    return Promise.resolve("loan-id-123");
+    if (!isConnected || !isContractsInitialized || !loanContract) {
+      throw new Error("Wallet not connected or contracts not initialized");
+    }
+    
+    try {
+      const tx = await loanContract.methods.submitLoan(loanData).send({
+        from: account
+      });
+      
+      console.log("Loan application transaction:", tx);
+      
+      return tx.transactionHash;
+    } catch (error) {
+      console.error("Error submitting loan application:", error);
+      throw error;
+    }
   };
 
   const approveLoan = async (loanId: string): Promise<boolean> => {
-    // Implementation for approveLoan
-    return Promise.resolve(true);
+    if (!isConnected || !isContractsInitialized || !loanContract) {
+      throw new Error("Wallet not connected or contracts not initialized");
+    }
+    
+    try {
+      const tx = await loanContract.methods.approveLoan(loanId).send({
+        from: account
+      });
+      
+      console.log("Loan approval transaction:", tx);
+      
+      return true;
+    } catch (error) {
+      console.error("Error approving loan:", error);
+      throw error;
+    }
   };
 
   const rejectLoan = async (loanId: string): Promise<boolean> => {
-    // Implementation for rejectLoan
-    return Promise.resolve(true);
+    if (!isConnected || !isContractsInitialized || !loanContract) {
+      throw new Error("Wallet not connected or contracts not initialized");
+    }
+    
+    try {
+      const tx = await loanContract.methods.rejectLoan(loanId).send({
+        from: account
+      });
+      
+      console.log("Loan rejection transaction:", tx);
+      
+      return true;
+    } catch (error) {
+      console.error("Error rejecting loan:", error);
+      throw error;
+    }
   };
 
   const getTransactionHistory = async (): Promise<any[]> => {
-    // Implementation for getTransactionHistory
-    return Promise.resolve([]);
+    return [];
   };
 
   const simulateBlockchainEvent = async (): Promise<boolean | void> => {
-    // Implementation for simulateBlockchainEvent
-    return Promise.resolve(true);
+    return true;
   };
 
   const registerBank = async (bankData: any): Promise<boolean> => {
-    // Implementation for registerBank
-    return Promise.resolve(true);
+    return true;
   };
 
   const repayLoan = async (loanId: string, amount: string): Promise<boolean> => {
-    // Implementation for repayLoan
-    return Promise.resolve(true);
+    if (!isConnected || !isContractsInitialized || !loanContract) {
+      throw new Error("Wallet not connected or contracts not initialized");
+    }
+    
+    try {
+      const tx = await loanContract.methods.repayLoan(loanId, amount).send({
+        from: account
+      });
+      
+      console.log("Loan repayment transaction:", tx);
+      
+      return true;
+    } catch (error) {
+      console.error("Error repaying loan:", error);
+      throw error;
+    }
   };
 
   const contextValue = {
@@ -471,7 +558,6 @@ export const BlockchainProvider = ({ children }: BlockchainProviderProps) => {
     submitKYC,
     isContractsInitialized,
     
-    // Add new properties to context value
     web3,
     networkId,
     kycContract,
