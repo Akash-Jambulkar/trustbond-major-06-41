@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import Web3 from "web3";
 import { generateMockTransactionHash } from "@/utils/mockBlockchain";
+import { safeFrom } from "@/utils/supabase-utils";
 
 // Register a bank on the blockchain and in the database
 export const registerBankOnBlockchain = async ({
@@ -29,9 +30,8 @@ export const registerBankOnBlockchain = async ({
     
     console.log("Bank registration submitted to blockchain", txHash);
     
-    // Store bank registration in database
-    const { data, error } = await supabase
-      .from("bank_registrations")
+    // Store bank registration in database - using safeFrom for tables not directly in the supabase types
+    const { data, error } = await safeFrom('bank_registrations')
       .insert({
         name: bankData.name,
         registration_number: bankData.registrationNumber,

@@ -1,3 +1,4 @@
+
 import { createContext, useContext, ReactNode } from "react";
 import { useMode } from "@/contexts/ModeContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -202,7 +203,8 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         repayLoan,
         registerBank,
         getTransactionHistory,
-        simulateBlockchainEvent
+        simulateBlockchainEvent,
+        kycStatus: 'not_verified' // Add a default value for kycStatus
       }}
     >
       {children}

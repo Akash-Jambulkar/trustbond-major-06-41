@@ -254,7 +254,7 @@ export const rejectLoanRequest = async ({
 
     if (txError) {
       console.error("Error recording transaction:", txError);
-      // But continue since the main operations were successful
+      // But continue since the blockchain transaction was successful
     }
 
     toast.success("Loan rejected successfully");
@@ -318,11 +318,11 @@ export const repayLoanRequest = async ({
     const totalAmount = parseFloat(loanData.amount);
     const isFullyRepaid = newRepaidAmount >= totalAmount;
 
-    // Update loan in database
+    // Update loan in database - convert numeric values to strings
     const { error: loanUpdateError } = await supabase
       .from("loans")
       .update({
-        repaid_amount: newRepaidAmount,
+        repaid_amount: newRepaidAmount.toString(),
         status: isFullyRepaid ? "repaid" : "approved",
         updated_at: new Date().toISOString()
       })
@@ -333,7 +333,7 @@ export const repayLoanRequest = async ({
       // But continue since the blockchain transaction was successful
     }
 
-    // Record transaction
+    // Record transaction - ensure amount is a string
     const { error: txError } = await supabase
       .from("transactions")
       .insert({
@@ -341,7 +341,7 @@ export const repayLoanRequest = async ({
         type: "repayment",
         from_address: account,
         to_address: loanData.bank_id,
-        amount: repaymentAmount,
+        amount: repaymentAmount.toString(),
         status: "confirmed",
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
