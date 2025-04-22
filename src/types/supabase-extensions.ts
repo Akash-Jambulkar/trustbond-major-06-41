@@ -5,7 +5,7 @@ export type KycDocumentSubmissionType = {
   id: string;
   user_id: string;
   document_type: string;
-  document_number?: string | null; // Add document_number property
+  document_number?: string | null;
   document_hash: string;
   submitted_at: string;
   verification_status: 'pending' | 'verified' | 'rejected';
@@ -15,7 +15,7 @@ export type KycDocumentSubmissionType = {
   verification_tx_hash?: string | null;
   verifier_address?: string | null;
   blockchain_tx_hash?: string | null;
-  consensus_status?: 'pending' | 'in_progress' | 'approved' | 'rejected' | null; // Add consensus_status property
+  consensus_status?: 'pending' | 'in_progress' | 'approved' | 'rejected' | null;
 };
 
 export type ProfileType = {

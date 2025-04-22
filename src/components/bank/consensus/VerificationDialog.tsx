@@ -70,7 +70,9 @@ export function VerificationDialog({
           {consensusData && (
             <div className="space-y-2">
               <ConsensusStatusComponent consensusData={consensusData} />
-              <VotesList votes={consensusData.votes} />
+              {consensusData.votes && consensusData.votes.length > 0 && (
+                <VotesList votes={consensusData.votes} />
+              )}
             </div>
           )}
           

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -141,9 +142,9 @@ export default function BankApprovals() {
                           <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
                             Pending
                           </Badge>
-                        ) : bank.status === "approved" || bank.status === "verified" ? (
+                        ) : bank.status === "approved" ? (
                           <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                            {bank.status === "approved" ? "Approved" : "Verified"}
+                            Approved
                           </Badge>
                         ) : (
                           <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">

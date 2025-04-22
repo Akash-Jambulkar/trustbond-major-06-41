@@ -1,16 +1,19 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { safeFrom } from '@/utils/supabase-utils';
 
 // Helper functions to get tables with proper type checking
 export const kycSubmissionsTable = () => supabase.from('kyc_document_submissions');
 export const profilesTable = () => supabase.from('profiles');
 export const transactionsTable = () => supabase.from('transactions');
 export const userRoleAssignmentsTable = () => supabase.from('user_role_assignments');
+export const kycDocumentsTable = () => supabase.from('kyc_documents');
+export const documentsTable = () => supabase.from('documents');
 
-// Adding missing table helpers
-export const bankRegistrationsTable = () => supabase.from('bank_registrations');
-export const kycVerificationVotesTable = () => supabase.from('kyc_verification_votes');
-export const usersMetadataTable = () => supabase.from('users_metadata');
+// For other tables, use the safeFrom utility
+export const bankRegistrationsTable = () => safeFrom('bank_registrations');
+export const kycVerificationVotesTable = () => safeFrom('kyc_verification_votes');
+export const usersMetadataTable = () => safeFrom('users_metadata');
 
 // Format date to display
 export const formatDate = (dateString?: string | null) => {

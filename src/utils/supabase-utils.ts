@@ -1,7 +1,10 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { 
-  KycDocumentSubmissionType
+  KycDocumentSubmissionType,
+  BankRegistrationType,
+  BlockchainTransactionType,
+  KycVerificationVoteType
 } from '@/types/supabase-extensions';
 
 /**
@@ -35,7 +38,7 @@ export async function queryBankRegistrations() {
     console.error('Error querying bank registrations:', error);
     return [];
   }
-  return typeCast<any[]>(data || []);
+  return typeCast<BankRegistrationType[]>(data || []);
 }
 
 // Type-safe query wrapper for blockchain transactions
@@ -45,5 +48,5 @@ export async function queryBlockchainTransactions() {
     console.error('Error querying blockchain transactions:', error);
     return [];
   }
-  return typeCast<any[]>(data || []);
+  return typeCast<BlockchainTransactionType[]>(data || []);
 }

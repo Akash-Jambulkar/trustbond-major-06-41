@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { KycDocumentSubmissionType, KycVerificationVoteType } from "@/types/supabase-extensions";
-import { kycVerificationVotesTable, kycSubmissionsTable } from "./supabase-helper";
+import { KycDocumentSubmissionType } from "@/types/supabase-extensions";
+import { typeCast, safeFrom } from "@/utils/supabase-utils";
 
 // Types
 export type VerificationVote = {
@@ -10,7 +10,15 @@ export type VerificationVote = {
   bankName: string;
   approved: boolean;
   notes?: string;
+  timestamp: string; // Add timestamp to the type
 };
+
+export enum ConsensusStatusEnum {
+  PENDING = 'pending',
+  IN_PROGRESS = 'in_progress',
+  APPROVED = 'approved',
+  REJECTED = 'rejected'
+}
 
 export type ConsensusStatus = 'pending' | 'in_progress' | 'approved' | 'rejected';
 
@@ -40,7 +48,7 @@ const MIN_VOTES_REQUIRED = 3; // Minimum number of votes required
 // Get documents that need consensus verification
 export const getDocumentsNeedingConsensus = async (): Promise<KycDocumentSubmissionType[]> => {
   try {
-    const { data, error } = await kycSubmissionsTable()
+    const { data, error } = await safeFrom<KycDocumentSubmissionType[]>('kyc_document_submissions')
       .select('*')
       .or('verification_status.eq.pending,consensus_status.eq.pending,consensus_status.eq.in_progress')
       .order('submitted_at', { ascending: true });
@@ -72,7 +80,7 @@ export const getDocumentsNeedingConsensus = async (): Promise<KycDocumentSubmiss
 export const getConsensusStatus = async (documentId: string): Promise<ConsensusResult> => {
   try {
     // Get document
-    const { data: documentData, error: documentError } = await kycSubmissionsTable()
+    const { data: documentData, error: documentError } = await safeFrom<KycDocumentSubmissionType>('kyc_document_submissions')
       .select('*')
       .eq('id', documentId)
       .single();
@@ -86,7 +94,7 @@ export const getConsensusStatus = async (documentId: string): Promise<ConsensusR
     const document = documentData as any;
     
     // Get votes
-    const { data: votesData, error: votesError } = await kycVerificationVotesTable()
+    const { data: votesData, error: votesError } = await safeFrom('kyc_verification_votes')
       .select('*')
       .eq('document_id', documentId)
       .order('created_at', { ascending: true });
@@ -184,7 +192,7 @@ export const submitVerificationVote = async (
 ): Promise<boolean> => {
   try {
     // Check if this bank already voted
-    const { data: existingVote, error: checkError } = await kycVerificationVotesTable()
+    const { data: existingVote, error: checkError } = await safeFrom('kyc_verification_votes')
       .select('id')
       .eq('document_id', documentId)
       .eq('bank_id', bankId)
@@ -192,7 +200,7 @@ export const submitVerificationVote = async (
     
     if (!checkError && existingVote) {
       // Update existing vote
-      const { error: updateError } = await kycVerificationVotesTable()
+      const { error: updateError } = await safeFrom('kyc_verification_votes')
         .update({
           approved,
           notes,
@@ -206,7 +214,7 @@ export const submitVerificationVote = async (
       }
     } else {
       // Insert new vote
-      const { error: insertError } = await kycVerificationVotesTable()
+      const { error: insertError } = await safeFrom('kyc_verification_votes')
         .insert({
           document_id: documentId,
           bank_id: bankId,
@@ -223,10 +231,10 @@ export const submitVerificationVote = async (
     }
     
     // Update document consensus status
-    const { error: documentError } = await kycSubmissionsTable()
+    const { error: documentError } = await safeFrom('kyc_document_submissions')
       .update({
         consensus_status: 'in_progress',
-      } as any)
+      })
       .eq('id', documentId);
     
     if (documentError) {
@@ -251,13 +259,13 @@ export const updateDocumentConsensusStatus = async (documentId: string): Promise
     }
     
     // Update document status based on consensus
-    const { error: updateError } = await kycSubmissionsTable()
+    const { error: updateError } = await safeFrom('kyc_document_submissions')
       .update({
         consensus_status: consensus.status,
         verification_status: consensus.finalDecision ? 'verified' : 'rejected',
         verified_at: consensus.finalDecision ? new Date().toISOString() : null,
         rejection_reason: !consensus.finalDecision ? 'Rejected by consensus verification' : null
-      } as any)
+      })
       .eq('id', documentId);
     
     if (updateError) {
@@ -287,7 +295,7 @@ export const checkVotingEligibility = async (
 }> => {
   try {
     // Check if document exists and is pending
-    const { data: document, error: documentError } = await kycSubmissionsTable()
+    const { data: document, error: documentError } = await safeFrom<KycDocumentSubmissionType>('kyc_document_submissions')
       .select('*')
       .eq('id', documentId)
       .single();
@@ -314,7 +322,7 @@ export const checkVotingEligibility = async (
     }
     
     // Check if this bank already voted
-    const { data: existingVote, error: voteError } = await kycVerificationVotesTable()
+    const { data: existingVote, error: voteError } = await safeFrom('kyc_verification_votes')
       .select('*')
       .eq('document_id', documentId)
       .eq('bank_id', bankId)
@@ -322,12 +330,13 @@ export const checkVotingEligibility = async (
     
     // If there's a vote, return it
     if (!voteError && existingVote) {
+      const vote = existingVote as any;
       return {
         eligible: true,
         alreadyVoted: true,
         previousVote: {
-          approved: existingVote.approved,
-          timestamp: existingVote.created_at
+          approved: vote.approved,
+          timestamp: vote.created_at
         }
       };
     }

@@ -1,10 +1,17 @@
 
 import React from 'react';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
-import { type VerificationVote } from "@/utils/consensusVerifier";
+
+interface Vote {
+  bankId: string;
+  bankName: string;
+  approved: boolean;
+  timestamp: string;
+  notes?: string;
+}
 
 interface VotesListProps {
-  votes: VerificationVote[];
+  votes: Vote[];
 }
 
 export function VotesList({ votes }: VotesListProps) {
