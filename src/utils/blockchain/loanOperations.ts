@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Contract } from "web3-eth-contract";
@@ -263,6 +262,103 @@ export const rejectLoanRequest = async ({
   } catch (error) {
     console.error("Error rejecting loan:", error);
     toast.error("Failed to reject loan on blockchain");
+    return false;
+  }
+};
+
+// Add the repayLoanRequest function to the existing loanOperations.ts file
+
+// Repay a loan
+export const repayLoanRequest = async ({
+  web3,
+  loanContract,
+  account,
+  loanId,
+  amount,
+  userId
+}: {
+  web3: Web3;
+  loanContract: Contract;
+  account: string;
+  loanId: string;
+  amount: string;
+  userId: string;
+}) => {
+  try {
+    // Get loan data from database
+    const { data: loanData, error: loanError } = await supabase
+      .from("loans")
+      .select("bank_id, amount, repaid_amount")
+      .eq("id", loanId)
+      .eq("user_id", userId)
+      .single();
+
+    if (loanError || !loanData) {
+      console.error("Error fetching loan data:", loanError);
+      toast.error("Failed to fetch loan data");
+      return false;
+    }
+
+    // Convert repayment amount to wei
+    const amountInWei = web3.utils.toWei(amount, 'ether');
+
+    // Call blockchain method to repay loan
+    const tx = await loanContract.methods
+      .repayLoan(loanId, amountInWei)
+      .send({ from: account, value: amountInWei });
+
+    console.log("Loan repayment processed on blockchain", tx.transactionHash);
+
+    // Calculate new repaid amount
+    const currentRepaidAmount = parseFloat(loanData.repaid_amount || '0');
+    const repaymentAmount = parseFloat(amount);
+    const newRepaidAmount = currentRepaidAmount + repaymentAmount;
+    
+    // Determine if loan is fully repaid
+    const totalAmount = parseFloat(loanData.amount);
+    const isFullyRepaid = newRepaidAmount >= totalAmount;
+
+    // Update loan in database
+    const { error: loanUpdateError } = await supabase
+      .from("loans")
+      .update({
+        repaid_amount: newRepaidAmount,
+        status: isFullyRepaid ? "repaid" : "approved",
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", loanId);
+
+    if (loanUpdateError) {
+      console.error("Error updating loan in database:", loanUpdateError);
+      // But continue since the blockchain transaction was successful
+    }
+
+    // Record transaction
+    const { error: txError } = await supabase
+      .from("transactions")
+      .insert({
+        transaction_hash: tx.transactionHash,
+        type: "repayment",
+        from_address: account,
+        to_address: loanData.bank_id,
+        amount: repaymentAmount,
+        status: "confirmed",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        user_id: userId,
+        bank_id: loanData.bank_id
+      });
+
+    if (txError) {
+      console.error("Error recording transaction:", txError);
+      // But continue since the main operations were successful
+    }
+
+    toast.success(`Loan repayment of ${amount} ETH processed successfully`);
+    return true;
+  } catch (error) {
+    console.error("Error repaying loan:", error);
+    toast.error("Failed to process loan repayment on blockchain");
     return false;
   }
 };

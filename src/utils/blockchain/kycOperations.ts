@@ -98,7 +98,7 @@ export const verifyKYCDocument = async ({
   try {
     // First get the KYC document data from the database
     const { data: kycData, error: kycError } = await supabase
-      .from("kyc_documents")
+      .from("kyc_document_submissions")
       .select("user_id, document_hash, wallet_address")
       .eq("id", kycId)
       .single();
@@ -133,7 +133,7 @@ export const verifyKYCDocument = async ({
 
     // Update document in database
     const { error: docUpdateError } = await supabase
-      .from("kyc_documents")
+      .from("kyc_document_submissions")
       .update({
         verification_status: verificationStatus,
         verified_at: new Date().toISOString(),

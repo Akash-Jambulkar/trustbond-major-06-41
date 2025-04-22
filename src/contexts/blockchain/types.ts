@@ -16,6 +16,7 @@ export interface BlockchainContextType {
   account: string | null;
   isConnected: boolean;
   networkName: string;
+  networkId: number | null; // Added networkId
   isCorrectNetwork: boolean;
   isGanache: boolean;
   isBlockchainLoading: boolean;
@@ -23,6 +24,7 @@ export interface BlockchainContextType {
   kycContract: Contract | null;
   trustScoreContract: Contract | null;
   loanContract: Contract | null;
+  kycStatus?: 'not_verified' | 'pending' | 'verified' | 'rejected'; // Added kycStatus
   connectWallet: () => Promise<string | false>;
   disconnectWallet: () => void;
   switchNetwork: (chainId: number) => Promise<boolean>;
@@ -34,6 +36,8 @@ export interface BlockchainContextType {
   rejectLoan: (loanId: string) => Promise<boolean>;
   getTransactionHistory: () => Promise<any[]>;
   simulateBlockchainEvent: () => Promise<boolean | void>;
+  registerBank?: (bankData: any) => Promise<boolean>; // Added registerBank
+  repayLoan?: (loanId: string, amount: string) => Promise<boolean>; // Added repayLoan
 }
 
 export type TransactionType = 'kyc' | 'verification' | 'loan' | 'loan_approval' | 'loan_rejection' | 'repayment';

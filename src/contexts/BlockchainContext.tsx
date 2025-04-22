@@ -1,12 +1,12 @@
-
 import { createContext, useContext, ReactNode } from "react";
 import { useMode } from "@/contexts/ModeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBlockchainConnection } from "./blockchain/useBlockchainConnection";
 import { BlockchainContextType } from "@/contexts/blockchain/types";
 import { submitKYCDocument, verifyKYCDocument, getKYCDocumentStatus } from "@/utils/blockchain/kycOperations";
-import { submitLoanRequest, approveLoanRequest, rejectLoanRequest } from "@/utils/blockchain/loanOperations";
+import { submitLoanRequest, approveLoanRequest, rejectLoanRequest, repayLoanRequest } from "@/utils/blockchain/loanOperations";
 import { getTransactionHistoryFromDb, simulateBlockchainEventInDb } from "@/utils/blockchain/transactionUtils";
+import { registerBankOnBlockchain } from "@/utils/blockchain/bankOperations";
 
 // Create blockchain context
 const BlockchainContext = createContext<BlockchainContextType | null>(null);
@@ -124,6 +124,38 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  // Repay loan (for borrowers)
+  const repayLoan = async (loanId: string, amount: string) => {
+    if (!isConnected || !loanContract || !account || !user?.id) {
+      console.error("Cannot repay loan: missing requirements");
+      return false;
+    }
+    
+    return await repayLoanRequest({
+      web3,
+      loanContract,
+      account,
+      loanId,
+      amount,
+      userId: user.id
+    });
+  };
+
+  // Register bank function
+  const registerBank = async (bankData: any) => {
+    if (!isConnected || !account || !user?.id) {
+      console.error("Cannot register bank: missing requirements");
+      return false;
+    }
+    
+    return await registerBankOnBlockchain({
+      web3,
+      account,
+      bankData,
+      userId: user.id
+    });
+  };
+
   // Get transaction history
   const getTransactionHistory = async () => {
     if (!user?.id) {
@@ -150,6 +182,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         account,
         isConnected,
         networkName,
+        networkId,
         isCorrectNetwork,
         isGanache,
         isBlockchainLoading,
@@ -166,6 +199,8 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         submitLoanApplication,
         approveLoan,
         rejectLoan,
+        repayLoan,
+        registerBank,
         getTransactionHistory,
         simulateBlockchainEvent
       }}
