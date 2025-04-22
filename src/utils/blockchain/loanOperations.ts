@@ -67,7 +67,7 @@ export const submitLoanRequest = async ({
         type: "loan",
         from_address: account,
         to_address: loanData.bankId,
-        amount: loanData.amount.toString(),
+        amount: loanData.amount.toString(), // Convert number to string
         status: "confirmed",
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -158,7 +158,7 @@ export const approveLoanRequest = async ({
         type: "loan_approval",
         from_address: account,
         to_address: borrowerAddress,
-        amount: loanData.amount.toString(),
+        amount: loanData.amount.toString(), // Convert number to string
         status: "confirmed",
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -323,7 +323,7 @@ export const repayLoanRequest = async ({
     const { error: loanUpdateError } = await supabase
       .from("loans")
       .update({
-        repaid_amount: newRepaidAmount.toString(),
+        repaid_amount: newRepaidAmount.toString(), // Store as string
         status: isFullyRepaid ? "repaid" : "approved",
         updated_at: new Date().toISOString()
       })
@@ -342,7 +342,7 @@ export const repayLoanRequest = async ({
         type: "repayment",
         from_address: account,
         to_address: loanData.bank_id,
-        amount: repaymentAmount.toString(),
+        amount: amount, // amount is already a string based on function params
         status: "confirmed",
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),

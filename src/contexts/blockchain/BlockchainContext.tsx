@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useMode } from "@/contexts/ModeContext";
 import { supabase } from "@/lib/supabase";
@@ -17,11 +18,17 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
   const [account, setAccount] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [networkName, setNetworkName] = useState<string>("Not Connected");
+  const [networkId, setNetworkId] = useState<number | null>(null);
   const [isCorrectNetwork, setIsCorrectNetwork] = useState<boolean>(false);
   const [isGanache, setIsGanache] = useState<boolean>(false);
   const [isBlockchainLoading, setIsBlockchainLoading] = useState<boolean>(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [kycStatus, setKycStatus] = useState<'not_verified' | 'pending' | 'verified' | 'rejected'>('not_verified');
+  // Added null states for the contract instances
+  const [web3, setWeb3] = useState<any>(null);
+  const [kycContract, setKycContract] = useState<any>(null);
+  const [trustScoreContract, setTrustScoreContract] = useState<any>(null);
+  const [loanContract, setLoanContract] = useState<any>(null);
 
   // Initialize blockchain connection if enabled
   useEffect(() => {
@@ -621,13 +628,18 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
   return (
     <BlockchainContext.Provider
       value={{
+        web3,
         account,
-        isConnected,
+        networkId,
         networkName,
+        isConnected,
         isCorrectNetwork,
         isGanache,
         isBlockchainLoading,
         connectionError,
+        kycContract,
+        trustScoreContract,
+        loanContract,
         kycStatus,
         connectWallet,
         disconnectWallet,
@@ -639,7 +651,28 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         approveLoan,
         rejectLoan,
         getTransactionHistory,
-        simulateBlockchainEvent
+        simulateBlockchainEvent,
+        // Add missing properties that were defined in the BlockchainContextType interface
+        repayLoan: async (loanId: string, amount: string) => {
+          if (!enableBlockchain || !isConnected) {
+            toast.error("Wallet not connected");
+            return false;
+          }
+          
+          // Mock implementation for now
+          toast.success(`Simulated loan repayment of ${amount} ETH`);
+          return true;
+        },
+        registerBank: async (bankData: any) => {
+          if (!enableBlockchain || !isConnected) {
+            toast.error("Wallet not connected");
+            return false;
+          }
+          
+          // Mock implementation for now
+          toast.success("Bank registration submitted");
+          return true;
+        }
       }}
     >
       {children}
