@@ -9,6 +9,150 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      documents: {
+        Row: {
+          created_at: string | null
+          file_path: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          file_path: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          file_path?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      kyc_document_submissions: {
+        Row: {
+          blockchain_tx_hash: string | null
+          document_hash: string
+          document_type: string
+          id: string
+          rejection_reason: string | null
+          submitted_at: string | null
+          user_id: string
+          verification_status: string
+          verification_tx_hash: string | null
+          verified_at: string | null
+          verifier_address: string | null
+          wallet_address: string | null
+        }
+        Insert: {
+          blockchain_tx_hash?: string | null
+          document_hash: string
+          document_type: string
+          id?: string
+          rejection_reason?: string | null
+          submitted_at?: string | null
+          user_id: string
+          verification_status?: string
+          verification_tx_hash?: string | null
+          verified_at?: string | null
+          verifier_address?: string | null
+          wallet_address?: string | null
+        }
+        Update: {
+          blockchain_tx_hash?: string | null
+          document_hash?: string
+          document_type?: string
+          id?: string
+          rejection_reason?: string | null
+          submitted_at?: string | null
+          user_id?: string
+          verification_status?: string
+          verification_tx_hash?: string | null
+          verified_at?: string | null
+          verifier_address?: string | null
+          wallet_address?: string | null
+        }
+        Relationships: []
+      }
+      kyc_documents: {
+        Row: {
+          created_at: string | null
+          document_hash: string
+          document_type: string
+          id: string
+          updated_at: string | null
+          user_id: string
+          verification_status: string
+        }
+        Insert: {
+          created_at?: string | null
+          document_hash: string
+          document_type: string
+          id?: string
+          updated_at?: string | null
+          user_id: string
+          verification_status?: string
+        }
+        Update: {
+          created_at?: string | null
+          document_hash?: string
+          document_type?: string
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+          verification_status?: string
+        }
+        Relationships: []
+      }
+      loans: {
+        Row: {
+          amount: number
+          bank_id: string | null
+          blockchain_address: string | null
+          created_at: string | null
+          id: string
+          interest_rate: number
+          purpose: string | null
+          repaid_amount: number | null
+          status: string
+          term_months: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          bank_id?: string | null
+          blockchain_address?: string | null
+          created_at?: string | null
+          id?: string
+          interest_rate: number
+          purpose?: string | null
+          repaid_amount?: number | null
+          status?: string
+          term_months: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          bank_id?: string | null
+          blockchain_address?: string | null
+          created_at?: string | null
+          id?: string
+          interest_rate?: number
+          purpose?: string | null
+          repaid_amount?: number | null
+          status?: string
+          term_months?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address: string | null
@@ -57,6 +201,48 @@ export type Database = {
         }
         Relationships: []
       }
+      transactions: {
+        Row: {
+          amount: number | null
+          bank_id: string | null
+          created_at: string | null
+          from_address: string | null
+          id: string
+          status: string
+          to_address: string | null
+          transaction_hash: string
+          type: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          amount?: number | null
+          bank_id?: string | null
+          created_at?: string | null
+          from_address?: string | null
+          id?: string
+          status?: string
+          to_address?: string | null
+          transaction_hash: string
+          type: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number | null
+          bank_id?: string | null
+          created_at?: string | null
+          from_address?: string | null
+          id?: string
+          status?: string
+          to_address?: string | null
+          transaction_hash?: string
+          type?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -72,6 +258,10 @@ export type Database = {
           kyc_status_param: string
         }
         Returns: Json
+      }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
     }
     Enums: {
