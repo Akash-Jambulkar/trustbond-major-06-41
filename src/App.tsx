@@ -60,6 +60,7 @@ const AdminUsers = lazy(() => import("@/pages/dashboard/admin/AdminUsers"));
 const BankApprovals = lazy(() => import("@/pages/dashboard/admin/BankApprovals"));
 const BankRegistrationPage = lazy(() => import("@/pages/dashboard/admin/BankRegistrationPage"));
 const BlockchainSetup = lazy(() => import("@/pages/dashboard/admin/BlockchainSetup"));
+const DatabaseSetup = lazy(() => import("@/pages/dashboard/admin/DatabaseSetup"));
 
 // Blockchain Transactions
 const BlockchainTransactionsPage = lazy(() => import("@/pages/dashboard/BlockchainTransactionsPage"));
@@ -124,6 +125,7 @@ function App() {
                     <Route path="bank-approvals" element={<BankApprovals />} />
                     <Route path="bank-registration" element={<BankRegistrationPage />} />
                     <Route path="blockchain-setup" element={<BlockchainSetup />} />
+                    <Route path="database-setup" element={<DatabaseSetup />} />
                     <Route path="transactions" element={<BlockchainTransactionsPage />} />
                   </Route>
 

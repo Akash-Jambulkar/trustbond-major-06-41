@@ -1,88 +1,14 @@
+
 import { createClient } from '@supabase/supabase-js';
 
-// Use real Supabase project values from supabase/client.ts
-const supabaseUrl = 'https://lbblmnhjqotmlovzkydk.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxiYmxtbmhqcW90bWxvdnpreWRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM5NzQ3ODAsImV4cCI6MjA1OTU1MDc4MH0.QGBVLEISMcRYDoxMPlyHzGLA0h-bsRuCt8cMyd40oKQ';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Missing Supabase URL or Anon Key. Make sure they are set in your environment variables.');
+}
 
-// Types for our database tables
-export type UserProfile = {
-  id: string;
-  user_id: string;
-  name: string;
-  email: string;
-  role: 'user' | 'bank' | 'admin';
-  created_at: string;
-  mfa_enabled: boolean;
-  address?: string;
-  phone?: string;
-  kyc_status: 'pending' | 'verified' | 'rejected' | 'not_submitted';
-  trust_score?: number;
-};
-
-export type KYCDocument = {
-  id: string;
-  user_id: string;
-  document_type: string;
-  document_hash: string;
-  verification_status: 'pending' | 'verified' | 'rejected';
-  verified_by?: string;
-  created_at: string;
-  updated_at: string;
-};
-
-export type Loan = {
-  id: string;
-  user_id: string;
-  bank_id: string;
-  amount: number;
-  interest_rate: number;
-  term_months: number;
-  status: 'pending' | 'approved' | 'rejected' | 'active' | 'completed' | 'defaulted';
-  purpose: string;
-  created_at: string;
-  updated_at: string;
-  blockchain_address?: string;
-};
-
-export type Bank = {
-  id: string;
-  user_id: string;
-  name: string;
-  license_number: string;
-  address: string;
-  verification_status: 'pending' | 'verified' | 'rejected';
-  verified_by?: string;
-  created_at: string;
-  updated_at: string;
-};
-
-export type Transaction = {
-  id: string;
-  transaction_hash: string;
-  type: 'kyc' | 'loan' | 'verification' | 'repayment';
-  from_address?: string;
-  to_address?: string;
-  amount?: number;
-  status: 'pending' | 'confirmed' | 'failed';
-  created_at: string;
-  updated_at: string;
-  user_id?: string;
-  bank_id?: string;
-};
-
-// Helper function to get the current user's profile
-export const getCurrentUserProfile = async () => {
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) return null;
-  
-  const { data } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('user_id', user.id)
-    .single();
-  
-  return data as UserProfile | null;
-};
+export const supabase = createClient(
+  supabaseUrl || '',
+  supabaseAnonKey || ''
+);

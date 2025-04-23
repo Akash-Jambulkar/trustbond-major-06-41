@@ -1,297 +1,300 @@
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Search, UserPlus, MoreHorizontal, User, Shield, AlertTriangle, Building2 } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
-
-// Mock user data
-const mockUsers = [
-  { id: 1, name: "John Doe", email: "john@example.com", role: "user", status: "active", created: "2025-01-15" },
-  { id: 2, name: "Jane Smith", email: "jane@example.com", role: "user", status: "active", created: "2025-01-20" },
-  { id: 3, name: "Bob Johnson", email: "bob@example.com", role: "user", status: "inactive", created: "2025-02-05" },
-  { id: 4, name: "Alice Brown", email: "alice@example.com", role: "user", status: "active", created: "2025-02-10" },
-  { id: 5, name: "First Bank", email: "contact@firstbank.com", role: "bank", status: "active", created: "2025-01-10" },
-  { id: 6, name: "National Bank", email: "info@nationalbank.com", role: "bank", status: "active", created: "2025-01-25" },
-  { id: 7, name: "Sarah Wilson", email: "sarah@example.com", role: "user", status: "pending", created: "2025-03-01" },
-  { id: 8, name: "Michael Clark", email: "michael@example.com", role: "user", status: "active", created: "2025-03-05" },
-];
+import { Button } from "@/components/ui/button";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/use-toast";
+import { Search, User, Users, Shield, Building, Clock, MoreHorizontal } from "lucide-react";
+import { userRoleService, UserRole } from "@/services/databaseService";
+import { format } from "date-fns";
 
 const AdminUsers = () => {
-  const [users, setUsers] = useState(mockUsers);
+  const { toast } = useToast();
+
+  const [users, setUsers] = useState<UserRole[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<UserRole[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [roleFilter, setRoleFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [newUser, setNewUser] = useState({
-    name: "",
-    email: "",
-    role: "user",
-    status: "active"
-  });
-  const [isAddUserOpen, setIsAddUserOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedUser, setSelectedUser] = useState<UserRole | null>(null);
+  const [isEditRoleOpen, setIsEditRoleOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<'user' | 'bank' | 'admin'>("user");
+  const [isRoleUpdateInProgress, setIsRoleUpdateInProgress] = useState(false);
 
-  // Filter users based on search and filters
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = 
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesRole = roleFilter === "all" || user.role === roleFilter;
-    const matchesStatus = statusFilter === "all" || user.status === statusFilter;
-    
-    return matchesSearch && matchesRole && matchesStatus;
-  });
-
-  const handleAddUser = () => {
-    if (!newUser.name || !newUser.email) {
-      toast.error("Please fill in all required fields");
-      return;
+  const fetchUsers = async () => {
+    setIsLoading(true);
+    try {
+      const usersData = await userRoleService.getAllUserRoles();
+      setUsers(usersData);
+      setFilteredUsers(usersData);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      toast({
+        variant: "destructive",
+        title: "Failed to fetch users",
+        description: "There was an error retrieving user data from the database."
+      });
+    } finally {
+      setIsLoading(false);
     }
-    
-    const id = users.length + 1;
-    const created = new Date().toISOString().split('T')[0];
-    
-    setUsers([...users, { ...newUser, id, created }]);
-    setNewUser({ name: "", email: "", role: "user", status: "active" });
-    setIsAddUserOpen(false);
-    
-    toast.success("User added successfully");
   };
 
-  const handleDeleteUser = (id: number) => {
-    setUsers(users.filter(user => user.id !== id));
-    toast.success("User deleted successfully");
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  useEffect(() => {
+    if (searchTerm) {
+      const filtered = users.filter(
+        user => 
+          (user.email?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+          (user.full_name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+          (user.role?.toLowerCase() || "").includes(searchTerm.toLowerCase())
+      );
+      setFilteredUsers(filtered);
+    } else {
+      setFilteredUsers(users);
+    }
+  }, [searchTerm, users]);
+
+  const getRoleBadge = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return <Badge variant="outline" className="bg-purple-50 text-purple-800 border-purple-300 flex items-center gap-1">
+          <Shield className="h-3 w-3" /> Admin
+        </Badge>;
+      case 'bank':
+        return <Badge variant="outline" className="bg-blue-50 text-blue-800 border-blue-300 flex items-center gap-1">
+          <Building className="h-3 w-3" /> Bank
+        </Badge>;
+      case 'user':
+      default:
+        return <Badge variant="outline" className="bg-gray-50 text-gray-800 border-gray-300 flex items-center gap-1">
+          <User className="h-3 w-3" /> User
+        </Badge>;
+    }
   };
 
-  const handleUserStatusChange = (id: number, newStatus: string) => {
-    setUsers(users.map(user => 
-      user.id === id ? { ...user, status: newStatus } : user
-    ));
-    toast.success("User status updated");
+  const handleEditRole = (user: UserRole) => {
+    setSelectedUser(user);
+    setSelectedRole(user.role as 'user' | 'bank' | 'admin');
+    setIsEditRoleOpen(true);
+  };
+
+  const handleUpdateRole = async () => {
+    if (!selectedUser) return;
+    
+    setIsRoleUpdateInProgress(true);
+    try {
+      await userRoleService.updateUserRole(selectedUser.user_id, selectedRole);
+      toast({
+        title: "Role Updated",
+        description: `User ${selectedUser.email} role updated to ${selectedRole}.`,
+      });
+      fetchUsers(); // Refresh data
+    } catch (error) {
+      console.error("Error updating user role:", error);
+      toast({
+        variant: "destructive",
+        title: "Update Failed",
+        description: "There was an error updating the user role."
+      });
+    } finally {
+      setIsRoleUpdateInProgress(false);
+      setIsEditRoleOpen(false);
+    }
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
-        <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <UserPlus className="mr-2 h-4 w-4" />
-              Add User
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New User</DialogTitle>
-              <DialogDescription>
-                Create a new user account in the system.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input 
-                  id="name" 
-                  value={newUser.name} 
-                  onChange={(e) => setNewUser({...newUser, name: e.target.value})} 
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email Address</Label>
-                <Input 
-                  id="email" 
-                  type="email" 
-                  value={newUser.email} 
-                  onChange={(e) => setNewUser({...newUser, email: e.target.value})} 
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="role">Role</Label>
-                <Select 
-                  value={newUser.role} 
-                  onValueChange={(value) => setNewUser({...newUser, role: value})}
-                >
-                  <SelectTrigger id="role">
-                    <SelectValue placeholder="Select role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="user">User</SelectItem>
-                    <SelectItem value="bank">Bank</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="status">Status</Label>
-                <Select 
-                  value={newUser.status} 
-                  onValueChange={(value) => setNewUser({...newUser, status: value})}
-                >
-                  <SelectTrigger id="status">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="submit" onClick={handleAddUser}>Add User</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+      <div>
+        <h1 className="text-3xl font-bold mb-2">User Management</h1>
+        <p className="text-gray-500">
+          View and manage all users in the system
+        </p>
       </div>
-      
+
       <Card>
-        <CardHeader>
-          <CardTitle>Users</CardTitle>
-          <CardDescription>Manage all users in the system</CardDescription>
+        <CardHeader className="pb-3">
+          <CardTitle>All Users</CardTitle>
+          <CardDescription>
+            View and manage user accounts and their roles
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col space-y-4">
-            <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0">
-              <div className="relative flex-1 md:max-w-sm">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Search users..."
-                  className="pl-8"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              <div className="flex items-center space-x-2">
-                <Select 
-                  value={roleFilter} 
-                  onValueChange={setRoleFilter}
-                >
-                  <SelectTrigger className="h-9 w-[130px]">
-                    <SelectValue placeholder="Filter by role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Roles</SelectItem>
-                    <SelectItem value="user">User</SelectItem>
-                    <SelectItem value="bank">Bank</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select 
-                  value={statusFilter} 
-                  onValueChange={setStatusFilter}
-                >
-                  <SelectTrigger className="h-9 w-[130px]">
-                    <SelectValue placeholder="Filter by status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
+          <div className="flex items-center mb-4 relative">
+            <Search className="absolute left-3 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search by email, name, or role..."
+              className="pl-9"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
                   <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableCell colSpan={5} className="text-center py-8">
+                      <div className="flex justify-center">
+                        <Clock className="h-8 w-8 animate-spin text-trustbond-primary" />
+                      </div>
+                      <p className="mt-2 text-sm text-gray-500">Loading users...</p>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredUsers.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="h-24 text-center">
-                        No users found.
+                ) : filteredUsers.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8">
+                      {searchTerm ? (
+                        <p className="text-sm text-gray-500">No users match your search criteria.</p>
+                      ) : (
+                        <div>
+                          <Users className="h-8 w-8 mx-auto text-gray-400" />
+                          <p className="mt-2 text-sm text-gray-500">No users found in the system.</p>
+                        </div>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredUsers.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell>
+                        <div className="font-medium">{user.email}</div>
+                      </TableCell>
+                      <TableCell>{user.full_name || "—"}</TableCell>
+                      <TableCell>{getRoleBadge(user.role)}</TableCell>
+                      <TableCell>{format(new Date(user.created_at), "MMM d, yyyy")}</TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEditRole(user)}
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                          <span className="sr-only">Edit user</span>
+                        </Button>
                       </TableCell>
                     </TableRow>
-                  ) : (
-                    filteredUsers.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell className="font-medium">{user.name}</TableCell>
-                        <TableCell>{user.email}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center">
-                            {user.role === "admin" ? (
-                              <Shield className="mr-1 h-4 w-4 text-red-500" />
-                            ) : user.role === "bank" ? (
-                              <Building2 className="mr-1 h-4 w-4 text-blue-500" />
-                            ) : (
-                              <User className="mr-1 h-4 w-4 text-green-500" />
-                            )}
-                            <span className="capitalize">{user.role}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge 
-                            variant={
-                              user.status === "active" 
-                                ? "default" 
-                                : user.status === "inactive" 
-                                ? "secondary" 
-                                : "outline"
-                            }
-                            className={
-                              user.status === "active" 
-                                ? "bg-green-500" 
-                                : user.status === "inactive" 
-                                ? "bg-gray-500" 
-                                : "bg-yellow-500 text-white"
-                            }
-                          >
-                            {user.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{user.created}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end space-x-2">
-                            <Select 
-                              defaultValue={user.status}
-                              onValueChange={(value) => handleUserStatusChange(user.id, value)}
-                            >
-                              <SelectTrigger className="h-8 w-[110px]">
-                                <SelectValue placeholder="Change status" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="active">Activate</SelectItem>
-                                <SelectItem value="inactive">Deactivate</SelectItem>
-                                <SelectItem value="pending">Set Pending</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <Button 
-                              variant="destructive" 
-                              size="sm"
-                              onClick={() => handleDeleteUser(user.id)}
-                            >
-                              <AlertTriangle className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+                  ))
+                )}
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>
+
+      {/* Edit Role Dialog */}
+      <Dialog open={isEditRoleOpen} onOpenChange={setIsEditRoleOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit User Role</DialogTitle>
+            <DialogDescription>
+              Change the role and permissions for this user
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedUser && (
+            <div className="py-4 space-y-4">
+              <div>
+                <h4 className="text-sm font-medium mb-1">User</h4>
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-gray-500" />
+                  <span>{selectedUser.email}</span>
+                </div>
+                {selectedUser.full_name && (
+                  <p className="text-sm text-gray-500 ml-6">{selectedUser.full_name}</p>
+                )}
+              </div>
+              
+              <div>
+                <h4 className="text-sm font-medium mb-1">Current Role</h4>
+                <div>{getRoleBadge(selectedUser.role)}</div>
+              </div>
+              
+              <div>
+                <h4 className="text-sm font-medium mb-1">New Role</h4>
+                <Select value={selectedRole} onValueChange={(value) => setSelectedRole(value as 'user' | 'bank' | 'admin')}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">User</SelectItem>
+                    <SelectItem value="bank">Bank</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="bg-amber-50 border border-amber-200 rounded p-2 text-sm text-amber-800">
+                <p className="font-medium">Role Change Implications:</p>
+                <ul className="list-disc list-inside mt-1 text-amber-700">
+                  <li>User access will be updated immediately</li>
+                  <li>Dashboard and permission changes take effect on next login</li>
+                  {selectedRole === 'bank' && (
+                    <li>Bank role should only be given to verified financial institutions</li>
+                  )}
+                  {selectedRole === 'admin' && (
+                    <li>Admin role grants full system access and should be assigned carefully</li>
+                  )}
+                </ul>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditRoleOpen(false)} disabled={isRoleUpdateInProgress}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleUpdateRole}
+              disabled={isRoleUpdateInProgress || selectedUser?.role === selectedRole}
+            >
+              {isRoleUpdateInProgress ? (
+                <>
+                  <Clock className="mr-2 h-4 w-4 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                "Save Changes"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
