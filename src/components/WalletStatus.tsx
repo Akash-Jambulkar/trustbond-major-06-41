@@ -141,7 +141,7 @@ export const WalletStatus = () => {
           {showError && connectionError && (
             <div className="text-xs text-red-500 mt-1 flex items-center gap-1">
               <AlertCircle size={12} />
-              <span>Connection error. Make sure MetaMask is installed and unlocked.</span>
+              <span>{connectionError}</span>
             </div>
           )}
         </div>

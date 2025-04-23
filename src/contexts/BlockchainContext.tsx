@@ -1,3 +1,3 @@
 
-export { BlockchainStateProvider as BlockchainProvider, useBlockchain } from './blockchain/BlockchainStateProvider';
+export { BlockchainProvider, useBlockchain } from './blockchain/BlockchainContext';
 export type { BlockchainContextType } from './blockchain/types/contextTypes';

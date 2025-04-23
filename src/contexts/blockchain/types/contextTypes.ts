@@ -1,9 +1,6 @@
 
-import { Contract } from "web3-eth-contract";
-import Web3 from "web3";
-
 export interface BlockchainContextType {
-  web3: Web3 | null;
+  web3: any;
   account: string | null;
   networkId: number | null;
   networkName: string;
@@ -12,28 +9,23 @@ export interface BlockchainContextType {
   isGanache: boolean;
   isBlockchainLoading: boolean;
   connectionError: string | null;
+  kycContract: any;
+  trustScoreContract: any;
+  loanContract: any;
+  kycStatus: 'not_verified' | 'pending' | 'verified' | 'rejected';
   transactions: any[];
-  kycContract: Contract | null;
-  trustScoreContract: Contract | null;
-  loanContract: Contract | null;
-  isContractsInitialized: boolean;
-  kycStatus: 'pending' | 'verified' | 'rejected' | 'not_verified';
+
+  // Functions
   connectWallet: () => Promise<string | false>;
   disconnectWallet: () => void;
-  submitKYC: (documentHash: string, feeInWei?: string) => Promise<boolean>;
-  getKYCStatus: (address: string) => Promise<boolean>;
-  verifyKYC: (kycId: string, verificationStatus: 'verified' | 'rejected') => Promise<boolean>;
-  getTransactionHistory: () => Promise<any[]>;
   switchNetwork: (chainId: number) => Promise<boolean>;
-  registerBank: (bankData: any) => Promise<boolean>;
-  repayLoan: (loanId: string, amountInWei: string) => Promise<boolean>;
+  submitKYC: (documentHash: string, feeInWei?: string) => Promise<boolean>;
+  verifyKYC: (kycId: string, verificationStatus: 'verified' | 'rejected') => Promise<boolean>;
+  getKYCStatus: (address: string) => Promise<boolean>;
+  submitLoanApplication: (loanData: any) => Promise<string | null>;
   approveLoan: (loanId: string) => Promise<boolean>;
   rejectLoan: (loanId: string) => Promise<boolean>;
-  submitLoanApplication: (loanData: any) => Promise<string | null>;
-  updateTrustScore: (userAddress: string, score: number) => Promise<boolean>;
-  getTrustScore: (userAddress?: string) => Promise<number>;
-  getUserLoans: (userAddress?: string) => Promise<any[]>;
-  // New functions for caching
-  clearBlockchainCache: () => void;
-  isOptimized: boolean;
+  getTransactionHistory: () => Promise<any[]>;
+  repayLoan: (loanId: string, amountInWei: string) => Promise<boolean>;
+  registerBank: (bankData: any) => Promise<boolean>;
 }
