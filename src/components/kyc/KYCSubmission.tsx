@@ -96,13 +96,18 @@ export function KYCSubmission() {
           wallet_address: account || null,
         };
         
-        const submissionId = await saveKycSubmission(submission);
-        
-        if (submissionId) {
-          toast.success("Document information submitted successfully to our database");
-          form.reset();
-        } else {
-          toast.error("Failed to submit document information to the database");
+        try {
+          const submissionId = await saveKycSubmission(submission);
+          
+          if (submissionId) {
+            toast.success("Document information submitted successfully to our database");
+            form.reset();
+          } else {
+            toast.error("Failed to submit document information to the database");
+          }
+        } catch (error) {
+          console.error("Database submission error:", error);
+          toast.error("Error saving to database: " + (error instanceof Error ? error.message : "Unknown error"));
         }
       } else {
         toast.success("Document information submitted successfully via blockchain");

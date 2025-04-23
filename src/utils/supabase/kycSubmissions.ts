@@ -30,20 +30,24 @@ export async function getUserKycSubmissions(userId: string): Promise<KycDocument
  */
 export async function saveKycSubmission(submission: Omit<KycDocumentSubmissionType, 'id'>): Promise<string | null> {
   try {
-    const { data, error } = await kycSubmissionsTable()
+    // Log the submission to help debug
+    console.log("Saving KYC submission:", submission);
+    
+    const { data, error } = await supabase
+      .from('kyc_document_submissions')
       .insert([submission])
       .select('id')
       .single();
 
     if (error) {
       console.error("Error saving KYC submission:", error);
-      return null;
+      throw error;
     }
 
-    return (data as any)?.id || null;
+    return data?.id || null;
   } catch (error) {
     console.error("Exception in saveKycSubmission:", error);
-    return null;
+    throw error;
   }
 }
 
