@@ -1,10 +1,11 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useMode } from "@/contexts/ModeContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { generateMockTransactionHash } from "@/utils/mockBlockchain";
-import { BlockchainContextType } from "./blockchain/types";
+import { BlockchainContextType } from "@/utils/transactions";
 import { 
   Transaction,
   TransactionType,
@@ -233,23 +234,21 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Verify KYC function (new)
-  const verifyKYC = async (userAddress: string, approved: boolean): Promise<boolean> => {
+  // Verify KYC function - updated to match the new type signature
+  const verifyKYC = async (kycId: string, verificationStatus: 'verified' | 'rejected'): Promise<boolean> => {
     if (!isConnected || !account) {
       toast.error("Wallet not connected");
       return false;
     }
 
     try {
-      const verificationStatus = approved ? 'verified' as const : 'rejected' as const;
-      
       // Update KYC document verification status
       const { data, error } = await safeFrom('kyc_documents')
         .update({ 
           verification_status: verificationStatus,
           updated_at: new Date().toISOString()
         })
-        .eq('user_id', userAddress);
+        .eq('id', kycId);
       
       if (error) {
         console.error("Error verifying KYC:", error);

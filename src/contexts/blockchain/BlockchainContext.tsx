@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useMode } from "@/contexts/ModeContext";
 import { supabase } from "@/lib/supabase";
@@ -24,16 +23,13 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
   const [isBlockchainLoading, setIsBlockchainLoading] = useState<boolean>(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [kycStatus, setKycStatus] = useState<'not_verified' | 'pending' | 'verified' | 'rejected'>('not_verified');
-  // Added null states for the contract instances
   const [web3, setWeb3] = useState<any>(null);
   const [kycContract, setKycContract] = useState<any>(null);
   const [trustScoreContract, setTrustScoreContract] = useState<any>(null);
   const [loanContract, setLoanContract] = useState<any>(null);
 
-  // Initialize blockchain connection if enabled
   useEffect(() => {
     if (enableBlockchain) {
-      // Check for saved connection
       const savedAccount = localStorage.getItem('blockchain_account');
       if (savedAccount) {
         setAccount(savedAccount);
@@ -43,7 +39,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         setIsGanache(true);
       }
     } else {
-      // Reset state if blockchain is disabled
       setAccount(null);
       setIsConnected(false);
       setNetworkName("Not Connected");
@@ -52,7 +47,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [enableBlockchain]);
 
-  // Check KYC status when account changes
   useEffect(() => {
     const checkKycStatus = async () => {
       if (isConnected && account && user) {
@@ -79,7 +73,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     checkKycStatus();
   }, [isConnected, account, user]);
 
-  // Connect wallet function
   const connectWallet = async (): Promise<string | false> => {
     if (!enableBlockchain) {
       toast.error("Blockchain features are disabled");
@@ -90,10 +83,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     setConnectionError(null);
 
     try {
-      // In a real implementation, this would connect to MetaMask or another wallet
-      // For demo purposes, we'll simulate a connection
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate connection delay
-      
+      await new Promise(resolve => setTimeout(resolve, 1500));
       const mockAccount = `0x${Math.random().toString(16).substring(2, 14)}${Math.random().toString(16).substring(2, 14)}`;
       setAccount(mockAccount);
       setIsConnected(true);
@@ -101,7 +91,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
       setIsCorrectNetwork(true);
       setIsGanache(true);
       
-      // Save connection
       localStorage.setItem('blockchain_account', mockAccount);
       
       toast.success("Wallet connected successfully!");
@@ -116,7 +105,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Disconnect wallet function
   const disconnectWallet = () => {
     setAccount(null);
     setIsConnected(false);
@@ -124,24 +112,19 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     setIsCorrectNetwork(false);
     setIsGanache(false);
     
-    // Remove saved connection
     localStorage.removeItem('blockchain_account');
     
     toast.success("Wallet disconnected");
   };
 
-  // Switch network function
-  const switchNetwork = async (chainId: number) => {
+  const switchNetwork = async (chainId: number): Promise<boolean> => {
     if (!enableBlockchain || !isConnected) {
       toast.error("Wallet not connected");
       return false;
     }
 
     try {
-      // In a real implementation, this would request the wallet to switch networks
-      // For demo purposes, we'll simulate a network switch
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate switch delay
-      
+      await new Promise(resolve => setTimeout(resolve, 1000));
       if (chainId === 1337) {
         setNetworkName("Development Network");
         setIsCorrectNetwork(true);
@@ -169,8 +152,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Submit KYC document to blockchain
-  const submitKYC = async (documentHash: string) => {
+  const submitKYC = async (documentHash: string, feeInWei?: string): Promise<boolean> => {
     if (!enableBlockchain || !isConnected) {
       toast.error("Wallet not connected");
       return false;
@@ -182,10 +164,8 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      // Generate transaction hash
       const transactionHash = generateMockTransactionHash();
       
-      // Store KYC document in database
       const { error: kycError } = await supabase
         .from('kyc_documents')
         .insert([
@@ -205,7 +185,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
 
-      // Update user profile KYC status
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ kyc_status: 'pending' })
@@ -217,7 +196,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
 
-      // Record transaction
       try {
         await supabase
           .from('transactions')
@@ -239,7 +217,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
 
-      // Update local state after successful submission
       setKycStatus('pending');
       return true;
     } catch (error) {
@@ -249,8 +226,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Verify KYC document (for bank users)
-  const verifyKYC = async (kycId: string, verificationStatus: 'verified' | 'rejected') => {
+  const verifyKYC = async (kycId: string, verificationStatus: 'verified' | 'rejected'): Promise<boolean> => {
     if (!enableBlockchain || !isConnected) {
       toast.error("Wallet not connected");
       return false;
@@ -262,10 +238,8 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      // Generate transaction hash
       const transactionHash = generateMockTransactionHash();
       
-      // Get KYC document
       const { data: kycData, error: kycFetchError } = await supabase
         .from('kyc_documents')
         .select('user_id')
@@ -278,7 +252,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
 
-      // Update KYC document status
       const { error: kycUpdateError } = await supabase
         .from('kyc_documents')
         .update({
@@ -294,7 +267,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
 
-      // Update user profile KYC status
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ kyc_status: verificationStatus })
@@ -306,7 +278,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
 
-      // Record transaction
       try {
         await supabase
           .from('transactions')
@@ -339,8 +310,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Submit loan application
-  const submitLoanApplication = async (loanData: any) => {
+  const submitLoanApplication = async (loanData: any): Promise<string | null> => {
     if (!enableBlockchain || !isConnected) {
       toast.error("Wallet not connected");
       return null;
@@ -352,10 +322,8 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      // Generate transaction hash
       const transactionHash = generateMockTransactionHash();
       
-      // Store loan application in database
       const { data: loanInsertData, error: loanError } = await supabase
         .from('loans')
         .insert([
@@ -381,7 +349,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         return null;
       }
 
-      // Record transaction
       try {
         await supabase
           .from('transactions')
@@ -414,8 +381,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Approve loan (for bank users)
-  const approveLoan = async (loanId: string) => {
+  const approveLoan = async (loanId: string): Promise<boolean> => {
     if (!enableBlockchain || !isConnected) {
       toast.error("Wallet not connected");
       return false;
@@ -427,10 +393,8 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      // Generate transaction hash
       const transactionHash = generateMockTransactionHash();
       
-      // Get loan data
       const { data: loanData, error: loanFetchError } = await supabase
         .from('loans')
         .select('user_id, amount')
@@ -444,7 +408,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
 
-      // Update loan status
       const { error: loanUpdateError } = await supabase
         .from('loans')
         .update({
@@ -459,7 +422,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
 
-      // Record transaction
       try {
         await supabase
           .from('transactions')
@@ -492,8 +454,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Reject loan (for bank users)
-  const rejectLoan = async (loanId: string) => {
+  const rejectLoan = async (loanId: string): Promise<boolean> => {
     if (!enableBlockchain || !isConnected) {
       toast.error("Wallet not connected");
       return false;
@@ -505,7 +466,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      // Update loan status
       const { error: loanUpdateError } = await supabase
         .from('loans')
         .update({
@@ -530,8 +490,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Get transaction history
-  const getTransactionHistory = async () => {
+  const getTransactionHistory = async (): Promise<any[]> => {
     if (!user) {
       return [];
     }
@@ -542,7 +501,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         .select('*')
         .order('created_at', { ascending: false });
 
-      // Filter by user role
       if (user.role === 'user') {
         query = query.eq('user_id', user.user_id);
       } else if (user.role === 'bank') {
@@ -563,15 +521,12 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Get KYC status for a user
-  const getKYCStatus = async (address: string) => {
+  const getKYCStatus = async (address: string): Promise<boolean> => {
     if (!enableBlockchain || !isConnected) {
       return false;
     }
 
     try {
-      // In a real implementation, this would check the blockchain
-      // For demo purposes, we'll check the database
       if (user) {
         const { data, error } = await supabase
           .from('kyc_documents')
@@ -589,21 +544,17 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Simulate blockchain event
   const simulateBlockchainEvent = async () => {
     if (!enableBlockchain || !isConnected || !user) {
       toast.error("Wallet not connected");
       return;
     }
 
-    // Generate random event type
     const eventTypes = ['kyc', 'loan', 'verification', 'repayment'];
     const randomEventType = eventTypes[Math.floor(Math.random() * eventTypes.length)];
     
-    // Generate transaction hash
     const transactionHash = generateMockTransactionHash();
 
-    // Simulate transaction
     try {
       await supabase
         .from('transactions')
@@ -623,6 +574,26 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
       console.error("Simulation error:", error);
       toast.error("Failed to simulate blockchain event");
     }
+  };
+
+  const repayLoan = async (loanId: string, amountInWei: string): Promise<boolean> => {
+    if (!enableBlockchain || !isConnected) {
+      toast.error("Wallet not connected");
+      return false;
+    }
+    
+    toast.success(`Simulated loan repayment of ${amountInWei} ETH`);
+    return true;
+  };
+
+  const registerBank = async (bankData: any): Promise<boolean> => {
+    if (!enableBlockchain || !isConnected) {
+      toast.error("Wallet not connected");
+      return false;
+    }
+    
+    toast.success("Bank registration submitted");
+    return true;
   };
 
   return (
@@ -652,27 +623,8 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         rejectLoan,
         getTransactionHistory,
         simulateBlockchainEvent,
-        // Add missing properties that were defined in the BlockchainContextType interface
-        repayLoan: async (loanId: string, amount: string) => {
-          if (!enableBlockchain || !isConnected) {
-            toast.error("Wallet not connected");
-            return false;
-          }
-          
-          // Mock implementation for now
-          toast.success(`Simulated loan repayment of ${amount} ETH`);
-          return true;
-        },
-        registerBank: async (bankData: any) => {
-          if (!enableBlockchain || !isConnected) {
-            toast.error("Wallet not connected");
-            return false;
-          }
-          
-          // Mock implementation for now
-          toast.success("Bank registration submitted");
-          return true;
-        }
+        repayLoan,
+        registerBank
       }}
     >
       {children}
@@ -680,7 +632,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// Hook to use blockchain context
 export const useBlockchain = () => {
   const context = useContext(BlockchainContext);
   if (!context) {
