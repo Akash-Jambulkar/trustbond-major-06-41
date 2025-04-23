@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { UserRole } from '@/contexts/auth/types';
@@ -30,20 +30,27 @@ export const useRoleSync = () => {
 
     // Initial fetch of user roles
     const fetchUserRoles = async () => {
-      const { data, error } = await supabase
-        .from('user_role_assignments')
-        .select('role')
-        .eq('user_id', user.id)
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from('user_role_assignments')
+          .select('role')
+          .eq('user_id', user.id)
+          .single();
 
-      if (error) {
-        console.error('Error fetching user roles:', error);
-        toast.error('Failed to fetch user roles');
-        return;
-      }
+        if (error && error.code !== 'PGRST116') { // No rows found error
+          console.error('Error fetching user roles:', error);
+          toast.error('Failed to fetch user roles');
+          return;
+        }
 
-      if (data?.role && data.role !== user.role) {
-        setUser({ ...user, role: data.role as UserRole });
+        if (data?.role && data.role !== user.role) {
+          setUser({ ...user, role: data.role as UserRole });
+          toast.info(`Your role is set to ${data.role}`);
+        }
+      } catch (err) {
+        console.error('Exception in fetchUserRoles:', err);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -69,7 +76,6 @@ export const useRoleSync = () => {
       .subscribe();
 
     fetchUserRoles();
-    setLoading(false);
 
     return () => {
       supabase.removeChannel(channel);

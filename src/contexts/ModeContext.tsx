@@ -1,26 +1,37 @@
+import { createContext, useContext, useState, ReactNode } from "react";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
-
-interface ModeContextType {
+type ModeContextType = {
   enableBlockchain: boolean;
   toggleBlockchain: () => void;
-}
+  darkMode: boolean;
+  toggleDarkMode: () => void;
+};
 
-const ModeContext = createContext<ModeContextType | undefined>(undefined);
+const ModeContext = createContext<ModeContextType | null>(null);
 
-interface ModeProviderProps {
-  children: ReactNode;
-}
-
-export const ModeProvider = ({ children }: ModeProviderProps) => {
-  const [enableBlockchain, setEnableBlockchain] = useState<boolean>(false);
+export const ModeProvider = ({ children }: { children: ReactNode }) => {
+  // Always enable blockchain by default
+  const [enableBlockchain, setEnableBlockchain] = useState<boolean>(true);
+  const [darkMode, setDarkMode] = useState<boolean>(false);
 
   const toggleBlockchain = () => {
-    setEnableBlockchain(prev => !prev);
+    // Always keep blockchain enabled
+    setEnableBlockchain(true);
+  };
+
+  const toggleDarkMode = () => {
+    setDarkMode((prev) => !prev);
   };
 
   return (
-    <ModeContext.Provider value={{ enableBlockchain, toggleBlockchain }}>
+    <ModeContext.Provider
+      value={{
+        enableBlockchain,
+        toggleBlockchain,
+        darkMode,
+        toggleDarkMode,
+      }}
+    >
       {children}
     </ModeContext.Provider>
   );
@@ -28,7 +39,7 @@ export const ModeProvider = ({ children }: ModeProviderProps) => {
 
 export const useMode = (): ModeContextType => {
   const context = useContext(ModeContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useMode must be used within a ModeProvider");
   }
   return context;

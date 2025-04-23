@@ -20,14 +20,13 @@ const KYCPage = () => {
   const { connectWallet } = useBlockchain();
   const [connectionAttempted, setConnectionAttempted] = useState(false);
   
-  // Try to connect wallet on page load, but don't force it or repeat attempts
+  // Try to connect wallet on page load only once
   useEffect(() => {
     const attemptConnection = async () => {
       if (!isConnected && !connectionAttempted) {
         try {
           await connectWallet();
         } catch (error) {
-          // Silently fail - we have a fallback mechanism
           console.log("Wallet connection failed, using database fallback");
         } finally {
           setConnectionAttempted(true);

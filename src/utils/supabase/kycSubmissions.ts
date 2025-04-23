@@ -15,13 +15,13 @@ export async function getUserKycSubmissions(userId: string): Promise<KycDocument
 
     if (error) {
       console.error("Error fetching KYC submissions:", error);
-      return [];
+      throw error;
     }
 
     return (data || []) as KycDocumentSubmissionType[];
   } catch (error) {
     console.error("Exception in getUserKycSubmissions:", error);
-    return [];
+    throw error;
   }
 }
 
@@ -30,18 +30,14 @@ export async function getUserKycSubmissions(userId: string): Promise<KycDocument
  */
 export async function saveKycSubmission(submission: Omit<KycDocumentSubmissionType, 'id'>): Promise<string | null> {
   try {
-    // Log the submission to help debug
-    console.log("Saving KYC submission:", submission);
-    
     // Ensure the user is authenticated before submission
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       throw new Error("User not authenticated");
     }
     
-    const { data, error } = await supabase
-      .from('kyc_document_submissions')
-      .insert([submission])
+    const { data, error } = await kycSubmissionsTable()
+      .insert(submission)
       .select('id')
       .single();
 
@@ -68,13 +64,13 @@ export async function updateKycSubmission(id: string, updates: Partial<KycDocume
 
     if (error) {
       console.error("Error updating KYC submission:", error);
-      return false;
+      throw error;
     }
 
     return true;
   } catch (error) {
     console.error("Exception in updateKycSubmission:", error);
-    return false;
+    throw error;
   }
 }
 
@@ -90,12 +86,70 @@ export async function getPendingKycSubmissions(): Promise<KycDocumentSubmissionT
 
     if (error) {
       console.error("Error fetching pending KYC submissions:", error);
-      return [];
+      throw error;
     }
 
     return (data || []) as KycDocumentSubmissionType[];
   } catch (error) {
     console.error("Exception in getPendingKycSubmissions:", error);
-    return [];
+    throw error;
+  }
+}
+
+/**
+ * Get KYC submissions by status
+ */
+export async function getKycSubmissionsByStatus(status: 'pending' | 'verified' | 'rejected'): Promise<KycDocumentSubmissionType[]> {
+  try {
+    const { data, error } = await kycSubmissionsTable()
+      .select('*')
+      .eq('verification_status', status)
+      .order('submitted_at', { ascending: false });
+
+    if (error) {
+      console.error(`Error fetching ${status} KYC submissions:`, error);
+      throw error;
+    }
+
+    return (data || []) as KycDocumentSubmissionType[];
+  } catch (error) {
+    console.error(`Exception in getKycSubmissionsByStatus(${status}):`, error);
+    throw error;
+  }
+}
+
+/**
+ * Verify a KYC submission
+ */
+export async function verifyKycSubmission(
+  id: string, 
+  verifierAddress: string, 
+  status: 'verified' | 'rejected', 
+  reason?: string
+): Promise<boolean> {
+  try {
+    const updates: Partial<KycDocumentSubmissionType> = {
+      verification_status: status,
+      verifier_address: verifierAddress,
+      verified_at: new Date().toISOString()
+    };
+    
+    if (status === 'rejected' && reason) {
+      updates.rejection_reason = reason;
+    }
+
+    const { error } = await kycSubmissionsTable()
+      .update(updates)
+      .eq('id', id);
+
+    if (error) {
+      console.error("Error verifying KYC submission:", error);
+      throw error;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Exception in verifyKycSubmission:", error);
+    throw error;
   }
 }
