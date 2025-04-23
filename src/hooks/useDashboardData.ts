@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { toast } from "sonner";
 
-export type KYCStatusType = 'pending' | 'verified' | 'not_submitted';
+export type KYCStatusType = 'pending' | 'verified' | 'not_submitted' | 'rejected' | 'not_verified';
 
 export const useDashboardData = () => {
   const { 
@@ -55,8 +55,13 @@ export const useDashboardData = () => {
     fetchDashboardData();
   }, [isConnected, account, getKYCStatus]);
 
+  // Map the blockchain kycStatus to our dashboard KYCStatusType
+  const mappedKycStatus: KYCStatusType = kycStatus === 'not_verified' ? 'not_submitted' : 
+                                         kycStatus === 'verified' ? 'verified' :
+                                         kycStatus === 'rejected' ? 'rejected' : 'pending';
+
   return {
-    kycStatus,
+    kycStatus: mappedKycStatus,
     trustScore,
     activeLoans,
     isLoading,
