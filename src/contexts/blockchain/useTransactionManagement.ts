@@ -41,20 +41,21 @@ export const useTransactionManagement = ({
       txHash: string,
       type: string,
       description: string,
-      userAddress: string,
       extraData?: Record<string, any>
     ) => {
+      if (!account) return null;
+      
       const tx = trackTransaction(
         txHash,
         type as any,
         description,
-        userAddress,
+        account, // Use the account from props as userAddress
         networkId || 0,
         extraData
       );
       
       if (web3) {
-        watchTransaction(web3, txHash, userAddress);
+        watchTransaction(web3, txHash);
       }
       
       return tx;

@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useMode } from "@/contexts/ModeContext";
 import { supabase } from "@/lib/supabase";
@@ -27,6 +28,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
   const [kycContract, setKycContract] = useState<any>(null);
   const [trustScoreContract, setTrustScoreContract] = useState<any>(null);
   const [loanContract, setLoanContract] = useState<any>(null);
+  const [transactions, setTransactions] = useState<any[]>([]);
 
   useEffect(() => {
     if (enableBlockchain) {
@@ -514,6 +516,9 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         return [];
       }
 
+      // Update the transactions state
+      setTransactions(data || []);
+      
       return data || [];
     } catch (error) {
       console.error("Transaction history error:", error);
@@ -580,6 +585,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         trustScoreContract,
         loanContract,
         kycStatus,
+        transactions, // Add the transactions property
         connectWallet,
         disconnectWallet,
         switchNetwork,
