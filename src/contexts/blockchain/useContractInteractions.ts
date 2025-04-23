@@ -2,6 +2,7 @@
 import { useKYCOperations } from "./useKYCOperations";
 import { useTrustScoreOperations } from "./useTrustScoreOperations";
 import { useLoanOperations } from "./useLoanOperations";
+import { clearCache } from "@/utils/cache/blockchainCache";
 
 interface UseContractInteractionsProps {
   web3: any;
@@ -26,6 +27,11 @@ export const useContractInteractions = ({
   trackAndWatchTransaction,
   refreshTransactions
 }: UseContractInteractionsProps) => {
+  // Clear cache when account or network changes
+  const clearBlockchainCache = () => {
+    clearCache();
+  };
+
   // KYC Operations
   const {
     submitKYC,
@@ -37,7 +43,8 @@ export const useContractInteractions = ({
     kycContract,
     isConnected,
     trackAndWatchTransaction,
-    refreshTransactions
+    refreshTransactions,
+    clearBlockchainCache
   });
 
   // Trust Score Operations
@@ -50,7 +57,8 @@ export const useContractInteractions = ({
     trustScoreContract,
     isConnected,
     trackAndWatchTransaction,
-    refreshTransactions
+    refreshTransactions,
+    clearBlockchainCache
   });
 
   // Loan Operations
@@ -70,7 +78,8 @@ export const useContractInteractions = ({
     isConnected,
     networkId,
     trackAndWatchTransaction,
-    refreshTransactions
+    refreshTransactions,
+    clearBlockchainCache
   });
 
   return {
@@ -89,6 +98,9 @@ export const useContractInteractions = ({
     rejectLoan,
     repayLoan,
     getUserLoans,
-    registerBank
+    registerBank,
+    
+    // Cache operations
+    clearBlockchainCache
   };
 };

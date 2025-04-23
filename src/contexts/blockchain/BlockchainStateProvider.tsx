@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, ReactNode } from "react";
+import React, { createContext, useContext, ReactNode, useState } from "react";
 import { useMode } from "@/contexts/ModeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { BlockchainContextType } from "./types/contextTypes";
@@ -12,6 +12,7 @@ const BlockchainContext = createContext<BlockchainContextType | null>(null);
 export const BlockchainStateProvider = ({ children }: { children: ReactNode }) => {
   const { enableBlockchain } = useMode();
   const { user } = useAuth();
+  const [isOptimized, setIsOptimized] = useState<boolean>(true); // Default to optimized mode
 
   const {
     web3,
@@ -38,7 +39,8 @@ export const BlockchainStateProvider = ({ children }: { children: ReactNode }) =
   } = useTransactionManagement({ 
     account, 
     web3, 
-    networkId 
+    networkId,
+    isOptimized
   });
 
   const {
@@ -52,7 +54,8 @@ export const BlockchainStateProvider = ({ children }: { children: ReactNode }) =
     rejectLoan,
     repayLoan,
     getUserLoans,
-    registerBank
+    registerBank,
+    clearBlockchainCache
   } = useContractInteractions({
     web3,
     account,
@@ -124,7 +127,9 @@ export const BlockchainStateProvider = ({ children }: { children: ReactNode }) =
     submitLoanApplication,
     updateTrustScore,
     getTrustScore,
-    getUserLoans
+    getUserLoans,
+    clearBlockchainCache,
+    isOptimized
   };
 
   return (

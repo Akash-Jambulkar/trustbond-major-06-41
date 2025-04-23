@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import Web3 from "web3";
 import { Contract } from "web3-eth-contract";
 import { supabase } from "@/integrations/supabase/client";
+import { getFromCache, storeInCache, getCacheKey } from "@/utils/cache/blockchainCache";
 
 interface UseKYCOperationsProps {
   web3: Web3 | null;
@@ -11,6 +12,7 @@ interface UseKYCOperationsProps {
   isConnected: boolean;
   trackAndWatchTransaction: (txHash: string, type: string, description: string, extraData?: Record<string, any>) => any;
   refreshTransactions: () => Promise<any[]>;
+  clearBlockchainCache?: () => void;
 }
 
 export const useKYCOperations = ({
@@ -19,7 +21,8 @@ export const useKYCOperations = ({
   kycContract,
   isConnected,
   trackAndWatchTransaction,
-  refreshTransactions
+  refreshTransactions,
+  clearBlockchainCache
 }: UseKYCOperationsProps) => {
   const submitKYC = async (documentHash: string, documentType: string, feeInWei?: string): Promise<{success: boolean, transactionHash?: string}> => {
     if (!web3 || !account || !kycContract) {
@@ -250,6 +253,11 @@ export const useKYCOperations = ({
         }
       }
       
+      // Clear blockchain cache after verification
+      if (clearBlockchainCache) {
+        clearBlockchainCache();
+      }
+      
       await refreshTransactions();
       return true;
     } catch (error) {
@@ -265,7 +273,15 @@ export const useKYCOperations = ({
     }
 
     try {
-      // Try from blockchain first
+      // Try from cache first
+      const cacheKey = getCacheKey('kycStatus', userAddress);
+      const cachedStatus = getFromCache<boolean>(cacheKey, 'kycStatus');
+      
+      if (cachedStatus !== null) {
+        return cachedStatus;
+      }
+      
+      // Try from blockchain if not in cache
       const status = await kycContract.methods.getKYCStatus(userAddress).call();
       
       // If not verified on blockchain, check database for pending submissions
@@ -283,10 +299,18 @@ export const useKYCOperations = ({
             
           // If there's a pending or verified submission but not yet on blockchain
           if (submissions && submissions.length > 0) {
-            return submissions[0].verification_status === 'verified';
+            const dbStatus = submissions[0].verification_status === 'verified';
+            
+            // Store in cache
+            storeInCache(cacheKey, 'kycStatus', dbStatus);
+            
+            return dbStatus;
           }
         }
       }
+      
+      // Store blockchain status in cache
+      storeInCache(cacheKey, 'kycStatus', status);
       
       return status;
     } catch (error) {
