@@ -8,9 +8,15 @@ import { useRealTimeUpdates } from "@/hooks/useRealTimeUpdates";
 
 interface DashboardLayoutProps {
   children?: ReactNode;
+  sidebarNavItems?: Array<{
+    title: string;
+    href: string;
+    icon: any;
+    active: boolean;
+  }>;
 }
 
-export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
+export const DashboardLayout = ({ children, sidebarNavItems }: DashboardLayoutProps) => {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -30,7 +36,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     <div className="flex h-screen w-full overflow-hidden bg-gray-50">
       {/* Main Sidebar - Compact and modern */}
       <div className="flex-shrink-0 w-60 bg-white border-r border-gray-200 shadow-sm">
-        <SidebarNav user={user} onLogout={logout} />
+        <SidebarNav user={user} onLogout={logout} navItems={sidebarNavItems} />
       </div>
 
       {/* Main content */}

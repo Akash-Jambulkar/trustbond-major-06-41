@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { Database, Check, AlertTriangle, RefreshCw, Activity } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { createUuidExtensionRPC } from "@/utils/databaseHelpers";
 
 const DatabaseSetup = () => {
   const { toast } = useToast();
@@ -102,7 +102,7 @@ const DatabaseSetup = () => {
     setIsLoading(true);
     try {
       // First ensure the uuid-ossp extension is available
-      await supabase.rpc('create_uuid_extension');
+      await createUuidExtensionRPC();
       
       // Check for the existence of each required table
       const tableStatuses = await Promise.all(requiredTables.map(async (table) => {
@@ -160,10 +160,7 @@ const DatabaseSetup = () => {
     try {
       // First create the uuid-ossp extension if it doesn't exist
       try {
-        await supabase.rpc('create_uuid_extension').catch(() => {
-          // Execute raw SQL if RPC isn't available
-          return supabase.sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`;
-        });
+        await createUuidExtensionRPC();
       } catch (error) {
         console.warn("Failed to create uuid extension via RPC, will proceed anyway:", error);
       }
@@ -173,8 +170,13 @@ const DatabaseSetup = () => {
         const exists = tables.find(t => t.name === table.name)?.exists;
         if (!exists) {
           try {
-            // Execute the table creation query
-            await supabase.sql`${table.query}`;
+            // Execute the table creation query using RPC
+            const { error } = await supabase.rpc('create_table', { 
+              table_name: table.name,
+              table_query: table.query
+            });
+            
+            if (error) throw error;
           } catch (error) {
             console.error(`Error creating table ${table.name}:`, error);
             throw error;

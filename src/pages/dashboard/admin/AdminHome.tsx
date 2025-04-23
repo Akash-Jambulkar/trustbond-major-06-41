@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/components/ui/use-toast";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { useBlockchain } from "@/contexts/BlockchainContext";
-import { BadgeDollarSign, BarChart3, Clock, RefreshCcw, ShieldCheck, AlertTriangle, Users, Database, Bank } from "lucide-react";
+import { BadgeDollarSign, BarChart3, Clock, RefreshCcw, ShieldCheck, AlertTriangle, Users, Database, Building } from "lucide-react";
 import { bankRegistrationService, transactionService, kycDocumentService, userRoleService } from "@/services/databaseService";
 
 const AdminHome = () => {
@@ -31,7 +30,6 @@ const AdminHome = () => {
   const fetchAllData = async () => {
     setIsLoading(true);
     try {
-      // Fetch data from database services
       const [banks, txs, kycs, users] = await Promise.all([
         bankRegistrationService.getAllBankRegistrations(),
         transactionService.getAllTransactions(),
@@ -44,11 +42,9 @@ const AdminHome = () => {
       setKycDocuments(kycs);
       setUserRoles(users);
       
-      // Calculate dashboard stats
       const pendingBanks = banks.filter(bank => bank.status === 'pending').length;
       const pendingKYC = kycs.filter(doc => doc.verification_status === 'pending').length;
       
-      // Group users by role
       const usersByRole = users.reduce((acc, user) => {
         acc[user.role] = (acc[user.role] || 0) + 1;
         return acc;
@@ -78,11 +74,9 @@ const AdminHome = () => {
     fetchAllData();
   }, []);
 
-  // Calculate transaction data for charts
   const prepareTransactionChartData = () => {
     if (!transactions.length) return [];
     
-    // Group transactions by date
     const last7Days = [...Array(7)].map((_, i) => {
       const d = new Date();
       d.setDate(d.getDate() - i);
@@ -106,7 +100,6 @@ const AdminHome = () => {
     }));
   };
 
-  // Calculate user role distribution for charts
   const prepareUserRoleData = () => {
     return [
       { name: 'Users', value: dashboardStats.usersByRole.user },
@@ -140,7 +133,7 @@ const AdminHome = () => {
       </div>
 
       {!isConnected && (
-        <Alert variant="warning" className="mb-6 border-amber-300 bg-amber-50">
+        <Alert variant="destructive" className="mb-6 border-amber-300 bg-amber-50">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Blockchain connection not detected</AlertTitle>
           <AlertDescription>
@@ -157,7 +150,7 @@ const AdminHome = () => {
           <CardContent>
             <div className="flex items-center justify-between">
               <div className="text-2xl font-bold">{isLoading ? '...' : dashboardStats.pendingBanks}</div>
-              <Bank className="h-8 w-8 text-trustbond-primary" />
+              <Building className="h-8 w-8 text-trustbond-primary" />
             </div>
           </CardContent>
           <CardFooter className="pt-0">

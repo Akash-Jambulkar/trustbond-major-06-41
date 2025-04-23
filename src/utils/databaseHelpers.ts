@@ -6,54 +6,56 @@ import { supabase } from "@/lib/supabase";
  * This is needed because direct SQL execution requires additional permissions
  */
 export const createUuidExtensionRPC = async () => {
-  // Check if the function already exists
-  const { data: existingFunction } = await supabase
-    .rpc('function_exists', { function_name: 'create_uuid_extension' })
-    .single();
-
-  if (existingFunction && existingFunction.exists) {
-    return true;
-  }
-
-  // Create the RPC function if it doesn't exist
   try {
-    await supabase.sql`
-      CREATE OR REPLACE FUNCTION create_uuid_extension()
-      RETURNS boolean
-      LANGUAGE plpgsql
-      SECURITY DEFINER
-      AS $$
-      BEGIN
-        CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-        RETURN TRUE;
-      EXCEPTION WHEN OTHERS THEN
-        RETURN FALSE;
-      END;
-      $$;
-    `;
+    // Check if function_exists function exists
+    const { data: functionExistsResult, error: functionExistsError } = await supabase
+      .rpc('check_function_exists', { function_name: 'function_exists' });
+    
+    if (functionExistsError) {
+      console.log("Function 'function_exists' doesn't exist yet, creating helper functions first");
+      
+      // Create helper function to check if functions exist
+      await supabase.rpc('create_helper_functions');
+    }
 
-    // Also create helper function to check if other functions exist
-    await supabase.sql`
-      CREATE OR REPLACE FUNCTION function_exists(function_name text)
-      RETURNS TABLE(exists boolean)
-      LANGUAGE plpgsql
-      AS $$
-      BEGIN
-        RETURN QUERY
-        SELECT EXISTS (
-          SELECT 1 
-          FROM pg_proc p
-          JOIN pg_namespace n ON p.pronamespace = n.oid
-          WHERE n.nspname = 'public'
-          AND p.proname = function_name
-        );
-      END;
-      $$;
-    `;
+    // Now check if create_uuid_extension function exists
+    const { data: existingFunction, error } = await supabase
+      .rpc('function_exists', { function_name: 'create_uuid_extension' });
 
+    if (error) {
+      console.error("Error checking if function exists:", error);
+      return false;
+    }
+
+    if (existingFunction && existingFunction.exists) {
+      return true;
+    }
+
+    // Create the RPC function if it doesn't exist
+    try {
+      await supabase.rpc('create_uuid_extension_function');
+      return true;
+    } catch (error) {
+      console.error("Error creating RPC function:", error);
+      return false;
+    }
+  } catch (error) {
+    console.error("Error in createUuidExtensionRPC:", error);
+    return false;
+  }
+};
+
+/**
+ * Creates helper functions in the database
+ * This includes functions to check if other functions exist and to run SQL
+ */
+export const setupHelperFunctions = async () => {
+  try {
+    // Create functions through RPC
+    await supabase.rpc('setup_database_helper_functions');
     return true;
   } catch (error) {
-    console.error("Error creating RPC function:", error);
+    console.error("Error setting up helper functions:", error);
     return false;
   }
 };

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Clock, CheckCircle, XCircle, Search, Bank, ExternalLink, AlertTriangle } from "lucide-react";
+import { Clock, CheckCircle, XCircle, Search, Building, ExternalLink, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { bankRegistrationService, BankRegistration } from "@/services/databaseService";
@@ -233,7 +232,7 @@ const BankApprovals = () => {
                     <TableRow key={bank.id}>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <Bank className="h-4 w-4 text-trustbond-primary" />
+                          <Building className="h-4 w-4 text-trustbond-primary" />
                           <span>{bank.name}</span>
                         </div>
                       </TableCell>

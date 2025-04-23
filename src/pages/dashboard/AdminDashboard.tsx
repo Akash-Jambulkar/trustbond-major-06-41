@@ -9,7 +9,7 @@ import {
   Settings,
   Activity,
   UserCircle,
-  Bank,
+  Building,
   FileText,
   Database,
   Network
@@ -34,7 +34,7 @@ const AdminDashboard = () => {
     {
       title: "Bank Approvals",
       href: "/dashboard/admin/bank-approvals",
-      icon: Bank,
+      icon: Building,
       active: false,
     },
     {
@@ -87,7 +87,7 @@ const AdminDashboard = () => {
   }, [user, navigate]);
 
   return (
-    <DashboardLayout sidebarNavItems={navItems}>
+    <DashboardLayout>
       <Outlet />
     </DashboardLayout>
   );
