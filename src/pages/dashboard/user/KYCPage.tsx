@@ -1,9 +1,11 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { KYCStatusDisplay } from "@/components/kyc/KYCStatusDisplay";
 import { KYCSubmission } from "@/components/kyc/KYCSubmission";
 import { useKYCStatus } from "@/hooks/useKYCStatus";
 import { Shield } from "lucide-react";
+import { useBlockchain } from "@/contexts/BlockchainContext";
+import { toast } from "sonner";
 
 const KYCPage = () => {
   const { 
@@ -14,6 +16,22 @@ const KYCPage = () => {
     rejectionReason,
     isConnected 
   } = useKYCStatus();
+  
+  const { connectWallet } = useBlockchain();
+  
+  // Try to connect wallet on page load, but don't force it
+  useEffect(() => {
+    const attemptConnection = async () => {
+      try {
+        await connectWallet();
+      } catch (error) {
+        // Silently fail - we have a fallback mechanism
+        console.log("Wallet connection failed, using database fallback");
+      }
+    };
+    
+    attemptConnection();
+  }, [connectWallet]);
   
   return (
     <div className="p-4 lg:p-6">

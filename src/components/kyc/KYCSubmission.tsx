@@ -21,13 +21,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Shield, AlertCircle } from "lucide-react";
+import { Shield, AlertCircle, Info } from "lucide-react";
 import { toast } from "sonner";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { DOCUMENT_TYPES, DocumentType, validateDocument, createDocumentHash } from "@/utils/documentHash";
 import { useAuth } from "@/contexts/AuthContext";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { KYC_SUBMISSION_FEE } from "@/utils/contracts/contractConfig";
+import { saveKycSubmission } from "@/utils/supabase/kycSubmissions";
 
 type FormValues = {
   documentType: DocumentType;
@@ -38,6 +39,7 @@ export function KYCSubmission() {
   const { submitKYC, isConnected, account, web3 } = useBlockchain();
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showBlockchainWarning, setShowBlockchainWarning] = useState(false);
 
   // Create form instance
   const form = useForm<FormValues>({
@@ -47,12 +49,8 @@ export function KYCSubmission() {
     }
   });
 
+  // Handle submission with database fallback
   const handleSubmit = async (values: FormValues) => {
-    if (!isConnected) {
-      toast.error("Please connect your wallet first");
-      return;
-    }
-
     if (!user) {
       toast.error("Please log in to submit KYC");
       return;
@@ -68,18 +66,47 @@ export function KYCSubmission() {
       // Generate the document hash using document type and number
       const documentHash = await createDocumentHash(values.documentType, values.documentNumber);
       
-      // Calculate fee in wei
-      const feeInWei = web3?.utils.toWei(KYC_SUBMISSION_FEE, 'ether') || "10000000000000000"; // 0.01 ETH
+      let blockchainSubmitted = false;
       
-      // Submit to blockchain with fee
-      const success = await submitKYC(documentHash, feeInWei);
+      // Try blockchain submission first if connected
+      if (isConnected && web3 && account) {
+        try {
+          // Calculate fee in wei
+          const feeInWei = web3?.utils.toWei(KYC_SUBMISSION_FEE, 'ether') || "10000000000000000"; // 0.01 ETH
+          
+          // Submit to blockchain with fee
+          blockchainSubmitted = await submitKYC(documentHash, feeInWei);
+        } catch (error) {
+          console.error("Error submitting to blockchain:", error);
+          // Show warning but continue with database fallback
+          setShowBlockchainWarning(true);
+          blockchainSubmitted = false;
+        }
+      }
       
-      // Check for success properly
-      if (success) {
-        toast.success("Document information submitted successfully for verification!");
-        form.reset();
+      // If blockchain submission failed or wasn't available, use database fallback
+      if (!blockchainSubmitted) {
+        // Save to database directly
+        const submission = {
+          user_id: user.id,
+          document_type: values.documentType,
+          document_hash: documentHash,
+          verification_status: 'pending',
+          submitted_at: new Date().toISOString(),
+          wallet_address: account || null,
+        };
+        
+        const submissionId = await saveKycSubmission(submission);
+        
+        if (submissionId) {
+          toast.success("Document information submitted successfully to our database");
+          form.reset();
+        } else {
+          toast.error("Failed to submit document information to the database");
+        }
       } else {
-        toast.error("Failed to submit document information");
+        toast.success("Document information submitted successfully via blockchain");
+        form.reset();
       }
     } catch (error) {
       console.error("Error submitting document:", error);
@@ -101,11 +128,22 @@ export function KYCSubmission() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {showBlockchainWarning && (
+          <Alert variant="warning" className="bg-amber-50 border-amber-200 text-amber-800">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Blockchain submission unavailable</AlertTitle>
+            <AlertDescription>
+              We couldn't submit your document to the blockchain. Your document will be processed through our standard verification system instead.
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Verification Fee</AlertTitle>
           <AlertDescription>
-            A fee of {KYC_SUBMISSION_FEE} ETH is required for document verification. This helps maintain security and prevent spam.
+            A fee of {KYC_SUBMISSION_FEE} ETH is required for blockchain verification. This helps maintain security and prevent spam.
+            {!isConnected && " Your submission will be processed through our standard system if blockchain is unavailable."}
           </AlertDescription>
         </Alert>
         
@@ -163,13 +201,23 @@ export function KYCSubmission() {
             
             <Button 
               type="submit" 
-              disabled={!isConnected || isSubmitting || !user}
+              disabled={isSubmitting || !user}
               className="w-full mt-4"
             >
-              {isSubmitting ? "Submitting..." : `Submit for Verification (${KYC_SUBMISSION_FEE} ETH)`}
+              {isSubmitting ? "Submitting..." : isConnected ? `Submit for Verification (${KYC_SUBMISSION_FEE} ETH)` : "Submit for Verification"}
             </Button>
           </form>
         </Form>
+        
+        {!isConnected && (
+          <Alert className="bg-blue-50 border-blue-200 text-blue-800">
+            <Info className="h-4 w-4" />
+            <AlertTitle>No wallet connected</AlertTitle>
+            <AlertDescription>
+              You're submitting without a blockchain wallet connection. Your document will still be processed through our standard verification system.
+            </AlertDescription>
+          </Alert>
+        )}
       </CardContent>
       <CardFooter className="text-sm text-muted-foreground">
         Once submitted, your document will be verified by authorized banks or administrators. 
