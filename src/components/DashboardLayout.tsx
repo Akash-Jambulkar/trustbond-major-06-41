@@ -36,7 +36,7 @@ export const DashboardLayout = ({ children, sidebarNavItems }: DashboardLayoutPr
     <div className="flex h-screen w-full overflow-hidden bg-gray-50">
       {/* Main Sidebar - Compact and modern */}
       <div className="flex-shrink-0 w-60 bg-white border-r border-gray-200 shadow-sm">
-        <SidebarNav user={user} onLogout={logout} navItems={sidebarNavItems} />
+        <SidebarNav user={user} onLogout={logout} navItems={sidebarNavItems || []} />
       </div>
 
       {/* Main content */}

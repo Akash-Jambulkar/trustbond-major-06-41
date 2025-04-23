@@ -1,4 +1,3 @@
-
 import { useLocation, Link } from "react-router-dom";
 import {
   BarChart2,
@@ -27,9 +26,15 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 interface SidebarNavProps {
   user: any;
   onLogout: () => void;
+  navItems?: Array<{
+    title: string;
+    href: string;
+    icon: any;
+    active: boolean;
+  }>;
 }
 
-export function SidebarNav({ user, onLogout }: SidebarNavProps) {
+export function SidebarNav({ user, onLogout, navItems }: SidebarNavProps) {
   const location = useLocation();
   const role = user?.role || "user";
 
@@ -177,12 +182,12 @@ export function SidebarNav({ user, onLogout }: SidebarNavProps) {
     },
   ];
 
-  // Choose the appropriate navigation items based on user role
-  const navItems = role === "admin" 
+  // Choose the appropriate navigation items based on provided navItems or role
+  const items = navItems || (role === "admin" 
     ? adminNavItems 
     : role === "bank" 
       ? bankNavItems 
-      : userNavItems;
+      : userNavItems);
 
   return (
     <div className="h-full flex flex-col bg-white">
@@ -210,7 +215,7 @@ export function SidebarNav({ user, onLogout }: SidebarNavProps) {
       {/* Navigation Items */}
       <ScrollArea className="flex-1 px-3 py-2">
         <div className="space-y-1">
-          {navItems.map((item) => (
+          {items.map((item) => (
             <Link
               key={item.href}
               to={item.href}

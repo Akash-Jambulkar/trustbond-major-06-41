@@ -360,6 +360,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_function_exists: {
+        Args: { function_name: string }
+        Returns: boolean
+      }
+      check_table_exists: {
+        Args: { table_name: string }
+        Returns: boolean
+      }
+      create_helper_functions: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       create_profile_for_user: {
         Args: {
           user_id_param: string
@@ -370,6 +382,30 @@ export type Database = {
           kyc_status_param: string
         }
         Returns: Json
+      }
+      create_table: {
+        Args: { table_name: string; table_query: string }
+        Returns: boolean
+      }
+      create_table_helper_functions: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      create_uuid_extension: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      create_uuid_extension_function: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      execute_sql: {
+        Args: { sql_command: string }
+        Returns: boolean
+      }
+      function_exists: {
+        Args: { function_name: string }
+        Returns: boolean
       }
       has_role: {
         Args: {
