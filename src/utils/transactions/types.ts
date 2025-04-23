@@ -2,7 +2,7 @@
 import { Json } from "@/integrations/supabase/types";
 
 // Transaction types
-export type TransactionType = 'kyc' | 'loan' | 'verification' | 'registration' | 'other';
+export type TransactionType = 'kyc' | 'loan' | 'verification' | 'registration' | 'trust_score' | 'other';
 
 // Transaction status
 export type TransactionStatus = 'pending' | 'confirmed' | 'failed';

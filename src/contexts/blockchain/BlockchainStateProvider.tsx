@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, ReactNode, useState } from "react";
 import { useMode } from "@/contexts/ModeContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -68,13 +67,25 @@ export const BlockchainStateProvider = ({ children }: { children: ReactNode }) =
     refreshTransactions: getTransactionHistory
   });
 
-  // Create a wrapper for submitKYC to maintain backward compatibility
   const submitKYCWrapper = async (documentHash: string, feeInWei?: string): Promise<boolean> => {
     const result = await submitKYC(documentHash, 'default', feeInWei);
     return result.success;
   };
 
-  // Create a wrapper for requestLoan to match the expected interface
+  const verifyKYCWrapper = async (kycId: string, verificationStatus: 'verified' | 'rejected'): Promise<boolean> => {
+    const isApproved = verificationStatus === 'verified';
+    return await verifyKYC(kycId, isApproved);
+  };
+
+  const approveLoanWrapper = async (loanId: string): Promise<boolean> => {
+    const defaultInterestRate = 5; // 5%
+    return await approveLoan(loanId, defaultInterestRate);
+  };
+
+  const rejectLoanWrapper = async (loanId: string): Promise<boolean> => {
+    return await rejectLoan(loanId, 'Rejected by bank');
+  };
+
   const submitLoanApplication = async (loanData: any): Promise<string | null> => {
     const result = await requestLoan(
       loanData.amount.toString(), 
@@ -84,12 +95,6 @@ export const BlockchainStateProvider = ({ children }: { children: ReactNode }) =
     return result ? loanData.loanId || 'pending-id' : null;
   };
 
-  // Create a wrapper for rejectLoan to match the expected interface
-  const rejectLoanWrapper = async (loanId: string): Promise<boolean> => {
-    return await rejectLoan(loanId, 'Rejected by bank');
-  };
-
-  // Create a wrapper for registerBank to match the expected interface
   const registerBankWrapper = async (bankData: any): Promise<boolean> => {
     return await registerBank(
       bankData.name || 'Bank', 
@@ -117,12 +122,12 @@ export const BlockchainStateProvider = ({ children }: { children: ReactNode }) =
     disconnectWallet,
     submitKYC: submitKYCWrapper,
     getKYCStatus,
-    verifyKYC,
+    verifyKYC: verifyKYCWrapper,
     getTransactionHistory,
     switchNetwork,
     registerBank: registerBankWrapper,
     repayLoan,
-    approveLoan,
+    approveLoan: approveLoanWrapper,
     rejectLoan: rejectLoanWrapper,
     submitLoanApplication,
     updateTrustScore,
