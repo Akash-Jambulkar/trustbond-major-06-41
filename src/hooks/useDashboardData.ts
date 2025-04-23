@@ -25,18 +25,22 @@ export const useDashboardData = () => {
       setError(null);
 
       try {
-        const { user } = await supabase.auth.getUser();
+        // Get user session data using the correct property
+        const { data: sessionData, error: sessionError } = await supabase.auth.getUser();
         
-        if (!user) {
+        if (sessionError || !sessionData.user) {
+          console.error("Error fetching user session:", sessionError);
           setIsLoading(false);
           return;
         }
 
+        const userId = sessionData.user.id;
+        
         // Get profile data including KYC status and trust score
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('kyc_status, trust_score')
-          .eq('user_id', user.id)
+          .eq('user_id', userId)
           .single();
 
         if (profileError) {
@@ -51,7 +55,7 @@ export const useDashboardData = () => {
         const { data: loansData, error: loansError } = await supabase
           .from('loans')
           .select('id')
-          .eq('user_id', user.id)
+          .eq('user_id', userId)
           .eq('status', 'active');
 
         if (loansError) {

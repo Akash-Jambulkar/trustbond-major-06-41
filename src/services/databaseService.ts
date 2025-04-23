@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 
 // Bank registration types
@@ -267,61 +266,101 @@ export const kycDocumentService = {
 // Database service for user roles
 export const userRoleService = {
   async getAllUserRoles(): Promise<UserRole[]> {
-    const { data, error } = await supabase
-      .from('user_role_assignments')
-      .select(`
-        id,
-        user_id,
-        role,
-        assigned_at as created_at,
-        profiles:user_id (email, name as full_name)
-      `)
-      .order('assigned_at', { ascending: false });
+    try {
+      // Use a simpler query that doesn't use complex joins which could cause parsing errors
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('user_role_assignments')
+        .select('id, user_id, role, assigned_at')
+        .order('assigned_at', { ascending: false });
 
-    if (error) {
-      console.error("Error fetching user roles:", error);
+      if (rolesError) {
+        console.error("Error fetching user roles:", rolesError);
+        throw rolesError;
+      }
+
+      // Get a list of unique user_ids to fetch their profile data
+      const userIds = rolesData?.map(role => role.user_id) || [];
+      
+      if (userIds.length === 0) {
+        return [];
+      }
+
+      // Fetch profiles separately
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, email, name')
+        .in('user_id', userIds);
+
+      if (profilesError) {
+        console.error("Error fetching user profiles:", profilesError);
+        throw profilesError;
+      }
+
+      // Create a map for quick lookups
+      const profileMap = new Map();
+      profilesData?.forEach(profile => {
+        profileMap.set(profile.user_id, profile);
+      });
+
+      // Combine the data
+      return (rolesData || []).map(role => {
+        const profile = profileMap.get(role.user_id) || {};
+        return {
+          id: role.id,
+          user_id: role.user_id,
+          email: profile.email || '',
+          full_name: profile.name || '',
+          role: role.role,
+          created_at: role.assigned_at
+        };
+      });
+    } catch (error) {
+      console.error("Error in getAllUserRoles:", error);
       throw error;
     }
-
-    // Map the results to match the expected structure
-    return (data || []).map(item => ({
-      id: item.id,
-      user_id: item.user_id,
-      email: item.profiles?.email || '',
-      full_name: item.profiles?.full_name || '',
-      role: item.role,
-      created_at: item.created_at
-    }));
   },
 
   async getUserRoleById(userId: string): Promise<UserRole | null> {
-    const { data, error } = await supabase
-      .from('user_role_assignments')
-      .select(`
-        id,
-        user_id,
-        role,
-        assigned_at as created_at,
-        profiles:user_id (email, name as full_name)
-      `)
-      .eq('user_id', userId)
-      .single();
+    try {
+      // Fetch role data
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_role_assignments')
+        .select('id, user_id, role, assigned_at')
+        .eq('user_id', userId)
+        .single();
 
-    if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned" which we handle as null
-      console.error(`Error fetching user role for user ${userId}:`, error);
+      if (roleError) {
+        if (roleError.code === 'PGRST116') { // No rows returned
+          return null;
+        }
+        console.error(`Error fetching user role for user ${userId}:`, roleError);
+        throw roleError;
+      }
+
+      // Fetch user profile data
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('email, name')
+        .eq('user_id', userId)
+        .single();
+
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error(`Error fetching profile for user ${userId}:`, profileError);
+        throw profileError;
+      }
+
+      return {
+        id: roleData.id,
+        user_id: roleData.user_id,
+        email: profileData?.email || '',
+        full_name: profileData?.name || '',
+        role: roleData.role,
+        created_at: roleData.assigned_at
+      };
+    } catch (error) {
+      console.error(`Error in getUserRoleById for ${userId}:`, error);
       throw error;
     }
-
-    if (!data) return null;
-
-    return {
-      id: data.id,
-      user_id: data.user_id,
-      email: data.profiles?.email || '',
-      full_name: data.profiles?.full_name || '',
-      role: data.role,
-      created_at: data.created_at
-    };
   },
 
   async createUserRole(userData: Omit<UserRole, 'id' | 'created_at'>): Promise<UserRole> {
