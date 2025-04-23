@@ -38,6 +38,7 @@ import {
   DOCUMENT_TYPES
 } from "@/utils/documentHash";
 import { useBlockchain } from "@/contexts/BlockchainContext";
+import { useMode } from "@/contexts/ModeContext";
 
 // Create a schema for form validation
 const documentSchema = z.object({
@@ -60,6 +61,7 @@ type DocumentFormValues = z.infer<typeof documentSchema>;
 export const KYCDocumentUpload = () => {
   const { toast } = useToast();
   const { submitKYC, isConnected, isContractsInitialized } = useBlockchain();
+  const { enableBlockchain } = useMode();
   const [activeTab, setActiveTab] = useState<DocumentType>(DOCUMENT_TYPES.AADHAAR);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -115,26 +117,8 @@ export const KYCDocumentUpload = () => {
     }
   };
 
-  // Create document hash and submit to blockchain
+  // Create document hash and submit to blockchain or mock submission
   const handleSubmit = async (values: DocumentFormValues) => {
-    if (!isConnected) {
-      toast({
-        variant: "destructive",
-        title: "Wallet not connected",
-        description: "Please connect your wallet to submit KYC documents.",
-      });
-      return;
-    }
-
-    if (!isContractsInitialized) {
-      toast({
-        variant: "destructive",
-        title: "Contracts not initialized",
-        description: "Please wait for blockchain contracts to initialize or try refreshing the page.",
-      });
-      return;
-    }
-
     let documentNumber = "";
     switch (activeTab) {
       case DOCUMENT_TYPES.AADHAAR:
@@ -166,13 +150,27 @@ export const KYCDocumentUpload = () => {
       const hash = await createDocumentHash(activeTab, documentNumber);
       setDocumentHash(hash);
 
-      // Submit the hash to the blockchain
-      await submitKYC(hash);
-      
-      toast({
-        title: "KYC document submitted successfully",
-        description: "Your document has been submitted for verification.",
-      });
+      // Check if we should submit to blockchain or mock the submission
+      if (enableBlockchain && isConnected && isContractsInitialized) {
+        // Submit the hash to the blockchain
+        await submitKYC(hash);
+        
+        toast({
+          title: "KYC document submitted successfully",
+          description: "Your document has been submitted for verification on the blockchain.",
+        });
+      } else {
+        // Mock submission when blockchain is not available
+        console.log("Mock submission:", { documentType: activeTab, hash });
+        
+        // Simulate a delay to mimic blockchain processing
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        toast({
+          title: "Document submitted for processing",
+          description: "Your document has been recorded in our system. Blockchain features are currently disabled.",
+        });
+      }
 
       // Reset form
       setUploadedFile(null);
@@ -182,7 +180,7 @@ export const KYCDocumentUpload = () => {
         fileInputRef.current.value = "";
       }
     } catch (error) {
-      console.error("Error submitting KYC document:", error);
+      console.error("Error submitting document:", error);
       toast({
         variant: "destructive",
         title: "Error submitting document",
@@ -209,6 +207,9 @@ export const KYCDocumentUpload = () => {
         return "";
     }
   };
+
+  // Determine if blockchain is available
+  const isBlockchainAvailable = enableBlockchain && isConnected && isContractsInitialized;
 
   return (
     <Card className="w-full">
@@ -412,22 +413,22 @@ export const KYCDocumentUpload = () => {
                 </Alert>
               )}
 
-              {!isConnected && (
-                <Alert className="mt-4 bg-amber-50 border-amber-200 text-amber-800">
+              {!enableBlockchain && (
+                <Alert className="mt-4 bg-blue-50 border-blue-200 text-blue-800">
                   <Info className="h-4 w-4" />
-                  <AlertTitle>Connect wallet to submit</AlertTitle>
+                  <AlertTitle>Blockchain features are disabled</AlertTitle>
                   <AlertDescription>
-                    You need to connect your wallet to submit KYC documents to the blockchain.
+                    Your document will be processed using our standard verification system. Enable blockchain features in settings for enhanced security.
                   </AlertDescription>
                 </Alert>
               )}
 
-              {isConnected && !isContractsInitialized && (
+              {enableBlockchain && !isConnected && (
                 <Alert className="mt-4 bg-amber-50 border-amber-200 text-amber-800">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Contracts not initialized</AlertTitle>
+                  <Info className="h-4 w-4" />
+                  <AlertTitle>You can still submit your documents</AlertTitle>
                   <AlertDescription>
-                    Please wait for blockchain contracts to initialize. This may take a moment.
+                    Your documents will be processed through our standard verification system. Connect a wallet in settings for blockchain verification.
                   </AlertDescription>
                 </Alert>
               )}
@@ -436,7 +437,7 @@ export const KYCDocumentUpload = () => {
                 <Button 
                   type="submit" 
                   className="w-full" 
-                  disabled={isSubmitting || !isConnected || !isContractsInitialized}
+                  disabled={isSubmitting}
                 >
                   {isSubmitting ? (
                     <>
@@ -444,7 +445,9 @@ export const KYCDocumentUpload = () => {
                       Submitting...
                     </>
                   ) : (
-                    "Submit Document for Verification"
+                    isBlockchainAvailable ? 
+                    "Submit Document for Blockchain Verification" : 
+                    "Submit Document for Processing"
                   )}
                 </Button>
               </div>
@@ -454,7 +457,7 @@ export const KYCDocumentUpload = () => {
       </CardContent>
       <CardFooter className="bg-muted/50 text-xs text-muted-foreground flex flex-col items-start">
         <p className="mb-1">
-          <span className="font-semibold">Security Note:</span> Your document data is securely hashed and only the hash is stored on the blockchain. No personal information is exposed.
+          <span className="font-semibold">Security Note:</span> Your document data is securely hashed and only the hash is stored on our systems. No personal information is exposed.
         </p>
         <p>
           <span className="font-semibold">Verification Process:</span> After submission, a bank or authorized entity will verify your documents and update your KYC status.
@@ -463,3 +466,4 @@ export const KYCDocumentUpload = () => {
     </Card>
   );
 };
+
