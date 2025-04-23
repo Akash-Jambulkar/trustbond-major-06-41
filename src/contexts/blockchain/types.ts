@@ -34,12 +34,12 @@ export interface BlockchainContextType {
   disconnectWallet: () => void;
   submitKYC: (documentHash: string, feeInWei?: string) => Promise<boolean>;
   getKYCStatus: (address: string) => Promise<boolean>;
-  verifyKYC?: (address: string, approved: boolean) => Promise<boolean>;
-  switchNetwork?: (networkId: number) => Promise<boolean>; // Added for WalletStatus
-  registerBank?: (bankData: any) => Promise<boolean>; // Added for BankRegistrationForm
-  getTransactionHistory?: () => Promise<any[]>; // Added for TransactionHistory
-  repayLoan?: (loanId: string, amountInWei: string) => Promise<boolean>; // Added for LoanRepaymentTracker
-  approveLoan?: (loanId: string) => Promise<boolean>; // Added for BankVerification
-  rejectLoan?: (loanId: string) => Promise<boolean>; // Added for BankVerification
-  submitLoanApplication?: (loanData: any) => Promise<string | null>; // Added for BankVerification
+  verifyKYC: (kycId: string, verificationStatus: 'verified' | 'rejected') => Promise<boolean>;
+  switchNetwork: (networkId: number) => Promise<boolean>; 
+  registerBank: (bankData: any) => Promise<boolean>;
+  getTransactionHistory: () => Promise<any[]>;
+  repayLoan: (loanId: string, amountInWei: string) => Promise<boolean>;
+  approveLoan: (loanId: string) => Promise<boolean>;
+  rejectLoan: (loanId: string) => Promise<boolean>;
+  submitLoanApplication: (loanData: any) => Promise<string | null>;
 }

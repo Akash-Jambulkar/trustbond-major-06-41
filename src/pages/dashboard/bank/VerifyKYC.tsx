@@ -84,17 +84,17 @@ const VerifyKYCPage = () => {
     try {
       setVerifying(true);
       
-      if (!submission.blockchain_address) {
-        toast.error("No blockchain address found for user");
+      if (!submission.id) {
+        toast.error("No KYC ID found for submission");
         setVerifying(false);
         return;
       }
       
-      const success = await verifyKYC(submission.blockchain_address, approved);
+      const verificationStatus = approved ? 'verified' as const : 'rejected' as const;
+      
+      const success = await verifyKYC(submission.id, verificationStatus);
       
       if (success) {
-        const verificationStatus = approved ? 'verified' as const : 'rejected' as const;
-        
         const { error } = await supabase
           .from('kyc_documents')
           .update({ 

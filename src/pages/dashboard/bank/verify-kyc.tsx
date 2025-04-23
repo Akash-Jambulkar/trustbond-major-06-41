@@ -55,8 +55,8 @@ const VerifyKYC = () => {
     try {
       setVerifying(true);
       
-      if (!selectedDocument || !selectedDocument.profiles?.wallet_address) {
-        toast.error("No wallet address found for user");
+      if (!selectedDocument || !selectedDocument.id) {
+        toast.error("No document ID found");
         setVerifying(false);
         return;
       }
@@ -64,7 +64,7 @@ const VerifyKYC = () => {
       const verificationStatus = approve ? 'verified' as const : 'rejected' as const;
       
       if (verifyKYC) {
-        await verifyKYC(selectedDocument.profiles.wallet_address, approve);
+        await verifyKYC(selectedDocument.id, verificationStatus);
       }
       
       const { error } = await supabase
