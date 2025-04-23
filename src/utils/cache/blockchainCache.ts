@@ -45,18 +45,19 @@ export function getFromCache<T>(cacheKey: string, cacheType: keyof BlockchainCac
 /**
  * Stores data in the cache with current timestamp
  */
-export function storeInCache<T>(
+export function storeInCache<T extends any>(
   cacheKey: string, 
   cacheType: keyof BlockchainCacheStore, 
   data: T
 ): void {
   const cache = cacheStore[cacheType];
   
-  // Fix the type assignment issue by using type assertion
-  cache.set(cacheKey, {
-    data: data as any,
+  const cachedData: CachedData<any> = {
+    data: data,
     timestamp: Date.now()
-  });
+  };
+  
+  cache.set(cacheKey, cachedData);
 }
 
 /**
