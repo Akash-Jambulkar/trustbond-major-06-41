@@ -91,7 +91,7 @@ export function KYCSubmission() {
           user_id: user.id,
           document_type: values.documentType,
           document_hash: documentHash,
-          verification_status: 'pending',
+          verification_status: 'pending' as 'pending' | 'verified' | 'rejected',
           submitted_at: new Date().toISOString(),
           wallet_address: account || null,
         };
@@ -129,7 +129,7 @@ export function KYCSubmission() {
       </CardHeader>
       <CardContent className="space-y-4">
         {showBlockchainWarning && (
-          <Alert variant="warning" className="bg-amber-50 border-amber-200 text-amber-800">
+          <Alert variant="destructive" className="bg-amber-50 border-amber-200 text-amber-800">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Blockchain submission unavailable</AlertTitle>
             <AlertDescription>
