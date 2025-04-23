@@ -98,7 +98,10 @@ export const BlockchainStateProvider = ({ children }: { children: ReactNode }) =
     repayLoan,
     approveLoan,
     rejectLoan,
-    submitLoanApplication
+    submitLoanApplication,
+    updateTrustScore,
+    getTrustScore,
+    getUserLoans
   };
 
   return (

@@ -1,16 +1,14 @@
 
-import Web3 from "web3";
-import { Contract } from "web3-eth-contract";
-import { useKYCOperations } from "./hooks/useKYCOperations";
-import { useTrustScoreOperations } from "./hooks/useTrustScoreOperations";
-import { useLoanOperations } from "./hooks/useLoanOperations";
+import { useKYCOperations } from "./useKYCOperations";
+import { useTrustScoreOperations } from "./useTrustScoreOperations";
+import { useLoanOperations } from "./useLoanOperations";
 
 interface UseContractInteractionsProps {
-  web3: Web3 | null;
+  web3: any;
   account: string | null;
-  kycContract: Contract | null;
-  trustScoreContract: Contract | null;
-  loanContract: Contract | null;
+  kycContract: any;
+  trustScoreContract: any;
+  loanContract: any;
   isConnected: boolean;
   networkId: number | null;
   trackAndWatchTransaction: (txHash: string, type: string, description: string, extraData?: Record<string, any>) => any;
@@ -28,8 +26,12 @@ export const useContractInteractions = ({
   trackAndWatchTransaction,
   refreshTransactions
 }: UseContractInteractionsProps) => {
-  // Use the separated hooks
-  const kycOperations = useKYCOperations({
+  // KYC Operations
+  const {
+    submitKYC,
+    verifyKYC,
+    getKYCStatus
+  } = useKYCOperations({
     web3,
     account,
     kycContract,
@@ -38,7 +40,11 @@ export const useContractInteractions = ({
     refreshTransactions
   });
 
-  const trustScoreOperations = useTrustScoreOperations({
+  // Trust Score Operations
+  const {
+    updateTrustScore,
+    getTrustScore
+  } = useTrustScoreOperations({
     web3,
     account,
     trustScoreContract,
@@ -47,52 +53,42 @@ export const useContractInteractions = ({
     refreshTransactions
   });
 
-  const loanOperations = useLoanOperations({
+  // Loan Operations
+  const {
+    requestLoan,
+    approveLoan,
+    rejectLoan,
+    repayLoan,
+    getUserLoans,
+    registerBank
+  } = useLoanOperations({
     web3,
     account,
     loanContract,
+    kycContract,
+    trustScoreContract,
     isConnected,
+    networkId,
     trackAndWatchTransaction,
     refreshTransactions
   });
 
-  // Bank registration operation (remaining in this file as it's a simple operation)
-  const registerBank = async (bankData: any): Promise<boolean> => {
-    if (!web3 || !account) {
-      throw new Error("Wallet not connected");
-    }
-
-    try {
-      const { name, registrationNumber } = bankData;
-      const walletAddress = bankData.walletAddress || account;
-      
-      const txHash = "0x" + Math.random().toString(16).substring(2, 42);
-      
-      trackAndWatchTransaction(
-        txHash,
-        'registration',
-        `Bank Registration: ${name}`,
-        { ...bankData }
-      );
-      
-      return true;
-    } catch (error) {
-      console.error("Error registering bank on blockchain:", error);
-      return false;
-    }
-  };
-
   return {
-    // KYC operations
-    ...kycOperations,
-    
-    // Trust score operations
-    ...trustScoreOperations,
-    
-    // Loan operations
-    ...loanOperations,
-    
-    // Bank operations
+    // KYC Operations
+    submitKYC,
+    verifyKYC,
+    getKYCStatus,
+
+    // Trust Score Operations
+    updateTrustScore,
+    getTrustScore,
+
+    // Loan Operations
+    requestLoan,
+    approveLoan,
+    rejectLoan,
+    repayLoan,
+    getUserLoans,
     registerBank
   };
 };

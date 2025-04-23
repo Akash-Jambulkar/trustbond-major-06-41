@@ -108,6 +108,82 @@ export type Database = {
         }
         Relationships: []
       }
+      kyc_verification_consensus: {
+        Row: {
+          consensus_reached: boolean | null
+          id: string
+          kyc_submission_id: string | null
+          transaction_hash: string | null
+          verification_status: string
+          verification_timestamp: string | null
+          verifier_bank_id: string | null
+        }
+        Insert: {
+          consensus_reached?: boolean | null
+          id?: string
+          kyc_submission_id?: string | null
+          transaction_hash?: string | null
+          verification_status?: string
+          verification_timestamp?: string | null
+          verifier_bank_id?: string | null
+        }
+        Update: {
+          consensus_reached?: boolean | null
+          id?: string
+          kyc_submission_id?: string | null
+          transaction_hash?: string | null
+          verification_status?: string
+          verification_timestamp?: string | null
+          verifier_bank_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kyc_verification_consensus_kyc_submission_id_fkey"
+            columns: ["kyc_submission_id"]
+            isOneToOne: false
+            referencedRelation: "kyc_document_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loan_events: {
+        Row: {
+          amount: number | null
+          created_at: string | null
+          event_type: string
+          id: string
+          loan_id: string | null
+          metadata: Json | null
+          transaction_hash: string | null
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string | null
+          event_type: string
+          id?: string
+          loan_id?: string | null
+          metadata?: Json | null
+          transaction_hash?: string | null
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          loan_id?: string | null
+          metadata?: Json | null
+          transaction_hash?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loan_events_loan_id_fkey"
+            columns: ["loan_id"]
+            isOneToOne: false
+            referencedRelation: "loans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       loans: {
         Row: {
           amount: number
@@ -156,10 +232,13 @@ export type Database = {
       profiles: {
         Row: {
           address: string | null
+          bank_registration_status: string | null
+          blockchain_verified: boolean | null
           created_at: string
           email: string | null
           id: string
           kyc_status: string | null
+          last_kyc_submission: string | null
           mfa_enabled: boolean | null
           name: string | null
           phone: string | null
@@ -171,10 +250,13 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          bank_registration_status?: string | null
+          blockchain_verified?: boolean | null
           created_at?: string
           email?: string | null
           id: string
           kyc_status?: string | null
+          last_kyc_submission?: string | null
           mfa_enabled?: boolean | null
           name?: string | null
           phone?: string | null
@@ -186,10 +268,13 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          bank_registration_status?: string | null
+          blockchain_verified?: boolean | null
           created_at?: string
           email?: string | null
           id?: string
           kyc_status?: string | null
+          last_kyc_submission?: string | null
           mfa_enabled?: boolean | null
           name?: string | null
           phone?: string | null
