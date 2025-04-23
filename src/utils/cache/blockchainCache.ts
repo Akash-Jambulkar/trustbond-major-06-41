@@ -45,19 +45,40 @@ export function getFromCache<T>(cacheKey: string, cacheType: keyof BlockchainCac
 /**
  * Stores data in the cache with current timestamp
  */
-export function storeInCache<T extends any>(
+export function storeInCache<T>(
   cacheKey: string, 
   cacheType: keyof BlockchainCacheStore, 
   data: T
 ): void {
   const cache = cacheStore[cacheType];
   
-  const cachedData: CachedData<any> = {
-    data: data,
-    timestamp: Date.now()
-  };
-  
-  cache.set(cacheKey, cachedData);
+  // Type-safe approach with conditional typing
+  switch(cacheType) {
+    case 'transactions':
+      (cache as Map<string, CachedData<Transaction[]>>).set(cacheKey, { 
+        data: data as Transaction[], 
+        timestamp: Date.now() 
+      });
+      break;
+    case 'kycStatus':
+      (cache as Map<string, CachedData<boolean>>).set(cacheKey, { 
+        data: data as boolean, 
+        timestamp: Date.now() 
+      });
+      break;
+    case 'trustScore':
+      (cache as Map<string, CachedData<number>>).set(cacheKey, { 
+        data: data as number, 
+        timestamp: Date.now() 
+      });
+      break;
+    case 'loans':
+      (cache as Map<string, CachedData<any[]>>).set(cacheKey, { 
+        data: data as any[], 
+        timestamp: Date.now() 
+      });
+      break;
+  }
 }
 
 /**

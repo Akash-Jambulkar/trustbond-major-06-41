@@ -133,7 +133,7 @@ export const CreditScoringService = {
   assessLoanRisk: async (userId: string, amount: number): Promise<LoanRiskResponse> => {
     try {
       // Get user credit score
-      const creditScoreResult = await this.getCreditScore(userId);
+      const creditScoreResult = await CreditScoringService.getCreditScore(userId);
       
       if (creditScoreResult.status === 'error') {
         throw new Error(creditScoreResult.error || "Failed to get credit score");
