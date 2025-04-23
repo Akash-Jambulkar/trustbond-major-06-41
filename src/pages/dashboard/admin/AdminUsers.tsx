@@ -65,21 +65,38 @@ interface UserRole {
 const userRoleService = {
   getAllUserRoles: async (): Promise<UserRole[]> => {
     try {
-      // First get user roles
+      console.log("Fetching all user roles");
+      
+      // Get user roles from the user_role_assignments table
       const { data: roleData, error: roleError } = await supabase
         .from('user_role_assignments')
         .select('id, user_id, role, assigned_at');
       
-      if (roleError) throw roleError;
+      if (roleError) {
+        console.error("Error fetching user roles:", roleError);
+        throw roleError;
+      }
       
-      // Then get user profiles for additional information
+      console.log("Role data fetched:", roleData?.length || 0, "records");
+      
+      if (!roleData || roleData.length === 0) {
+        return [];
+      }
+      
+      // Get a list of unique user_ids to fetch their profile data
       const userIds = roleData.map(role => role.user_id);
       
+      // Fetch profiles separately
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('user_id, email, name');
       
-      if (profilesError) throw profilesError;
+      if (profilesError) {
+        console.error("Error fetching user profiles:", profilesError);
+        throw profilesError;
+      }
+      
+      console.log("Profiles fetched:", profilesData?.length || 0, "records");
       
       // Create a map for quick lookups
       const profileMap: Record<string, UserProfile> = {};
@@ -107,6 +124,12 @@ const userRoleService = {
           created_at: role.assigned_at
         };
       });
+      
+      console.log("Final user roles data:", usersWithRoles.length, "records");
+      console.log("Role distribution:", usersWithRoles.reduce((acc, user) => {
+        acc[user.role] = (acc[user.role] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>));
       
       return usersWithRoles;
     } catch (error) {
@@ -147,7 +170,9 @@ const AdminUsers = () => {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
+      console.log("Fetching users from userRoleService...");
       const usersData = await userRoleService.getAllUserRoles();
+      console.log("Users data fetched:", usersData.length, "users");
       setUsers(usersData);
       setFilteredUsers(usersData);
     } catch (error) {

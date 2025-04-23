@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,17 +9,14 @@ import { useToast } from "@/components/ui/use-toast";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { BadgeDollarSign, BarChart3, Clock, RefreshCcw, ShieldCheck, AlertTriangle, Users, Database, Building } from "lucide-react";
-import { bankRegistrationService, transactionService, kycDocumentService, userRoleService } from "@/services/databaseService";
+import { supabase } from "@/integrations/supabase/client";
 
 const AdminHome = () => {
   const { toast } = useToast();
   const { isConnected } = useBlockchain();
   
   const [isLoading, setIsLoading] = useState(true);
-  const [bankRegistrations, setBankRegistrations] = useState([]);
   const [transactions, setTransactions] = useState([]);
-  const [kycDocuments, setKycDocuments] = useState([]);
-  const [userRoles, setUserRoles] = useState([]);
   const [dashboardStats, setDashboardStats] = useState({
     pendingBanks: 0,
     totalTransactions: 0,
@@ -30,31 +28,59 @@ const AdminHome = () => {
   const fetchAllData = async () => {
     setIsLoading(true);
     try {
-      const [banks, txs, kycs, users] = await Promise.all([
-        bankRegistrationService.getAllBankRegistrations(),
-        transactionService.getAllTransactions(),
-        kycDocumentService.getAllKYCDocuments(),
-        userRoleService.getAllUserRoles()
-      ]);
+      // Fetch transactions to display in the UI
+      const { data: txs, error: txError } = await supabase
+        .from('transactions')
+        .select('*')
+        .order('created_at', { ascending: false });
       
-      setBankRegistrations(banks);
-      setTransactions(txs);
-      setKycDocuments(kycs);
-      setUserRoles(users);
+      if (txError) throw txError;
+      setTransactions(txs || []);
       
-      const pendingBanks = banks.filter(bank => bank.status === 'pending').length;
-      const pendingKYC = kycs.filter(doc => doc.verification_status === 'pending').length;
+      // Fetch pending bank registrations
+      const { data: bankData, error: bankError } = await supabase
+        .from('bank_registrations')
+        .select('*')
+        .eq('status', 'pending');
       
-      const usersByRole = users.reduce((acc, user) => {
-        acc[user.role] = (acc[user.role] || 0) + 1;
+      if (bankError) throw bankError;
+      
+      // Fetch pending KYC documents
+      const { data: kycData, error: kycError } = await supabase
+        .from('kyc_documents')
+        .select('*')
+        .eq('verification_status', 'pending');
+      
+      if (kycError) throw kycError;
+      
+      // Fetch user roles and count by role
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_role_assignments')
+        .select('role');
+      
+      if (roleError) throw roleError;
+      
+      // Calculate statistics
+      const pendingBanks = bankData?.length || 0;
+      const totalTransactions = txs?.length || 0;
+      const pendingKYC = kycData?.length || 0;
+      
+      // Count users by role
+      const usersByRole = roleData?.reduce((acc, item) => {
+        const role = item.role;
+        acc[role] = (acc[role] || 0) + 1;
         return acc;
       }, { user: 0, bank: 0, admin: 0 });
       
+      const totalUsers = roleData?.length || 0;
+      
+      console.log('User distribution:', usersByRole);
+      
       setDashboardStats({
         pendingBanks,
-        totalTransactions: txs.length,
+        totalTransactions,
         pendingKYC,
-        totalUsers: users.length,
+        totalUsers,
         usersByRole
       });
       
@@ -123,7 +149,7 @@ const AdminHome = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-        <Button variant="outline" onClick={handleRefresh} disabled={isLoading}>
+        <Button variant="outline" onClick={fetchAllData} disabled={isLoading}>
           {isLoading ? 
             <Clock className="mr-2 h-4 w-4 animate-spin" /> : 
             <RefreshCcw className="mr-2 h-4 w-4" />
@@ -202,7 +228,7 @@ const AdminHome = () => {
               <Users className="h-8 w-8 text-gray-500" />
             </div>
             <div className="text-xs text-muted-foreground mt-2">
-              {!isLoading && `Users: ${dashboardStats.usersByRole.user} · Banks: ${dashboardStats.usersByRole.bank} · Admins: ${dashboardStats.usersByRole.admin}`}
+              {!isLoading && `Users: ${dashboardStats.usersByRole.user || 0} · Banks: ${dashboardStats.usersByRole.bank || 0} · Admins: ${dashboardStats.usersByRole.admin || 0}`}
             </div>
           </CardContent>
           <CardFooter className="pt-0">
