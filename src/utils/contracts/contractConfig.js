@@ -4,9 +4,9 @@
 // Contract addresses - update these after deployment
 export const CONTRACT_ADDRESSES = {
   // Example addresses - replace with actual deployed addresses from Ganache
-  KYCVerifier: "0x40D30fFb5F8bb97fa2B60aAD619022A4D0493bbd",
-  TrustScore: "0xBaD3EaA819ABBef8aB5b61fb54eba7a7f00a9bBD",
-  LoanManager: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0" // This will be updated after successful deployment
+  KYCVerifier: "0xF9D456e454B408Dc7Bc4BD201169E7e6e7aAe0F4",
+  TrustScore: "0xd12fDF106a3cB35388fBA1202c46a9cCaC0168B2",
+  LoanManager: "0x5341bDcD24CB14f353695257c9224849f9F2D6C7" // This will be updated after successful deployment
 };
 
 // Network configuration
