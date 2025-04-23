@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
-import { Database, Check, AlertTriangle, RefreshCw, Activity } from "lucide-react";
+import { Database, Check, AlertTriangle, RefreshCw, Activity, XCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { createUuidExtensionRPC } from "@/utils/databaseHelpers";
 
@@ -22,6 +23,7 @@ const DatabaseSetup = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [tables, setTables] = useState<{name: string, exists: boolean, fields: number}[]>([]);
   const [isCreatingTables, setIsCreatingTables] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
 
   const requiredTables = [
     {
@@ -99,6 +101,7 @@ const DatabaseSetup = () => {
   ];
 
   const checkTables = async () => {
+    setConnectionError(null);
     setIsLoading(true);
     try {
       // First ensure the uuid-ossp extension is available
@@ -106,41 +109,63 @@ const DatabaseSetup = () => {
       
       // Check for the existence of each required table
       const tableStatuses = await Promise.all(requiredTables.map(async (table) => {
-        // Check if table exists
-        const { data, error } = await supabase
-          .from('information_schema.tables')
-          .select('table_name')
-          .eq('table_schema', 'public')
-          .eq('table_name', table.name);
-        
-        if (error) throw error;
-        
-        const exists = data && data.length > 0;
-        
-        // If table exists, count fields
-        let fields = 0;
-        if (exists) {
-          const { data: columns, error: columnsError } = await supabase
-            .from('information_schema.columns')
-            .select('column_name')
+        try {
+          // Check if table exists
+          const { data, error } = await supabase
+            .from('information_schema.tables')
+            .select('table_name')
             .eq('table_schema', 'public')
             .eq('table_name', table.name);
           
-          if (!columnsError && columns) {
-            fields = columns.length;
+          if (error) {
+            console.error(`Error checking table ${table.name}:`, error);
+            return {
+              name: table.name,
+              exists: false,
+              fields: 0,
+              error: error.message
+            };
           }
+          
+          const exists = data && data.length > 0;
+          
+          // If table exists, count fields
+          let fields = 0;
+          if (exists) {
+            const { data: columns, error: columnsError } = await supabase
+              .from('information_schema.columns')
+              .select('column_name')
+              .eq('table_schema', 'public')
+              .eq('table_name', table.name);
+            
+            if (!columnsError && columns) {
+              fields = columns.length;
+            }
+          }
+          
+          return {
+            name: table.name,
+            exists,
+            fields,
+            error: null
+          };
+        } catch (error) {
+          console.error(`Error checking table ${table.name}:`, error);
+          return {
+            name: table.name,
+            exists: false,
+            fields: 0,
+            error: error instanceof Error ? error.message : "Unknown error"
+          };
         }
-        
-        return {
-          name: table.name,
-          exists,
-          fields
-        };
       }));
       
       setTables(tableStatuses);
     } catch (error) {
       console.error("Error checking database tables:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown database connection error";
+      setConnectionError(errorMessage);
+      
       toast({
         variant: "destructive",
         title: "Database Error",
@@ -157,6 +182,7 @@ const DatabaseSetup = () => {
 
   const createMissingTables = async () => {
     setIsCreatingTables(true);
+    setConnectionError(null);
     try {
       // First create the uuid-ossp extension if it doesn't exist
       try {
@@ -193,6 +219,9 @@ const DatabaseSetup = () => {
       checkTables();
     } catch (error) {
       console.error("Error creating database tables:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error creating tables";
+      setConnectionError(errorMessage);
+      
       toast({
         variant: "destructive",
         title: "Database Error",
@@ -213,6 +242,24 @@ const DatabaseSetup = () => {
           Initialize and manage database tables for blockchain operations
         </p>
       </div>
+
+      {connectionError && (
+        <Alert variant="destructive">
+          <XCircle className="h-4 w-4" />
+          <AlertTitle>Database Connection Error</AlertTitle>
+          <AlertDescription>
+            There was an error connecting to the database: {connectionError}
+            <div className="mt-2">
+              <p className="text-sm">Common solutions:</p>
+              <ul className="list-disc list-inside text-sm ml-2">
+                <li>Check your Supabase connection settings</li>
+                <li>Make sure the database is accessible</li>
+                <li>Verify that you have the required permissions</li>
+              </ul>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Card>
         <CardHeader>

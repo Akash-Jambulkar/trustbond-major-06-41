@@ -14,8 +14,13 @@ export const createUuidExtensionRPC = async () => {
     if (functionExistsError) {
       console.log("Function 'function_exists' doesn't exist yet, creating helper functions first");
       
-      // Create helper function to check if functions exist
-      await supabase.rpc('create_helper_functions');
+      try {
+        // Create helper function to check if functions exist
+        await supabase.rpc('create_helper_functions');
+      } catch (error) {
+        console.error("Error creating helper functions:", error);
+        throw new Error("Failed to create helper functions: " + (error instanceof Error ? error.message : String(error)));
+      }
     }
 
     // Now check if create_uuid_extension function exists
@@ -24,7 +29,7 @@ export const createUuidExtensionRPC = async () => {
 
     if (error) {
       console.error("Error checking if function exists:", error);
-      return false;
+      throw new Error("Failed to check if function exists: " + error.message);
     }
 
     if (existingFunction && existingFunction.exists) {
@@ -37,11 +42,11 @@ export const createUuidExtensionRPC = async () => {
       return true;
     } catch (error) {
       console.error("Error creating RPC function:", error);
-      return false;
+      throw new Error("Failed to create RPC function: " + (error instanceof Error ? error.message : String(error)));
     }
   } catch (error) {
     console.error("Error in createUuidExtensionRPC:", error);
-    return false;
+    throw error;
   }
 };
 
@@ -56,6 +61,32 @@ export const setupHelperFunctions = async () => {
     return true;
   } catch (error) {
     console.error("Error setting up helper functions:", error);
+    return false;
+  }
+};
+
+/**
+ * Check if a table exists in the database
+ */
+export const checkTableExists = async (tableName: string): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase
+      .from('information_schema.tables')
+      .select('table_name')
+      .eq('table_schema', 'public')
+      .eq('table_name', tableName)
+      .single();
+    
+    if (error) {
+      if (error.code === 'PGRST116') { // No rows found
+        return false;
+      }
+      throw error;
+    }
+    
+    return !!data;
+  } catch (error) {
+    console.error(`Error checking if table ${tableName} exists:`, error);
     return false;
   }
 };

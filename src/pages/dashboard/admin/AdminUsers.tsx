@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -26,14 +25,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { Search, User, Users, Shield, Building, Clock, MoreHorizontal } from "lucide-react";
+import { 
+  Search, 
+  User, 
+  Users, 
+  Shield, 
+  Building, 
+  Clock, 
+  MoreHorizontal, 
+  AlertTriangle,
+  RefreshCw,
+  Database
+} from "lucide-react";
 import { userRoleService, UserRole } from "@/services/databaseService";
 import { format } from "date-fns";
+import { checkTableExists } from "@/utils/databaseHelpers";
+import { useNavigate } from "react-router-dom";
 
 const AdminUsers = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const [users, setUsers] = useState<UserRole[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<UserRole[]>([]);
