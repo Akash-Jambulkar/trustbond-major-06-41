@@ -1,5 +1,5 @@
 
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,6 +18,7 @@ import {
 const AdminDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [navItems, setNavItems] = useState([
     {
       title: "Dashboard",
@@ -71,13 +72,13 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     // Update active state based on current route
-    const currentPath = window.location.pathname;
+    const currentPath = location.pathname;
     const updatedNavItems = navItems.map((item) => ({
       ...item,
-      active: item.href === currentPath,
+      active: currentPath === item.href,
     }));
     setNavItems(updatedNavItems);
-  }, []);
+  }, [location.pathname]);
 
   // Check if user is an admin
   useEffect(() => {
@@ -87,7 +88,7 @@ const AdminDashboard = () => {
   }, [user, navigate]);
 
   return (
-    <DashboardLayout>
+    <DashboardLayout sidebarNavItems={navItems}>
       <Outlet />
     </DashboardLayout>
   );
