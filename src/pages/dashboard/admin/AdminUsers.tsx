@@ -40,9 +40,76 @@ import {
   AlertTriangle,
   RefreshCw
 } from "lucide-react";
-import { userRoleService, UserRole } from "@/services/databaseService";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
+
+// Define a simpler UserRole type to avoid potential import issues
+interface UserRole {
+  id: string;
+  user_id: string;
+  email?: string;
+  full_name?: string;
+  role: string;
+  created_at: string;
+}
+
+// Create a standalone service for user roles
+const userRoleService = {
+  getAllUserRoles: async (): Promise<UserRole[]> => {
+    try {
+      // First get user roles
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_role_assignments')
+        .select('id, user_id, role, created_at');
+      
+      if (roleError) throw roleError;
+      
+      // Then get user profiles for additional information
+      const userIds = roleData.map(role => role.user_id);
+      
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, email, full_name')
+        .in('user_id', userIds);
+      
+      if (profilesError) throw profilesError;
+      
+      // Merge the data
+      const usersWithRoles: UserRole[] = roleData.map(role => {
+        const profile = profilesData.find(p => p.user_id === role.user_id) || {};
+        return {
+          id: role.id,
+          user_id: role.user_id,
+          email: profile.email,
+          full_name: profile.full_name,
+          role: role.role,
+          created_at: role.created_at
+        };
+      });
+      
+      return usersWithRoles;
+    } catch (error) {
+      console.error("Error fetching user roles:", error);
+      return [];
+    }
+  },
+
+  updateUserRole: async (userId: string, role: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase
+        .from('user_role_assignments')
+        .update({ role })
+        .eq('user_id', userId);
+      
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error("Error updating user role:", error);
+      return false;
+    }
+  }
+};
 
 const AdminUsers = () => {
   const { toast } = useToast();
@@ -83,9 +150,9 @@ const AdminUsers = () => {
     if (searchTerm) {
       const filtered = users.filter(
         user => 
-          (user.email?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-          (user.full_name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-          (user.role?.toLowerCase() || "").includes(searchTerm.toLowerCase())
+          ((user.email || "").toLowerCase()).includes(searchTerm.toLowerCase()) ||
+          ((user.full_name || "").toLowerCase()).includes(searchTerm.toLowerCase()) ||
+          ((user.role || "").toLowerCase()).includes(searchTerm.toLowerCase())
       );
       setFilteredUsers(filtered);
     } else {
@@ -172,7 +239,7 @@ const AdminUsers = () => {
               onClick={fetchUsers}
               disabled={isLoading}
             >
-              <RefreshCw className="h-3 w-3" />
+              <RefreshCw className={`h-3 w-3 ${isLoading ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
           </div>
@@ -215,7 +282,7 @@ const AdminUsers = () => {
                   filteredUsers.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell>
-                        <div className="font-medium">{user.email}</div>
+                        <div className="font-medium">{user.email || "—"}</div>
                       </TableCell>
                       <TableCell>{user.full_name || "—"}</TableCell>
                       <TableCell>{getRoleBadge(user.role)}</TableCell>
@@ -255,7 +322,7 @@ const AdminUsers = () => {
                 <h4 className="text-sm font-medium mb-1">User</h4>
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-gray-500" />
-                  <span>{selectedUser.email}</span>
+                  <span>{selectedUser.email || selectedUser.user_id}</span>
                 </div>
                 {selectedUser.full_name && (
                   <p className="text-sm text-gray-500 ml-6">{selectedUser.full_name}</p>

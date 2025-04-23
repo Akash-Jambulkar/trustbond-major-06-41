@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,6 +12,7 @@ import { getNavItems } from "@/components/dashboard/navigation/getNavItems";
 const UserDashboard = () => {
   const { user } = useAuth();
   const { isConnected, connectWallet } = useBlockchain();
+  const location = useLocation();
   const [connectionAttempted, setConnectionAttempted] = useState(false);
   
   // Get user-specific navigation items
@@ -19,10 +20,10 @@ const UserDashboard = () => {
     ? getNavItems(user.role) 
     : { mainItems: [], roleSpecificItems: [] };
   
-  // Combine navigation items and add active state based on current path
+  // Update active state based on current route
   const sidebarNavItems = [...mainItems, ...roleSpecificItems].map(item => ({
     ...item,
-    active: window.location.pathname === item.href
+    active: location.pathname === item.href
   }));
 
   // Try to connect wallet automatically on first load

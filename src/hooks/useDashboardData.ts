@@ -28,13 +28,17 @@ export const useDashboardData = () => {
         // Get user session data using the correct property
         const { data: sessionData, error: sessionError } = await supabase.auth.getUser();
         
-        if (sessionError || !sessionData.user) {
+        if (sessionError || !sessionData) {
           console.error("Error fetching user session:", sessionError);
           setIsLoading(false);
           return;
         }
 
-        const userId = sessionData.user.id;
+        const userId = sessionData?.user?.id;
+        if (!userId) {
+          setIsLoading(false);
+          return;
+        }
         
         // Get profile data including KYC status and trust score
         const { data: profileData, error: profileError } = await supabase
