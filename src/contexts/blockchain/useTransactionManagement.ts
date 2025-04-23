@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import Web3 from "web3";
-import { getTransactions, trackTransaction as track, watchTransaction, Transaction } from "@/utils/transactions";
+import { getTransactions, trackTransaction as track, watchTransaction, Transaction, TransactionType } from "@/utils/transactions";
 
 interface UseTransactionManagementProps {
   account: string | null;
@@ -38,7 +38,7 @@ export const useTransactionManagement = ({
 
   const trackTransaction = (
     txHash: string,
-    type: string,
+    type: TransactionType,
     description: string,
     extraData?: Record<string, any>
   ) => {
@@ -54,7 +54,7 @@ export const useTransactionManagement = ({
     );
     
     if (web3) {
-      watchTransaction(web3, txHash);
+      watchTransaction(web3, txHash, account);
     }
     
     return tx;
