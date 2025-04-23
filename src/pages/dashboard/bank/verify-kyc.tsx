@@ -55,8 +55,14 @@ const VerifyKYC = () => {
   const handleVerifyDocument = async (approve: boolean) => {
     try {
       setVerifying(true);
-      const verificationStatus = approve ? 'verified' : 'rejected';
-      await verifyKYC(selectedDocument.id, approve);
+      
+      if (!selectedDocument || !selectedDocument.profiles?.wallet_address) {
+        toast.error("No wallet address found for user");
+        setVerifying(false);
+        return;
+      }
+      
+      await verifyKYC(selectedDocument.profiles.wallet_address, approve);
       toast.success(approve ? "Document verified!" : "Document rejected");
       setSelectedDocument(null);
       fetchDocuments();

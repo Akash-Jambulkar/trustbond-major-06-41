@@ -26,7 +26,7 @@ async function main() {
 
   // Deploy LoanManager with addresses of other contracts
   console.log("Deploying LoanManager...");
-  const loanManager = await LoanManager.deploy(kycVerifier.address, trustScore.address);
+  const loanManager = await LoanManager.deploy(trustScore.address, kycVerifier.address);
   await loanManager.deployed();
   console.log("LoanManager deployed to:", loanManager.address);
 

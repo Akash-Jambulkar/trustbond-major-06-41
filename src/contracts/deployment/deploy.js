@@ -61,16 +61,56 @@ async function deployContracts() {
     console.log('TRUST_SCORE:', trustScore.options.address);
     console.log('LOAN_MANAGER:', loanManager.options.address);
     
-    // Create a .env file with the contract addresses
-    const envContent = `
-# Contract Addresses
-REACT_APP_KYC_VERIFIER_ADDRESS=${kycVerifier.options.address}
-REACT_APP_TRUST_SCORE_ADDRESS=${trustScore.options.address}
-REACT_APP_LOAN_MANAGER_ADDRESS=${loanManager.options.address}
+    // Create a configuration file with the contract addresses
+    const configContent = `
+// Contract addresses - updated from deployment
+export const CONTRACT_ADDRESSES = {
+  KYCVerifier: "${kycVerifier.options.address}",
+  TrustScore: "${trustScore.options.address}",
+  LoanManager: "${loanManager.options.address}"
+};
+
+// Network configuration
+export const NETWORK_CONFIG = {
+  chainId: 5777, // Ganache network
+  name: "Ganache",
+  rpcUrl: "http://localhost:7545"
+};
+
+// KYC submission fee in ETH
+export const KYC_SUBMISSION_FEE = "0.01"; // 0.01 ETH fee for KYC submission
+
+// Helper function to initialize contracts
+export const initializeContracts = (web3) => {
+  if (!web3) return { kycContract: null, trustScoreContract: null, loanContract: null };
+
+  // Import ABIs
+  const KYCVerifierABI = require('../../contracts/KYCVerifier.json').abi;
+  const TrustScoreABI = require('../../contracts/TrustScore.json').abi;
+  const LoanManagerABI = require('../../contracts/LoanManager.json').abi;
+
+  // Create contract instances
+  const kycContract = new web3.eth.Contract(
+    KYCVerifierABI,
+    CONTRACT_ADDRESSES.KYCVerifier
+  );
+
+  const trustScoreContract = new web3.eth.Contract(
+    TrustScoreABI,
+    CONTRACT_ADDRESSES.TrustScore
+  );
+
+  const loanContract = new web3.eth.Contract(
+    LoanManagerABI,
+    CONTRACT_ADDRESSES.LoanManager
+  );
+
+  return { kycContract, trustScoreContract, loanContract };
+};
 `;
     
-    fs.writeFileSync(path.join(__dirname, '../../../.env'), envContent);
-    console.log('\nEnvironment file (.env) created with contract addresses');
+    fs.writeFileSync(path.join(__dirname, '../../utils/contracts/contractConfig.js'), configContent);
+    console.log('\nContract configuration file updated!');
     
     // Test the deployed contracts with some initial values
     console.log('\nSetting up test data...');
@@ -87,32 +127,13 @@ REACT_APP_LOAN_MANAGER_ADDRESS=${loanManager.options.address}
     await kycVerifier.methods.submitKYC("0x416e6f7468657244656d6f446f63756d656e7448617368").send({ from: testAccount2 });
     await kycVerifier.methods.verifyKYC(testAccount2, true).send({ from: deployer });
     
-    console.log('Setting up test trust scores');
-    await trustScore.methods.updateScore(testAccount1, 75).send({ from: deployer });
-    await trustScore.methods.updateScore(testAccount2, 90).send({ from: deployer });
-    
-    console.log('Creating example loan applications');
-    // Create test loan applications
-    const loanAmount1 = web3.utils.toWei('1', 'ether');
-    const loanAmount2 = web3.utils.toWei('2', 'ether');
-    
-    await loanManager.methods.applyForLoan(loanAmount1, 30, "Business expansion loan").send({ 
-      from: testAccount1,
-      gas: 3000000
-    });
-    
-    await loanManager.methods.applyForLoan(loanAmount2, 60, "Home renovation project").send({ 
-      from: testAccount2,
-      gas: 3000000
-    });
-    
     console.log('Test data setup complete!');
     console.log('\nDeployment and setup successful!');
     console.log('-----------------------------------------------');
     console.log('Remember to:');
     console.log('1. Connect your MetaMask to Ganache (http://localhost:7545)');
     console.log('2. Import the Ganache accounts into MetaMask for testing');
-    console.log('3. Use the transactions app to interact with the contracts');
+    console.log('3. Use the application to interact with the contracts');
     
   } catch (error) {
     console.error('Error deploying contracts:', error);

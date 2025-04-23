@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Shield, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useBlockchain } from "@/contexts/BlockchainContext";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 interface KYCSubmission {
   id: string;
@@ -17,7 +17,7 @@ interface KYCSubmission {
   document_hash: string;
   status: 'pending' | 'verified' | 'rejected';
   created_at: string;
-  blockchain_address: string;
+  blockchain_address?: string;
   user_email?: string;
   user_name?: string;
 }
@@ -37,7 +37,7 @@ const VerifyKYCPage = () => {
       try {
         setLoading(true);
         
-        // In a real implementation, fetch from your database
+        // Fetch from the kyc_documents table
         const { data, error } = await supabase
           .from('kyc_documents')
           .select(`
@@ -47,6 +47,7 @@ const VerifyKYCPage = () => {
             document_hash,
             verification_status as status,
             created_at,
+            blockchain_address,
             profiles(email, name)
           `)
           .eq('verification_status', 'pending');
@@ -87,6 +88,12 @@ const VerifyKYCPage = () => {
     
     try {
       setVerifying(true);
+      
+      if (!submission.blockchain_address) {
+        toast.error("No blockchain address found for user");
+        setVerifying(false);
+        return;
+      }
       
       // Update verification status on blockchain
       const success = await verifyKYC(submission.blockchain_address, approved);
@@ -216,7 +223,7 @@ const VerifyKYCPage = () => {
                 
                 <div className="text-muted-foreground">Wallet:</div>
                 <div className="col-span-2 font-mono text-sm">
-                  {selectedSubmission.blockchain_address}
+                  {selectedSubmission.blockchain_address || 'No wallet address'}
                 </div>
                 
                 <div className="text-muted-foreground">Hash:</div>
