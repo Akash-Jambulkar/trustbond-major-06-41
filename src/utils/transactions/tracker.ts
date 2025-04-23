@@ -2,7 +2,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Transaction, TransactionType, createTransactionMetadata } from "./types";
-import { useAuth } from "@/contexts/AuthContext";
 
 /**
  * Add a transaction to the history
@@ -43,7 +42,8 @@ export const trackTransaction = async (
         amount: metadata?.amount || 0,
         user_id: userId,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        value: metadata?.amount ? metadata.amount.toString() : "0" // Ensure value is populated
       });
     
     if (error) {
@@ -87,7 +87,9 @@ export const watchTransaction = async (
         .from('transactions')
         .update({
           status,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
+          gas_used: receipt.gasUsed ? receipt.gasUsed.toString() : null,
+          block_number: receipt.blockNumber ? receipt.blockNumber.toString() : null
         })
         .eq('transaction_hash', txHash.toLowerCase())
         .eq('from_address', account.toLowerCase());

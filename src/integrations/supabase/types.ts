@@ -9,6 +9,51 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      bank_registrations: {
+        Row: {
+          address: string | null
+          contact_number: string | null
+          created_at: string | null
+          document_hash: string | null
+          email: string
+          id: string
+          license_number: string
+          name: string
+          registration_fee: string | null
+          status: string
+          updated_at: string | null
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          contact_number?: string | null
+          created_at?: string | null
+          document_hash?: string | null
+          email: string
+          id?: string
+          license_number: string
+          name: string
+          registration_fee?: string | null
+          status: string
+          updated_at?: string | null
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          contact_number?: string | null
+          created_at?: string | null
+          document_hash?: string | null
+          email?: string
+          id?: string
+          license_number?: string
+          name?: string
+          registration_fee?: string | null
+          status?: string
+          updated_at?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           created_at: string | null
@@ -351,6 +396,33 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          email: string
+          full_name: string | null
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          full_name?: string | null
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          full_name?: string | null
+          id?: string
+          role?: string
           user_id?: string
         }
         Relationships: []
