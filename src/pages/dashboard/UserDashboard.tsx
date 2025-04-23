@@ -7,11 +7,23 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Wallet } from "lucide-react";
+import { getNavItems } from "@/components/dashboard/navigation/getNavItems";
 
 const UserDashboard = () => {
   const { user } = useAuth();
   const { isConnected, connectWallet } = useBlockchain();
   const [connectionAttempted, setConnectionAttempted] = useState(false);
+  
+  // Get user-specific navigation items
+  const { mainItems, roleSpecificItems } = user?.role 
+    ? getNavItems(user.role) 
+    : { mainItems: [], roleSpecificItems: [] };
+  
+  // Combine navigation items and add active state based on current path
+  const sidebarNavItems = [...mainItems, ...roleSpecificItems].map(item => ({
+    ...item,
+    active: window.location.pathname === item.href
+  }));
 
   // Try to connect wallet automatically on first load
   useEffect(() => {
@@ -24,7 +36,7 @@ const UserDashboard = () => {
   }, [isConnected, connectWallet, connectionAttempted]);
 
   return (
-    <DashboardLayout>
+    <DashboardLayout sidebarNavItems={sidebarNavItems}>
       <div className="flex flex-col gap-6 p-4 md:p-6 max-w-full w-full h-full">
         {/* Wallet Connection Warning */}
         {!isConnected && (

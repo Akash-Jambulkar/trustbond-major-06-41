@@ -1,5 +1,5 @@
 
-import { Home, CreditCard, FileText, User, Users, BuildingIcon, Shield, Settings, FileCode, LineChart, FileSearch, Lock } from "lucide-react";
+import { Home, CreditCard, FileText, User, Users, BuildingIcon, Shield, Settings, FileCode, LineChart, FileSearch, Lock, Wallet } from "lucide-react";
 import { UserRole } from "@/contexts/auth/types";
 
 interface NavItem {
@@ -18,19 +18,24 @@ export const getNavItems = (role: UserRole): NavItems => {
   const mainItems: NavItem[] = [
     {
       title: "Home",
-      href: "/dashboard",
+      href: `/dashboard/${role}`,
       icon: Home,
     },
     {
       title: "Profile",
-      href: "/dashboard/profile",
+      href: `/dashboard/${role}/profile`,
       icon: User,
     },
     {
       title: "Security",
-      href: "/dashboard/security",
+      href: `/dashboard/${role}/security`,
       icon: Lock,
     },
+    {
+      title: "Transactions",
+      href: `/dashboard/${role}/transactions`,
+      icon: Wallet,
+    }
   ];
 
   // Role-specific navigation items
@@ -41,28 +46,28 @@ export const getNavItems = (role: UserRole): NavItems => {
       roleSpecificItems = [
         {
           title: "KYC Verification",
-          href: "/dashboard/kyc",
+          href: "/dashboard/user/kyc",
           icon: FileSearch,
         },
         {
           title: "Loans",
-          href: "/dashboard/loans",
+          href: "/dashboard/user/loans",
           icon: CreditCard,
         },
         {
+          title: "Apply for Loan",
+          href: "/dashboard/user/loan-application",
+          icon: FileText,
+        },
+        {
           title: "Trust Score",
-          href: "/dashboard/trust-score",
+          href: "/dashboard/user/trust-score",
           icon: Shield,
         },
         {
           title: "Analytics",
-          href: "/dashboard/analytics",
+          href: "/dashboard/user/analytics",
           icon: LineChart,
-        },
-        {
-          title: "Blockchain",
-          href: "/dashboard/blockchain",
-          icon: FileCode,
         },
       ];
       break;
@@ -74,24 +79,19 @@ export const getNavItems = (role: UserRole): NavItems => {
           icon: FileSearch,
         },
         {
-          title: "Loans",
+          title: "Manage Loans",
           href: "/dashboard/bank/loans",
           icon: CreditCard,
         },
         {
           title: "Consensus",
-          href: "/dashboard/bank/consensus",
+          href: "/dashboard/bank/consensus-verification",
           icon: Users,
         },
         {
           title: "Trust Scores",
           href: "/dashboard/bank/trust-scores",
           icon: Shield,
-        },
-        {
-          title: "Blockchain",
-          href: "/dashboard/blockchain",
-          icon: FileCode,
         },
       ];
       break;
@@ -105,7 +105,7 @@ export const getNavItems = (role: UserRole): NavItems => {
         {
           title: "Banks",
           href: "/dashboard/admin/banks",
-          icon: BuildingIcon, // Use BuildingIcon instead of Bank
+          icon: BuildingIcon,
         },
         {
           title: "Bank Approvals",

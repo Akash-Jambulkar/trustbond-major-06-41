@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { SidebarNav } from "./dashboard/navigation/SidebarNav";
 import { DashboardHeader } from "./dashboard/navigation/DashboardHeader";
 import { useRealTimeUpdates } from "@/hooks/useRealTimeUpdates";
+import { getNavItems } from "./dashboard/navigation/getNavItems";
 
 interface DashboardLayoutProps {
   children?: ReactNode;
@@ -23,6 +24,9 @@ export const DashboardLayout = ({ children, sidebarNavItems }: DashboardLayoutPr
   // Use real-time updates hook
   useRealTimeUpdates();
 
+  // Get navigation items based on user role
+  const navItems = user?.role ? getNavItems(user.role) : { mainItems: [], roleSpecificItems: [] };
+
   // Redirect if not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
@@ -35,8 +39,12 @@ export const DashboardLayout = ({ children, sidebarNavItems }: DashboardLayoutPr
   return (
     <div className="flex h-screen w-full overflow-hidden bg-gray-50">
       {/* Main Sidebar - Compact and modern */}
-      <div className="flex-shrink-0 w-60 bg-white border-r border-gray-200 shadow-sm">
-        <SidebarNav user={user} onLogout={logout} navItems={sidebarNavItems || []} />
+      <div className="flex-shrink-0 w-64 bg-white border-r border-gray-200 shadow-sm">
+        <SidebarNav 
+          user={user} 
+          onLogout={logout} 
+          navItems={sidebarNavItems || []} 
+        />
       </div>
 
       {/* Main content */}
