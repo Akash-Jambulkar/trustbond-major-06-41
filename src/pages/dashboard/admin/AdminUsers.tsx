@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -37,12 +38,10 @@ import {
   Clock, 
   MoreHorizontal, 
   AlertTriangle,
-  RefreshCw,
-  Database
+  RefreshCw
 } from "lucide-react";
 import { userRoleService, UserRole } from "@/services/databaseService";
 import { format } from "date-fns";
-import { checkTableExists } from "@/utils/databaseHelpers";
 import { useNavigate } from "react-router-dom";
 
 const AdminUsers = () => {
@@ -167,6 +166,15 @@ const AdminUsers = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
+            <Button 
+              className="ml-2 flex items-center gap-1" 
+              variant="outline"
+              onClick={fetchUsers}
+              disabled={isLoading}
+            >
+              <RefreshCw className="h-3 w-3" />
+              Refresh
+            </Button>
           </div>
           
           <div className="rounded-md border">

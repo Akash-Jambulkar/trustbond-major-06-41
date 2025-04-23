@@ -268,22 +268,42 @@ export const kycDocumentService = {
 export const userRoleService = {
   async getAllUserRoles(): Promise<UserRole[]> {
     const { data, error } = await supabase
-      .from('user_roles')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .from('user_role_assignments')
+      .select(`
+        id,
+        user_id,
+        role,
+        assigned_at as created_at,
+        profiles:user_id (email, name as full_name)
+      `)
+      .order('assigned_at', { ascending: false });
 
     if (error) {
       console.error("Error fetching user roles:", error);
       throw error;
     }
 
-    return data || [];
+    // Map the results to match the expected structure
+    return (data || []).map(item => ({
+      id: item.id,
+      user_id: item.user_id,
+      email: item.profiles?.email || '',
+      full_name: item.profiles?.full_name || '',
+      role: item.role,
+      created_at: item.created_at
+    }));
   },
 
   async getUserRoleById(userId: string): Promise<UserRole | null> {
     const { data, error } = await supabase
-      .from('user_roles')
-      .select('*')
+      .from('user_role_assignments')
+      .select(`
+        id,
+        user_id,
+        role,
+        assigned_at as created_at,
+        profiles:user_id (email, name as full_name)
+      `)
       .eq('user_id', userId)
       .single();
 
@@ -292,13 +312,25 @@ export const userRoleService = {
       throw error;
     }
 
-    return data;
+    if (!data) return null;
+
+    return {
+      id: data.id,
+      user_id: data.user_id,
+      email: data.profiles?.email || '',
+      full_name: data.profiles?.full_name || '',
+      role: data.role,
+      created_at: data.created_at
+    };
   },
 
   async createUserRole(userData: Omit<UserRole, 'id' | 'created_at'>): Promise<UserRole> {
     const { data, error } = await supabase
-      .from('user_roles')
-      .insert([userData])
+      .from('user_role_assignments')
+      .insert([{
+        user_id: userData.user_id,
+        role: userData.role
+      }])
       .select()
       .single();
 
@@ -307,13 +339,23 @@ export const userRoleService = {
       throw error;
     }
 
-    return data;
+    return {
+      id: data.id,
+      user_id: data.user_id,
+      email: userData.email,
+      full_name: userData.full_name,
+      role: data.role,
+      created_at: data.assigned_at
+    };
   },
 
   async updateUserRole(userId: string, role: 'user' | 'bank' | 'admin'): Promise<UserRole> {
     const { data, error } = await supabase
-      .from('user_roles')
-      .update({ role })
+      .from('user_role_assignments')
+      .update({ 
+        role,
+        updated_at: new Date().toISOString()
+      })
       .eq('user_id', userId)
       .select()
       .single();
@@ -323,6 +365,20 @@ export const userRoleService = {
       throw error;
     }
 
-    return data;
+    // Fetch user email after update
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('email, name')
+      .eq('user_id', userId)
+      .single();
+
+    return {
+      id: data.id,
+      user_id: data.user_id,
+      email: profileData?.email || '',
+      full_name: profileData?.name || '',
+      role: data.role,
+      created_at: data.assigned_at
+    };
   }
 };
