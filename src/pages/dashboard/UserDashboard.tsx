@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+
+import { useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useBlockchain } from "@/contexts/BlockchainContext";
@@ -11,12 +12,14 @@ const UserDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { isConnected, connectWallet } = useBlockchain();
+  const [connectionAttempted, setConnectionAttempted] = useState(false);
 
   useEffect(() => {
-    if (!isConnected) {
+    if (!isConnected && !connectionAttempted) {
       connectWallet().catch(console.error);
+      setConnectionAttempted(true);
     }
-  }, [isConnected, connectWallet]);
+  }, [isConnected, connectWallet, connectionAttempted]);
 
   return (
     <DashboardLayout>
@@ -30,7 +33,10 @@ const UserDashboard = () => {
               <Button 
                 variant="default" 
                 className="flex items-center gap-2 whitespace-nowrap"
-                onClick={() => connectWallet()}
+                onClick={() => {
+                  connectWallet();
+                  setConnectionAttempted(true);
+                }}
               >
                 <Wallet className="h-4 w-4" />
                 Connect Wallet

@@ -33,6 +33,12 @@ export async function saveKycSubmission(submission: Omit<KycDocumentSubmissionTy
     // Log the submission to help debug
     console.log("Saving KYC submission:", submission);
     
+    // Ensure the user is authenticated before submission
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      throw new Error("User not authenticated");
+    }
+    
     const { data, error } = await supabase
       .from('kyc_document_submissions')
       .insert([submission])

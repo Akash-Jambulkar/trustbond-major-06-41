@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Card, 
   CardContent, 
@@ -40,6 +40,7 @@ export function KYCSubmission() {
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showBlockchainWarning, setShowBlockchainWarning] = useState(false);
+  const [walletPrompted, setWalletPrompted] = useState(false);
 
   // Create form instance
   const form = useForm<FormValues>({
@@ -48,6 +49,13 @@ export function KYCSubmission() {
       documentNumber: "",
     }
   });
+
+  // Reset wallet prompt flag when connection status changes
+  useEffect(() => {
+    if (isConnected) {
+      setWalletPrompted(true);
+    }
+  }, [isConnected]);
 
   // Handle submission with database fallback
   const handleSubmit = async (values: FormValues) => {
@@ -214,7 +222,7 @@ export function KYCSubmission() {
           </form>
         </Form>
         
-        {!isConnected && (
+        {!isConnected && !walletPrompted && (
           <Alert className="bg-blue-50 border-blue-200 text-blue-800">
             <Info className="h-4 w-4" />
             <AlertTitle>No wallet connected</AlertTitle>

@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { KYCStatusDisplay } from "@/components/kyc/KYCStatusDisplay";
 import { KYCSubmission } from "@/components/kyc/KYCSubmission";
 import { useKYCStatus } from "@/hooks/useKYCStatus";
@@ -18,20 +18,25 @@ const KYCPage = () => {
   } = useKYCStatus();
   
   const { connectWallet } = useBlockchain();
+  const [connectionAttempted, setConnectionAttempted] = useState(false);
   
-  // Try to connect wallet on page load, but don't force it
+  // Try to connect wallet on page load, but don't force it or repeat attempts
   useEffect(() => {
     const attemptConnection = async () => {
-      try {
-        await connectWallet();
-      } catch (error) {
-        // Silently fail - we have a fallback mechanism
-        console.log("Wallet connection failed, using database fallback");
+      if (!isConnected && !connectionAttempted) {
+        try {
+          await connectWallet();
+        } catch (error) {
+          // Silently fail - we have a fallback mechanism
+          console.log("Wallet connection failed, using database fallback");
+        } finally {
+          setConnectionAttempted(true);
+        }
       }
     };
     
     attemptConnection();
-  }, [connectWallet]);
+  }, [connectWallet, isConnected, connectionAttempted]);
   
   return (
     <div className="p-4 lg:p-6">
