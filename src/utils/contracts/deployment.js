@@ -25,8 +25,15 @@ async function main() {
   console.log("TrustScore deployed to:", trustScore.address);
 
   // Deploy LoanManager with addresses of other contracts
-  console.log("Deploying LoanManager...");
-  const loanManager = await LoanManager.deploy(trustScore.address, kycVerifier.address);
+  console.log("Deploying LoanManager with addresses:");
+  console.log("TrustScore:", trustScore.address);
+  console.log("KYCVerifier:", kycVerifier.address);
+  
+  const loanManager = await LoanManager.deploy(
+    trustScore.address,  // First parameter - trustScoreAddress
+    kycVerifier.address  // Second parameter - kycVerifierAddress
+  );
+  
   await loanManager.deployed();
   console.log("LoanManager deployed to:", loanManager.address);
 

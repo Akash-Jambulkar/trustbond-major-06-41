@@ -44,7 +44,10 @@ async function deployContracts() {
     console.log('Trust Score deployed to:', trustScore.options.address);
     
     // Deploy Loan Manager with references to other contracts
-    console.log('Deploying Loan Manager contract...');
+    console.log('Deploying Loan Manager contract with parameters:');
+    console.log('TrustScore address:', trustScore.options.address);
+    console.log('KYCVerifier address:', kycVerifier.options.address);
+    
     const LoanManagerContract = new web3.eth.Contract(loanManagerJson.abi);
     const loanManager = await LoanManagerContract.deploy({
       data: loanManagerJson.bytecode,
@@ -84,28 +87,33 @@ export const KYC_SUBMISSION_FEE = "0.01"; // 0.01 ETH fee for KYC submission
 export const initializeContracts = (web3) => {
   if (!web3) return { kycContract: null, trustScoreContract: null, loanContract: null };
 
-  // Import ABIs
-  const KYCVerifierABI = require('../../contracts/KYCVerifier.json').abi;
-  const TrustScoreABI = require('../../contracts/TrustScore.json').abi;
-  const LoanManagerABI = require('../../contracts/LoanManager.json').abi;
+  try {
+    // Import ABIs
+    const KYCVerifierABI = require('../../contracts/KYCVerifier.json').abi;
+    const TrustScoreABI = require('../../contracts/TrustScore.json').abi;
+    const LoanManagerABI = require('../../contracts/LoanManager.json').abi;
 
-  // Create contract instances
-  const kycContract = new web3.eth.Contract(
-    KYCVerifierABI,
-    CONTRACT_ADDRESSES.KYCVerifier
-  );
+    // Create contract instances
+    const kycContract = new web3.eth.Contract(
+      KYCVerifierABI,
+      CONTRACT_ADDRESSES.KYCVerifier
+    );
 
-  const trustScoreContract = new web3.eth.Contract(
-    TrustScoreABI,
-    CONTRACT_ADDRESSES.TrustScore
-  );
+    const trustScoreContract = new web3.eth.Contract(
+      TrustScoreABI,
+      CONTRACT_ADDRESSES.TrustScore
+    );
 
-  const loanContract = new web3.eth.Contract(
-    LoanManagerABI,
-    CONTRACT_ADDRESSES.LoanManager
-  );
+    const loanContract = new web3.eth.Contract(
+      LoanManagerABI,
+      CONTRACT_ADDRESSES.LoanManager
+    );
 
-  return { kycContract, trustScoreContract, loanContract };
+    return { kycContract, trustScoreContract, loanContract };
+  } catch (error) {
+    console.error("Error initializing contracts:", error);
+    return { kycContract: null, trustScoreContract: null, loanContract: null };
+  }
 };
 `;
     
@@ -120,11 +128,17 @@ export const initializeContracts = (web3) => {
     const testAccount2 = accounts[2];
     
     console.log('Setting up test KYC for:', testAccount1);
-    await kycVerifier.methods.submitKYC("0x4578616d706c65446f63756d656e7448617368").send({ from: testAccount1 });
+    await kycVerifier.methods.submitKYC("0x4578616d706c65446f63756d656e7448617368").send({ 
+      from: testAccount1,
+      value: web3.utils.toWei("0.01", "ether") // Send 0.01 ETH as fee
+    });
     await kycVerifier.methods.verifyKYC(testAccount1, true).send({ from: deployer });
     
     console.log('Setting up test KYC for:', testAccount2);
-    await kycVerifier.methods.submitKYC("0x416e6f7468657244656d6f446f63756d656e7448617368").send({ from: testAccount2 });
+    await kycVerifier.methods.submitKYC("0x416e6f7468657244656d6f446f63756d656e7448617368").send({ 
+      from: testAccount2,
+      value: web3.utils.toWei("0.01", "ether") // Send 0.01 ETH as fee
+    });
     await kycVerifier.methods.verifyKYC(testAccount2, true).send({ from: deployer });
     
     console.log('Test data setup complete!');
@@ -137,6 +151,7 @@ export const initializeContracts = (web3) => {
     
   } catch (error) {
     console.error('Error deploying contracts:', error);
+    console.error(error.stack);
   }
 }
 
