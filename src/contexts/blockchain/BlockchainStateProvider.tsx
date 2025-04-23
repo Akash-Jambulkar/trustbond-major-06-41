@@ -65,6 +65,12 @@ export const BlockchainStateProvider = ({ children }: { children: ReactNode }) =
     refreshTransactions: getTransactionHistory
   });
 
+  // Create a wrapper for submitKYC to maintain backward compatibility
+  const submitKYCWrapper = async (documentHash: string, feeInWei?: string): Promise<boolean> => {
+    const result = await submitKYC(documentHash, 'default', feeInWei);
+    return result.success;
+  };
+
   const contextValue: BlockchainContextType = {
     web3,
     account,
@@ -83,7 +89,7 @@ export const BlockchainStateProvider = ({ children }: { children: ReactNode }) =
     kycStatus: 'pending',
     connectWallet,
     disconnectWallet,
-    submitKYC,
+    submitKYC: submitKYCWrapper,
     getKYCStatus,
     verifyKYC,
     getTransactionHistory,

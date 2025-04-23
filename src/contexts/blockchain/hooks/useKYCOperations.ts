@@ -20,33 +20,72 @@ export const useKYCOperations = ({
   trackAndWatchTransaction,
   refreshTransactions
 }: UseKYCOperationsProps) => {
-  const submitKYC = async (documentHash: string, feeInWei?: string): Promise<boolean> => {
+  const submitKYC = async (documentHash: string, documentType: string, feeInWei?: string): Promise<{success: boolean, transactionHash?: string}> => {
     if (!web3 || !account || !kycContract) {
       throw new Error("Wallet not connected or contract not initialized");
     }
 
     try {
-      const options: any = { from: account };
-      if (feeInWei) {
-        options.value = feeInWei;
+      // Calculate fee based on document type if not provided
+      let fee = feeInWei;
+      if (!fee) {
+        // Default fees by document type (in Wei)
+        const fees: Record<string, string> = {
+          'AADHAAR': web3.utils.toWei('0.001', 'ether'),
+          'PAN': web3.utils.toWei('0.0015', 'ether'),
+          'VOTER_ID': web3.utils.toWei('0.001', 'ether'),
+          'DRIVING_LICENSE': web3.utils.toWei('0.002', 'ether'),
+          'default': web3.utils.toWei('0.001', 'ether')
+        };
+        
+        fee = fees[documentType] || fees.default;
       }
       
+      // Estimate gas for the transaction
+      const gasEstimate = await kycContract.methods.submitKYC(documentHash).estimateGas({
+        from: account,
+        value: fee
+      });
+      
+      // Add 20% buffer to gas estimate
+      const gasLimit = Math.round(Number(gasEstimate) * 1.2).toString();
+      
+      // Send transaction with calculated fee and gas
+      const options: any = { 
+        from: account,
+        value: fee,
+        gas: gasLimit
+      };
+      
       const tx = await kycContract.methods.submitKYC(documentHash).send(options);
+      
+      const txData = {
+        documentHash,
+        documentType,
+        fee,
+        timestamp: new Date().toISOString()
+      };
       
       trackAndWatchTransaction(
         tx.transactionHash,
         'kyc',
-        'KYC Document Submitted'
+        `KYC ${documentType} Document Submitted`,
+        txData
       );
       
       toast.success("KYC documents submitted successfully");
       await refreshTransactions();
       
-      return true;
+      return {
+        success: true,
+        transactionHash: tx.transactionHash
+      };
     } catch (error) {
       console.error("Error submitting KYC:", error);
       toast.error("Failed to submit KYC: " + (error as Error).message);
-      return false;
+      return {
+        success: false
+      };
     }
   };
 

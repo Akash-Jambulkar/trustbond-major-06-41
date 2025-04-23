@@ -208,10 +208,10 @@ const BlockchainTransactionsPage = () => {
                   <TableRow>
                     <TableHead>Transaction Hash</TableHead>
                     <TableHead>Type</TableHead>
-                    <TableHead>From</TableHead>
-                    <TableHead>To</TableHead>
+                    <TableHead>Description</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Time</TableHead>
+                    <TableHead>Details</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -229,17 +229,19 @@ const BlockchainTransactionsPage = () => {
                       <TableCell>
                         {formatTransactionType(tx.type)}
                       </TableCell>
-                      <TableCell className="font-mono text-xs">
-                        {truncate(tx.from_address || 'N/A')}
-                      </TableCell>
-                      <TableCell className="font-mono text-xs">
-                        {truncate(tx.to_address || 'N/A')}
+                      <TableCell>
+                        {tx.description || 'Transaction'}
                       </TableCell>
                       <TableCell>
                         {getStatusBadge(tx.status)}
                       </TableCell>
                       <TableCell className="text-xs">
                         {formatDate(tx.created_at)}
+                      </TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="sm" onClick={() => window.open(`https://etherscan.io/tx/${tx.transaction_hash}`, '_blank')}>
+                          View
+                        </Button>
                       </TableCell>
                     </motion.tr>
                   ))}

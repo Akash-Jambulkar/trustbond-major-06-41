@@ -30,6 +30,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Loader2, Upload, FileText, CheckCircle2, AlertCircle, Info, Shield } from "lucide-react";
+import Web3 from "web3";
 import { 
   createDocumentHash, 
   type DocumentType, 
@@ -112,6 +113,18 @@ export function KYCDocumentUpload() {
     }
   };
 
+  // Get document verification fee based on document type
+  const getDocumentVerificationFee = useCallback((documentType: DocumentType): string => {
+    // These are placeholder values - in production, these would come from the contract or API
+    const fees = {
+      [DOCUMENT_TYPES.AADHAAR]: '0.001',
+      [DOCUMENT_TYPES.PAN]: '0.0015',
+      [DOCUMENT_TYPES.VOTER_ID]: '0.001',
+      [DOCUMENT_TYPES.DRIVING_LICENSE]: '0.002'
+    };
+    return fees[documentType] || '0.001'; // Default to 0.001 ETH if type not found
+  }, []);
+
   const handleSubmit = useCallback(async () => {
     if (!isConnected) {
       toast({
@@ -148,18 +161,40 @@ export function KYCDocumentUpload() {
 
     setIsSubmitting(true);
     try {
+      // Generate document hash
       const documentHash = await createDocumentHash(activeTab, documentNumber);
       setDocumentHash(documentHash);
 
       if (enableBlockchain && isConnected) {
-        await submitKYC(documentHash);
+        // Get verification fee based on document type
+        const verificationFee = getDocumentVerificationFee(activeTab);
         
-        toast({
-          title: "KYC document submitted successfully",
-          description: "Your document has been submitted for verification on the blockchain.",
-        });
+        // Convert ETH to Wei for transaction
+        const web3 = new Web3(window.ethereum);
+        const feeInWei = web3.utils.toWei(verificationFee, 'ether');
+        
+        // Submit KYC with fee
+        const result = await submitKYC(documentHash, feeInWei);
+        
+        if (result) {
+          toast({
+            title: "KYC document submitted successfully",
+            description: `Your document has been submitted for verification on the blockchain with a fee of ${verificationFee} ETH.`,
+          });
+          
+          // If we have file hash, store both document and file hash
+          if (fileHash) {
+            // In a production app, this would securely store the relationship between
+            // document hash and file hash in a database, likely through an API call
+            console.log("Document hash and file hash stored:", { documentHash, fileHash });
+          }
+        }
       } else {
-        console.log("Mock submission:", { documentType: activeTab, hash: documentHash });
+        console.log("Mock submission:", { 
+          documentType: activeTab, 
+          hash: documentHash,
+          fee: getDocumentVerificationFee(activeTab)
+        });
         
         await new Promise(resolve => setTimeout(resolve, 1500));
         
@@ -169,6 +204,7 @@ export function KYCDocumentUpload() {
         });
       }
 
+      // Reset form state
       setUploadedFile(null);
       setFileHash(null);
       form.reset();
@@ -185,7 +221,7 @@ export function KYCDocumentUpload() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [form, activeTab, isConnected, enableBlockchain, submitKYC, toast]);
+  }, [form, activeTab, isConnected, enableBlockchain, submitKYC, toast, getDocumentVerificationFee, fileHash]);
 
   const getCurrentDocumentNumber = (): string => {
     const values = form.getValues();
@@ -407,6 +443,17 @@ export function KYCDocumentUpload() {
                 </Alert>
               )}
 
+              {enableBlockchain && isConnected && (
+                <Alert className="mt-4 bg-blue-50 border-blue-200 text-blue-800">
+                  <Info className="h-4 w-4" />
+                  <AlertTitle>Verification Fee Required</AlertTitle>
+                  <AlertDescription>
+                    <p>A verification fee of <strong>{getDocumentVerificationFee(activeTab)} ETH</strong> will be charged for submitting this document to the blockchain for verification.</p>
+                    <p className="mt-2 text-xs">This fee covers the verification process and blockchain transaction costs.</p>
+                  </AlertDescription>
+                </Alert>
+              )}
+
               {!enableBlockchain && (
                 <Alert className="mt-4 bg-blue-50 border-blue-200 text-blue-800">
                   <Info className="h-4 w-4" />
@@ -422,7 +469,8 @@ export function KYCDocumentUpload() {
                   <Info className="h-4 w-4" />
                   <AlertTitle>You can still submit your documents</AlertTitle>
                   <AlertDescription>
-                    Your documents will be processed through our standard verification system. Connect a wallet in settings for blockchain verification.
+                    <p>Your documents will be processed through our standard verification system. Connect a wallet in settings for blockchain verification.</p>
+                    <p className="mt-2 text-xs">Note: Blockchain verification requires a fee of {getDocumentVerificationFee(activeTab)} ETH.</p>
                   </AlertDescription>
                 </Alert>
               )}
