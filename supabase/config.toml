@@ -1,8 +1,1 @@
-
 project_id = "lbblmnhjqotmlovzkydk"
-
-[functions.setup-database-rpcs]
-verify_jwt = true
-
-[functions.execute-db-operation]
-verify_jwt = true
