@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import Web3 from "web3";
-import { getTransactions, trackTransaction, watchTransaction, Transaction } from "@/utils/transactions";
+import { getTransactions, trackTransaction as track, watchTransaction, Transaction } from "@/utils/transactions";
 
 interface UseTransactionManagementProps {
   account: string | null;
@@ -25,40 +25,44 @@ export const useTransactionManagement = ({
       try {
         const accountTransactions = await getTransactions(account);
         setTransactions(accountTransactions);
+        return accountTransactions;
       } catch (error) {
         console.error("Failed to refresh transactions:", error);
         setTransactions([]);
+        return [];
       }
-    } else {
-      setTransactions([]);
     }
+    setTransactions([]);
+    return [];
+  };
+
+  const trackTransaction = (
+    txHash: string,
+    type: string,
+    description: string,
+    extraData?: Record<string, any>
+  ) => {
+    if (!account || !networkId) return null;
+    
+    const tx = track(
+      txHash,
+      type,
+      description,
+      account,
+      networkId,
+      extraData
+    );
+    
+    if (web3) {
+      watchTransaction(web3, txHash);
+    }
+    
+    return tx;
   };
 
   return {
     transactions,
     refreshTransactions,
-    trackTransaction: (
-      txHash: string,
-      type: string,
-      description: string,
-      extraData?: Record<string, any>
-    ) => {
-      if (!account) return null;
-      
-      const tx = trackTransaction(
-        txHash,
-        type as any,
-        description,
-        account, // Use the account from props as userAddress
-        networkId || 0,
-        extraData
-      );
-      
-      if (web3) {
-        watchTransaction(web3, txHash);
-      }
-      
-      return tx;
-    }
+    trackTransaction
   };
 };
