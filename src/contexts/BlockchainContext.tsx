@@ -222,7 +222,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
       
       // Find the latest KYC transaction
       const kycTx = txs.find(tx => 
-        tx.type === "kyc_submission" && 
+        tx.type === "kyc" && 
         tx.status === "confirmed"
       );
       
@@ -265,6 +265,46 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Mock functions needed by the app
+  const getTransactionHistory = async (): Promise<any[]> => {
+    try {
+      return await getTransactions(account || '');
+    } catch (error) {
+      console.error("Error getting transaction history:", error);
+      return [];
+    }
+  };
+  
+  const switchNetwork = async (networkId: number): Promise<boolean> => {
+    console.log(`Switching to network: ${networkId}`);
+    return true;
+  };
+  
+  const registerBank = async (bankData: any): Promise<boolean> => {
+    console.log("Registering bank:", bankData);
+    return true;
+  };
+  
+  const repayLoan = async (loanId: string, amountInWei: string): Promise<boolean> => {
+    console.log(`Repaying loan ${loanId} with amount ${amountInWei}`);
+    return true;
+  };
+  
+  const approveLoan = async (loanId: string): Promise<boolean> => {
+    console.log(`Approving loan ${loanId}`);
+    return true;
+  };
+  
+  const rejectLoan = async (loanId: string): Promise<boolean> => {
+    console.log(`Rejecting loan ${loanId}`);
+    return true;
+  };
+  
+  const submitLoanApplication = async (loanData: any): Promise<string | null> => {
+    console.log("Submitting loan application:", loanData);
+    return "loan123";
+  };
+
   // Get all context values
   const contextValue: BlockchainContextType = {
     account,
@@ -281,11 +321,19 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     trustScoreContract: null,
     loanContract: null,
     isContractsInitialized,
+    kycStatus: 'pending', // Mock KYC status
     connectWallet,
     disconnectWallet,
     submitKYC,
     getKYCStatus,
-    verifyKYC
+    verifyKYC,
+    getTransactionHistory,
+    switchNetwork,
+    registerBank,
+    repayLoan,
+    approveLoan,
+    rejectLoan,
+    submitLoanApplication
   };
 
   return (

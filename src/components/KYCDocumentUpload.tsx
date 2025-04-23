@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { 
   Card, 
   CardContent, 
@@ -38,6 +38,7 @@ import {
 } from "@/utils/documentHash";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { useMode } from "@/contexts/ModeContext";
+import type { ChangeEvent } from "react";
 
 const documentSchema = z.object({
   aadhaarNumber: z.string().refine(val => val === "" || validateDocument(DOCUMENT_TYPES.AADHAAR, val), {
@@ -58,7 +59,7 @@ type DocumentFormValues = z.infer<typeof documentSchema>;
 
 export function KYCDocumentUpload() {
   const { toast } = useToast();
-  const { submitKYC, isConnected } = useBlockchain();
+  const { submitKYC, isConnected, isContractsInitialized } = useBlockchain();
   const { enableBlockchain } = useMode();
   const [activeTab, setActiveTab] = useState<DocumentType>(DOCUMENT_TYPES.AADHAAR);
   const [isUploading, setIsUploading] = useState(false);
@@ -113,7 +114,10 @@ export function KYCDocumentUpload() {
 
   const handleSubmit = useCallback(async () => {
     if (!isConnected) {
-      toast.error("Please connect your wallet first");
+      toast({
+        variant: "destructive",
+        title: "Please connect your wallet first"
+      });
       return;
     }
 

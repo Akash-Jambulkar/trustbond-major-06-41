@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Transaction } from './types';
+import { Transaction, TransactionStatus, TransactionType } from './types';
 import { safeFrom } from '@/utils/supabase-utils';
 
 // Get transactions for a specific user or all transactions
@@ -27,8 +27,8 @@ export async function getTransactions(userAddress?: string): Promise<Transaction
     return (data || []).map((tx: any) => ({
       hash: tx.transaction_hash,
       timestamp: new Date(tx.created_at).getTime(),
-      status: tx.status || 'pending',
-      type: tx.type || 'other',
+      status: (tx.status || 'pending') as TransactionStatus,
+      type: (tx.type || 'other') as TransactionType,
       description: tx.type === 'kyc' ? 'KYC Submission' : 'Blockchain transaction',
       account: tx.from_address,
       network: '1', // Default to mainnet
@@ -59,8 +59,8 @@ export async function getTransactionByHash(hash: string): Promise<Transaction | 
     return {
       hash: data.transaction_hash,
       timestamp: new Date(data.created_at).getTime(),
-      status: data.status || 'pending',
-      type: data.type || 'other',
+      status: (data.status || 'pending') as TransactionStatus,
+      type: (data.type || 'other') as TransactionType,
       description: data.type === 'kyc' ? 'KYC Submission' : 'Blockchain transaction',
       account: data.from_address,
       network: '1', // Default to mainnet

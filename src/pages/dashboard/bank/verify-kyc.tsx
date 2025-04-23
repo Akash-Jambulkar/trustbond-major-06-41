@@ -14,7 +14,7 @@ import { format } from "date-fns";
 
 const VerifyKYC = () => {
   const { user } = useAuth();
-  const { verifyKYC, isConnected } = useBlockchain();
+  const { verifyKYC, isConnected, account } = useBlockchain();
   const [documents, setDocuments] = useState<any[]>([]);
   const [pendingDocuments, setPendingDocuments] = useState<any[]>([]);
   const [verifiedDocuments, setVerifiedDocuments] = useState<any[]>([]);
@@ -22,7 +22,6 @@ const VerifyKYC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedDocument, setSelectedDocument] = useState<any>(null);
   const [verifying, setVerifying] = useState(false);
-  const { account } = useAuth();
 
   useEffect(() => {
     if (user && user.role === "bank") {
@@ -64,7 +63,9 @@ const VerifyKYC = () => {
       
       const verificationStatus = approve ? 'verified' as const : 'rejected' as const;
       
-      await verifyKYC(selectedDocument.profiles.wallet_address, approve);
+      if (verifyKYC) {
+        await verifyKYC(selectedDocument.profiles.wallet_address, approve);
+      }
       
       const { error } = await supabase
         .from('kyc_documents')
