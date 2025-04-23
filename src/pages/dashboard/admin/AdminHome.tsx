@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const AdminHome = () => {
   const { toast } = useToast();
-  const { isConnected } = useBlockchain();
+  const { isConnected, connectWallet } = useBlockchain();
   
   const [isLoading, setIsLoading] = useState(true);
   const [transactions, setTransactions] = useState([]);
@@ -53,28 +52,30 @@ const AdminHome = () => {
       
       if (kycError) throw kycError;
       
-      // Fetch user roles and count by role
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_role_assignments')
+      // Fetch user roles from profiles table
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
         .select('role');
       
-      if (roleError) throw roleError;
+      if (profileError) throw profileError;
       
       // Calculate statistics
       const pendingBanks = bankData?.length || 0;
       const totalTransactions = txs?.length || 0;
       const pendingKYC = kycData?.length || 0;
       
-      // Count users by role
-      const usersByRole = roleData?.reduce((acc, item) => {
+      // Count users by role from profiles table
+      const usersByRole = profileData?.reduce((acc, item) => {
         const role = item.role;
-        acc[role] = (acc[role] || 0) + 1;
+        if (role) {
+          acc[role] = (acc[role] || 0) + 1;
+        }
         return acc;
       }, { user: 0, bank: 0, admin: 0 });
       
-      const totalUsers = roleData?.length || 0;
+      const totalUsers = profileData?.length || 0;
       
-      console.log('User distribution:', usersByRole);
+      console.log('User distribution from profiles:', usersByRole);
       
       setDashboardStats({
         pendingBanks,
@@ -99,6 +100,20 @@ const AdminHome = () => {
   useEffect(() => {
     fetchAllData();
   }, []);
+
+  useEffect(() => {
+    const attemptConnection = async () => {
+      if (!isConnected && window.ethereum) {
+        try {
+          await connectWallet();
+        } catch (error) {
+          console.log("Auto-connection to MetaMask failed:", error);
+        }
+      }
+    };
+    
+    attemptConnection();
+  }, [isConnected, connectWallet]);
 
   const prepareTransactionChartData = () => {
     if (!transactions.length) return [];
@@ -145,17 +160,41 @@ const AdminHome = () => {
     });
   };
 
+  const handleConnectWallet = async () => {
+    try {
+      await connectWallet();
+      toast({
+        title: "Wallet connected",
+        description: "MetaMask wallet connected successfully.",
+      });
+    } catch (error) {
+      console.error("Failed to connect wallet:", error);
+      toast({
+        variant: "destructive",
+        title: "Connection failed",
+        description: "Could not connect to MetaMask. Please make sure it's installed and unlocked.",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-        <Button variant="outline" onClick={fetchAllData} disabled={isLoading}>
-          {isLoading ? 
-            <Clock className="mr-2 h-4 w-4 animate-spin" /> : 
-            <RefreshCcw className="mr-2 h-4 w-4" />
-          }
-          Refresh Data
-        </Button>
+        <div className="flex gap-2">
+          {!isConnected && (
+            <Button variant="outline" onClick={handleConnectWallet}>
+              Connect MetaMask
+            </Button>
+          )}
+          <Button variant="outline" onClick={fetchAllData} disabled={isLoading}>
+            {isLoading ? 
+              <Clock className="mr-2 h-4 w-4 animate-spin" /> : 
+              <RefreshCcw className="mr-2 h-4 w-4" />
+            }
+            Refresh Data
+          </Button>
+        </div>
       </div>
 
       {!isConnected && (

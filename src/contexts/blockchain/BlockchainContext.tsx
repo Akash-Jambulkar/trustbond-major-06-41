@@ -40,6 +40,39 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         setIsCorrectNetwork(true);
         setIsGanache(true);
       }
+      
+      // Check if MetaMask is installed and try to connect
+      if (window.ethereum) {
+        window.ethereum.request({ method: 'eth_accounts' })
+          .then((accounts: string[]) => {
+            if (accounts && accounts.length > 0) {
+              setAccount(accounts[0]);
+              setIsConnected(true);
+              setNetworkName("MetaMask Network");
+              setIsCorrectNetwork(true);
+              
+              // Get network ID
+              window.ethereum.request({ method: 'net_version' })
+                .then((networkId: string) => {
+                  const id = parseInt(networkId);
+                  setNetworkId(id);
+                  
+                  if (id === 1337 || id === 5777) {
+                    setIsGanache(true);
+                    setNetworkName("Ganache");
+                  } else if (id === 1) {
+                    setNetworkName("Ethereum Mainnet");
+                  } else if (id === 5) {
+                    setNetworkName("Goerli Testnet");
+                  } else {
+                    setNetworkName(`Network ID: ${id}`);
+                  }
+                })
+                .catch(console.error);
+            }
+          })
+          .catch(console.error);
+      }
     } else {
       setAccount(null);
       setIsConnected(false);
@@ -88,18 +121,65 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     setConnectionError(null);
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      const mockAccount = `0x${Math.random().toString(16).substring(2, 14)}${Math.random().toString(16).substring(2, 14)}`;
-      setAccount(mockAccount);
-      setIsConnected(true);
-      setNetworkName("Development Network");
-      setIsCorrectNetwork(true);
-      setIsGanache(true);
-      
-      localStorage.setItem('blockchain_account', mockAccount);
-      
-      toast.success("Wallet connected successfully!");
-      return mockAccount;
+      // Check if MetaMask is installed
+      if (window.ethereum) {
+        try {
+          // Request account access
+          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+          
+          if (accounts.length > 0) {
+            const account = accounts[0];
+            setAccount(account);
+            setIsConnected(true);
+            
+            // Get network ID
+            const networkId = await window.ethereum.request({ method: 'net_version' });
+            const id = parseInt(networkId);
+            setNetworkId(id);
+            
+            if (id === 1337 || id === 5777) {
+              setIsGanache(true);
+              setNetworkName("Ganache");
+              setIsCorrectNetwork(true);
+            } else if (id === 1) {
+              setNetworkName("Ethereum Mainnet");
+              setIsCorrectNetwork(true);
+            } else if (id === 5) {
+              setNetworkName("Goerli Testnet");
+              setIsCorrectNetwork(true);
+            } else {
+              setNetworkName(`Network ID: ${id}`);
+              setIsCorrectNetwork(false);
+            }
+            
+            localStorage.setItem('blockchain_account', account);
+            toast.success("Wallet connected successfully!");
+            return account;
+          } else {
+            throw new Error("No accounts found");
+          }
+        } catch (error: any) {
+          console.error("MetaMask connection error:", error);
+          const errorMessage = error?.message || "Unknown MetaMask error";
+          setConnectionError(errorMessage);
+          toast.error(`Failed to connect MetaMask: ${errorMessage}`);
+          return false;
+        }
+      } else {
+        // Fall back to mock account if MetaMask is not installed
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        const mockAccount = `0x${Math.random().toString(16).substring(2, 14)}${Math.random().toString(16).substring(2, 14)}`;
+        setAccount(mockAccount);
+        setIsConnected(true);
+        setNetworkName("Development Network");
+        setIsCorrectNetwork(true);
+        setIsGanache(true);
+        
+        localStorage.setItem('blockchain_account', mockAccount);
+        
+        toast.success("Mock wallet connected successfully!");
+        return mockAccount;
+      }
     } catch (error: any) {
       console.error("Wallet connection error:", error);
       const errorMessage = error?.message || "Unknown error";
