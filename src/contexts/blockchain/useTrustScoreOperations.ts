@@ -1,16 +1,16 @@
-
 import { toast } from "sonner";
 import Web3 from "web3";
 import { Contract } from "web3-eth-contract";
 import { supabase } from "@/integrations/supabase/client";
 
-interface UseTrustScoreOperationsProps {
-  web3: Web3 | null;
+export interface UseTrustScoreOperationsProps {
+  web3: any;
   account: string | null;
-  trustScoreContract: Contract | null;
+  trustScoreContract: any;
   isConnected: boolean;
   trackAndWatchTransaction: (txHash: string, type: string, description: string, extraData?: Record<string, any>) => any;
   refreshTransactions: () => Promise<any[]>;
+  clearBlockchainCache: () => void;
 }
 
 export const useTrustScoreOperations = ({
@@ -19,16 +19,15 @@ export const useTrustScoreOperations = ({
   trustScoreContract,
   isConnected,
   trackAndWatchTransaction,
-  refreshTransactions
+  refreshTransactions,
+  clearBlockchainCache
 }: UseTrustScoreOperationsProps) => {
-  // Update a user's trust score
   const updateTrustScore = async (userAddress: string, score: number): Promise<boolean> => {
     if (!web3 || !account || !trustScoreContract) {
       throw new Error("Wallet not connected or contract not initialized");
     }
 
     try {
-      // Get current score to calculate change
       let currentScore = 0;
       try {
         currentScore = parseInt(await trustScoreContract.methods.calculateScore(userAddress).call());
@@ -36,15 +35,12 @@ export const useTrustScoreOperations = ({
         console.warn("Could not get current trust score:", error);
       }
       
-      // Calculate score change
       const scoreChange = score - currentScore;
 
-      // Update score on blockchain
       const tx = await trustScoreContract.methods
         .updateScore(userAddress, score)
         .send({ from: account });
         
-      // Track the transaction
       trackAndWatchTransaction(
         tx.transactionHash,
         'trust_score',
@@ -58,9 +54,7 @@ export const useTrustScoreOperations = ({
         }
       );
       
-      // Update database records
       try {
-        // Get target user by blockchain address
         const { data: targetUser } = await supabase
           .from('profiles')
           .select('id')
@@ -68,7 +62,6 @@ export const useTrustScoreOperations = ({
           .maybeSingle();
           
         if (targetUser) {
-          // Update user's trust score
           await supabase
             .from('profiles')
             .update({
@@ -91,7 +84,6 @@ export const useTrustScoreOperations = ({
     }
   };
 
-  // Get a user's trust score
   const getTrustScore = async (userAddress?: string): Promise<number> => {
     if (!web3 || !trustScoreContract) {
       console.error("Web3 or trust score contract not initialized");

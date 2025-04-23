@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 // Mock data for regulatory compliance API
@@ -70,7 +69,7 @@ export const CreditScoringService = {
         
       if (existingScore?.trust_score) {
         // If score exists and is less than 30 days old, use it
-        const scoreDate = new Date(existingScore.updated_at);
+        const scoreDate = new Date(existingScore.updated_at || Date.now());
         const daysSinceUpdate = (Date.now() - scoreDate.getTime()) / (1000 * 60 * 60 * 24);
         
         if (daysSinceUpdate < 30) {
@@ -82,7 +81,7 @@ export const CreditScoringService = {
               "Credit history length"
             ],
             source: "Database cache",
-            timestamp: existingScore.updated_at,
+            timestamp: existingScore.updated_at || new Date().toISOString(),
             status: 'success'
           };
         }

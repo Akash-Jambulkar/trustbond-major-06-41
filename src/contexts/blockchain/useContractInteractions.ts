@@ -44,7 +44,7 @@ export const useContractInteractions = ({
     isConnected,
     trackAndWatchTransaction,
     refreshTransactions,
-    clearBlockchainCache
+    clearBlockchainCache // Pass the function to KYC operations
   });
 
   // Trust Score Operations
@@ -58,7 +58,7 @@ export const useContractInteractions = ({
     isConnected,
     trackAndWatchTransaction,
     refreshTransactions,
-    clearBlockchainCache
+    clearBlockchainCache // Pass the function to Trust Score operations
   });
 
   // Loan Operations
@@ -79,7 +79,7 @@ export const useContractInteractions = ({
     networkId,
     trackAndWatchTransaction,
     refreshTransactions,
-    clearBlockchainCache
+    clearBlockchainCache // Pass the function to Loan operations
   });
 
   return {

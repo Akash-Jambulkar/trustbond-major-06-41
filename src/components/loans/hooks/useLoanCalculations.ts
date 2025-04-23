@@ -16,6 +16,7 @@ interface LoanSummary {
   totalInterest: number;
   firstPaymentDate: Date;
   lastPaymentDate: Date;
+  apr: number; // Added this property to match the expected type
 }
 
 export const useLoanCalculations = (
@@ -173,6 +174,7 @@ export const useLoanCalculations = (
       monthlyPayment: parseFloat(monthlyPayment.toFixed(4)),
       totalRepayment: parseFloat(totalRepayment.toFixed(4)),
       interestRate: interestRate,
+      apr: interestRate, // Added to match expected type - using interestRate as apr
       totalInterest: parseFloat(totalInterest.toFixed(4)),
       firstPaymentDate,
       lastPaymentDate

@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 import Web3 from "web3";
 import { Contract } from "web3-eth-contract";
@@ -15,6 +14,7 @@ interface UseLoanOperationsProps {
   networkId: number | null;
   trackAndWatchTransaction: (txHash: string, type: string, description: string, extraData?: Record<string, any>) => any;
   refreshTransactions: () => Promise<any[]>;
+  clearBlockchainCache: () => void;
 }
 
 export const useLoanOperations = ({
@@ -26,7 +26,8 @@ export const useLoanOperations = ({
   isConnected,
   networkId,
   trackAndWatchTransaction,
-  refreshTransactions
+  refreshTransactions,
+  clearBlockchainCache
 }: UseLoanOperationsProps) => {
   // Request a loan (as a borrower)
   const requestLoan = async (amount: string, purpose: string, term: number): Promise<boolean> => {
@@ -421,17 +422,7 @@ export const useLoanOperations = ({
           const loan = await loanContract.methods.getLoan(id).call();
           
           // Get loan status as a string
-          let statusStr = '';
-          switch (String(loan.status)) {
-            case '0': statusStr = 'pending'; break;
-            case '1': statusStr = 'approved'; break;
-            case '2': statusStr = 'rejected'; break;
-            case '3': statusStr = 'funded'; break;
-            case '4': statusStr = 'active'; break;
-            case '5': statusStr = 'completed'; break;
-            case '6': statusStr = 'defaulted'; break;
-            default: statusStr = 'unknown';
-          }
+          let statusStr = String(loan.status) === '0' ? 'pending' : String(loan.status);
           
           // Return formatted loan object
           return {

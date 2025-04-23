@@ -15,7 +15,8 @@ export interface LoanFormData {
 }
 
 export interface LoanSummary {
-  apr: number;
+  interestRate: number;
+  apr: number;  // Added this property to match usage
   monthlyPayment: number;
   totalRepayment: number;
   totalInterest: number;

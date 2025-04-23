@@ -52,8 +52,9 @@ export function storeInCache<T>(
 ): void {
   const cache = cacheStore[cacheType];
   
+  // Fix the type assignment issue by using type assertion
   cache.set(cacheKey, {
-    data,
+    data: data as any,
     timestamp: Date.now()
   });
 }
