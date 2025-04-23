@@ -1,5 +1,4 @@
-
-import { useState, useRef, ChangeEvent } from "react";
+import { useState, useCallback } from "react";
 import { 
   Card, 
   CardContent, 
@@ -40,7 +39,6 @@ import {
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { useMode } from "@/contexts/ModeContext";
 
-// Create a schema for form validation
 const documentSchema = z.object({
   aadhaarNumber: z.string().refine(val => val === "" || validateDocument(DOCUMENT_TYPES.AADHAAR, val), {
     message: "Invalid Aadhaar number. Must be 12 digits."
@@ -58,9 +56,9 @@ const documentSchema = z.object({
 
 type DocumentFormValues = z.infer<typeof documentSchema>;
 
-export const KYCDocumentUpload = () => {
+export function KYCDocumentUpload() {
   const { toast } = useToast();
-  const { submitKYC, isConnected, isContractsInitialized } = useBlockchain();
+  const { submitKYC, isConnected } = useBlockchain();
   const { enableBlockchain } = useMode();
   const [activeTab, setActiveTab] = useState<DocumentType>(DOCUMENT_TYPES.AADHAAR);
   const [isUploading, setIsUploading] = useState(false);
@@ -70,7 +68,6 @@ export const KYCDocumentUpload = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Initialize form
   const form = useForm<DocumentFormValues>({
     resolver: zodResolver(documentSchema),
     defaultValues: {
@@ -81,7 +78,6 @@ export const KYCDocumentUpload = () => {
     },
   });
 
-  // Handle file upload
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) {
       return;
@@ -93,9 +89,7 @@ export const KYCDocumentUpload = () => {
     setFileHash(null);
 
     try {
-      // Read the file as an ArrayBuffer
       const fileBuffer = await file.arrayBuffer();
-      // Hash the file content using SubtleCrypto
       const hashBuffer = await crypto.subtle.digest('SHA-256', fileBuffer);
       const hashArray = Array.from(new Uint8Array(hashBuffer));
       const hash = "0x" + hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
@@ -117,21 +111,25 @@ export const KYCDocumentUpload = () => {
     }
   };
 
-  // Create document hash and submit to blockchain or mock submission
-  const handleSubmit = async (values: DocumentFormValues) => {
+  const handleSubmit = useCallback(async () => {
+    if (!isConnected) {
+      toast.error("Please connect your wallet first");
+      return;
+    }
+
     let documentNumber = "";
     switch (activeTab) {
       case DOCUMENT_TYPES.AADHAAR:
-        documentNumber = values.aadhaarNumber;
+        documentNumber = form.getValues().aadhaarNumber;
         break;
       case DOCUMENT_TYPES.PAN:
-        documentNumber = values.panNumber;
+        documentNumber = form.getValues().panNumber;
         break;
       case DOCUMENT_TYPES.VOTER_ID:
-        documentNumber = values.voterIdNumber;
+        documentNumber = form.getValues().voterIdNumber;
         break;
       case DOCUMENT_TYPES.DRIVING_LICENSE:
-        documentNumber = values.drivingLicenseNumber;
+        documentNumber = form.getValues().drivingLicenseNumber;
         break;
     }
 
@@ -146,24 +144,19 @@ export const KYCDocumentUpload = () => {
 
     setIsSubmitting(true);
     try {
-      // Create a hash that combines document type and number
-      const hash = await createDocumentHash(activeTab, documentNumber);
-      setDocumentHash(hash);
+      const documentHash = await createDocumentHash(activeTab, documentNumber);
+      setDocumentHash(documentHash);
 
-      // Check if we should submit to blockchain or mock the submission
-      if (enableBlockchain && isConnected && isContractsInitialized) {
-        // Submit the hash to the blockchain
-        await submitKYC(hash);
+      if (enableBlockchain && isConnected) {
+        await submitKYC(documentHash);
         
         toast({
           title: "KYC document submitted successfully",
           description: "Your document has been submitted for verification on the blockchain.",
         });
       } else {
-        // Mock submission when blockchain is not available
-        console.log("Mock submission:", { documentType: activeTab, hash });
+        console.log("Mock submission:", { documentType: activeTab, hash: documentHash });
         
-        // Simulate a delay to mimic blockchain processing
         await new Promise(resolve => setTimeout(resolve, 1500));
         
         toast({
@@ -172,7 +165,6 @@ export const KYCDocumentUpload = () => {
         });
       }
 
-      // Reset form
       setUploadedFile(null);
       setFileHash(null);
       form.reset();
@@ -189,9 +181,8 @@ export const KYCDocumentUpload = () => {
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [form, activeTab, isConnected, enableBlockchain, submitKYC, toast]);
 
-  // Get the current document number based on active tab
   const getCurrentDocumentNumber = (): string => {
     const values = form.getValues();
     switch (activeTab) {
@@ -208,8 +199,7 @@ export const KYCDocumentUpload = () => {
     }
   };
 
-  // Determine if blockchain is available
-  const isBlockchainAvailable = enableBlockchain && isConnected && isContractsInitialized;
+  const isBlockchainAvailable = enableBlockchain && isConnected;
 
   return (
     <Card className="w-full">
@@ -465,5 +455,4 @@ export const KYCDocumentUpload = () => {
       </CardFooter>
     </Card>
   );
-};
-
+}

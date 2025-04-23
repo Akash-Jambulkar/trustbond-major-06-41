@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,13 +30,11 @@ const VerifyKYCPage = () => {
   
   const { isConnected, account, verifyKYC } = useBlockchain();
   
-  // Fetch KYC submissions from Supabase
   useEffect(() => {
     const fetchSubmissions = async () => {
       try {
         setLoading(true);
         
-        // Fetch from the kyc_documents table
         const { data, error } = await supabase
           .from('kyc_documents')
           .select(`
@@ -54,7 +51,6 @@ const VerifyKYCPage = () => {
           
         if (error) throw error;
         
-        // Format submissions with user details
         const formattedSubmissions = data?.map((sub: any) => ({
           id: sub.id,
           user_id: sub.user_id,
@@ -79,7 +75,6 @@ const VerifyKYCPage = () => {
     fetchSubmissions();
   }, []);
   
-  // Handle verification status update
   const handleUpdateVerification = async (submission: KYCSubmission, approved: boolean) => {
     if (!isConnected) {
       toast.error("Please connect your wallet first");
@@ -95,15 +90,15 @@ const VerifyKYCPage = () => {
         return;
       }
       
-      // Update verification status on blockchain
       const success = await verifyKYC(submission.blockchain_address, approved);
       
       if (success) {
-        // Update status in database
+        const verificationStatus = approved ? 'verified' as const : 'rejected' as const;
+        
         const { error } = await supabase
           .from('kyc_documents')
           .update({ 
-            verification_status: approved ? 'verified' : 'rejected',
+            verification_status: verificationStatus,
             verified_by: account,
             updated_at: new Date().toISOString()
           })
@@ -111,7 +106,6 @@ const VerifyKYCPage = () => {
           
         if (error) throw error;
         
-        // Update local state
         setSubmissions(prev => 
           prev.filter(sub => sub.id !== submission.id)
         );
@@ -127,7 +121,6 @@ const VerifyKYCPage = () => {
     }
   };
   
-  // Open detail dialog
   const openDetailDialog = (submission: KYCSubmission) => {
     setSelectedSubmission(submission);
     setIsDialogOpen(true);
@@ -199,7 +192,6 @@ const VerifyKYCPage = () => {
         </CardContent>
       </Card>
       
-      {/* KYC Verification Dialog */}
       {selectedSubmission && (
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="sm:max-w-md">

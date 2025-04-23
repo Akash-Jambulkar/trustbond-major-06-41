@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { 
   Card, 
@@ -42,7 +41,6 @@ export function KYCSubmission() {
   const [showBlockchainWarning, setShowBlockchainWarning] = useState(false);
   const [walletPrompted, setWalletPrompted] = useState(false);
 
-  // Create form instance
   const form = useForm<FormValues>({
     defaultValues: {
       documentType: DOCUMENT_TYPES.PAN,
@@ -50,14 +48,12 @@ export function KYCSubmission() {
     }
   });
 
-  // Reset wallet prompt flag when connection status changes
   useEffect(() => {
     if (isConnected) {
       setWalletPrompted(true);
     }
   }, [isConnected]);
 
-  // Handle submission with database fallback
   const handleSubmit = async (values: FormValues) => {
     if (!user) {
       toast.error("Please log in to submit KYC");
@@ -71,30 +67,21 @@ export function KYCSubmission() {
 
     setIsSubmitting(true);
     try {
-      // Generate the document hash using document type and number
       const documentHash = await createDocumentHash(values.documentType, values.documentNumber);
       
       let blockchainSubmitted = false;
       
-      // Try blockchain submission first if connected
       if (isConnected && web3 && account) {
         try {
-          // Calculate fee in wei
-          const feeInWei = web3?.utils.toWei(KYC_SUBMISSION_FEE, 'ether') || "10000000000000000"; // 0.01 ETH
-          
-          // Submit to blockchain with fee
-          blockchainSubmitted = await submitKYC(documentHash, feeInWei);
+          blockchainSubmitted = await submitKYC(documentHash);
         } catch (error) {
           console.error("Error submitting to blockchain:", error);
-          // Show warning but continue with database fallback
           setShowBlockchainWarning(true);
           blockchainSubmitted = false;
         }
       }
       
-      // If blockchain submission failed or wasn't available, use database fallback
       if (!blockchainSubmitted) {
-        // Save to database directly
         const submission = {
           user_id: user.id,
           document_type: values.documentType,

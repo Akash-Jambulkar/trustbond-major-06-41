@@ -1,13 +1,14 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Transaction } from './types';
+import { safeFrom } from '@/utils/supabase-utils';
 
 // Get transactions for a specific user or all transactions
 export async function getTransactions(userAddress?: string): Promise<Transaction[]> {
   try {
-    // Use direct supabase query
+    // Use transactions table instead of blockchain_transactions
     let query = supabase
-      .from('blockchain_transactions')
+      .from('transactions')
       .select('*')
       .order('created_at', { ascending: false });
       
@@ -24,15 +25,14 @@ export async function getTransactions(userAddress?: string): Promise<Transaction
     
     // Transform the raw data into Transaction objects with type safety
     return (data || []).map((tx: any) => ({
-      hash: tx.hash,
+      hash: tx.transaction_hash,
       timestamp: new Date(tx.created_at).getTime(),
-      status: tx.metadata?.status || 'pending',
+      status: tx.status || 'pending',
       type: tx.type || 'other',
-      description: tx.metadata?.description || 'Blockchain transaction',
+      description: tx.type === 'kyc' ? 'KYC Submission' : 'Blockchain transaction',
       account: tx.from_address,
-      network: tx.network_id?.toString() || 'unknown',
-      blockNumber: tx.metadata?.blockNumber,
-      metadata: tx.metadata || {}
+      network: '1', // Default to mainnet
+      metadata: {}
     }));
   } catch (error) {
     console.error('Error in getTransactions:', error);
@@ -44,9 +44,9 @@ export async function getTransactions(userAddress?: string): Promise<Transaction
 export async function getTransactionByHash(hash: string): Promise<Transaction | null> {
   try {
     const { data, error } = await supabase
-      .from('blockchain_transactions')
+      .from('transactions')
       .select('*')
-      .eq('hash', hash.toLowerCase())
+      .eq('transaction_hash', hash.toLowerCase())
       .maybeSingle();
     
     if (error) {
@@ -57,15 +57,14 @@ export async function getTransactionByHash(hash: string): Promise<Transaction | 
     if (!data) return null;
     
     return {
-      hash: data.hash,
+      hash: data.transaction_hash,
       timestamp: new Date(data.created_at).getTime(),
-      status: data.metadata?.status || 'pending',
+      status: data.status || 'pending',
       type: data.type || 'other',
-      description: data.metadata?.description || 'Blockchain transaction',
+      description: data.type === 'kyc' ? 'KYC Submission' : 'Blockchain transaction',
       account: data.from_address,
-      network: data.network_id?.toString() || 'unknown',
-      blockNumber: data.metadata?.blockNumber,
-      metadata: data.metadata || {}
+      network: '1', // Default to mainnet
+      metadata: {}
     };
   } catch (error) {
     console.error('Error in getTransactionByHash:', error);
@@ -76,9 +75,9 @@ export async function getTransactionByHash(hash: string): Promise<Transaction | 
 // Add transaction
 export async function addBlockchainTransaction(transactionData: any) {
   try {
-    // Use direct supabase query
+    // Use transactions table
     const { data, error } = await supabase
-      .from('blockchain_transactions')
+      .from('transactions')
       .insert(transactionData)
       .select()
       .single();
@@ -99,9 +98,9 @@ export async function addBlockchainTransaction(transactionData: any) {
 export async function updateBlockchainTransaction(hash: string, updates: any) {
   try {
     const { error } = await supabase
-      .from('blockchain_transactions')
+      .from('transactions')
       .update(updates)
-      .eq('hash', hash.toLowerCase());
+      .eq('transaction_hash', hash.toLowerCase());
       
     if (error) {
       console.error('Error updating blockchain transaction:', error);
@@ -119,7 +118,7 @@ export async function updateBlockchainTransaction(hash: string, updates: any) {
 export async function clearTransactionHistory(userAddress: string): Promise<boolean> {
   try {
     const { error } = await supabase
-      .from('blockchain_transactions')
+      .from('transactions')
       .delete()
       .eq('from_address', userAddress.toLowerCase());
       

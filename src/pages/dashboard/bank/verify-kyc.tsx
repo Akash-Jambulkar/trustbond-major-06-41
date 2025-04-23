@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,6 +22,7 @@ const VerifyKYC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedDocument, setSelectedDocument] = useState<any>(null);
   const [verifying, setVerifying] = useState(false);
+  const { account } = useAuth();
 
   useEffect(() => {
     if (user && user.role === "bank") {
@@ -62,8 +62,22 @@ const VerifyKYC = () => {
         return;
       }
       
+      const verificationStatus = approve ? 'verified' as const : 'rejected' as const;
+      
       await verifyKYC(selectedDocument.profiles.wallet_address, approve);
-      toast.success(approve ? "Document verified!" : "Document rejected");
+      
+      const { error } = await supabase
+        .from('kyc_documents')
+        .update({ 
+          verification_status: verificationStatus,
+          verified_by: account,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', selectedDocument.id);
+        
+      if (error) throw error;
+      
+      toast.success(`Document ${approve ? 'verified' : 'rejected'} successfully`);
       setSelectedDocument(null);
       fetchDocuments();
     } catch (error) {
