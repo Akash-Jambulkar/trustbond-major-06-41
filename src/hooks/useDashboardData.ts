@@ -25,10 +25,10 @@ export const useDashboardData = () => {
       setError(null);
 
       try {
-        // Get user session data using the correct property
+        // Get user session data
         const { data: sessionData, error: sessionError } = await supabase.auth.getUser();
         
-        if (sessionError || !sessionData) {
+        if (sessionError) {
           console.error("Error fetching user session:", sessionError);
           setIsLoading(false);
           return;

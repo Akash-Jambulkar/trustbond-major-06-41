@@ -44,6 +44,13 @@ import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 
+// Define a type for the user profile
+interface UserProfile {
+  email?: string;
+  full_name?: string;
+  [key: string]: any;
+}
+
 // Define a simpler UserRole type to avoid potential import issues
 interface UserRole {
   id: string;
@@ -61,7 +68,7 @@ const userRoleService = {
       // First get user roles
       const { data: roleData, error: roleError } = await supabase
         .from('user_role_assignments')
-        .select('id, user_id, role, created_at');
+        .select('id, user_id, role, assigned_at');
       
       if (roleError) throw roleError;
       
@@ -70,21 +77,34 @@ const userRoleService = {
       
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('user_id, email, full_name')
-        .in('user_id', userIds);
+        .select('user_id, email, name');
       
       if (profilesError) throw profilesError;
       
+      // Create a map for quick lookups
+      const profileMap: Record<string, UserProfile> = {};
+      if (profilesData) {
+        profilesData.forEach(profile => {
+          if (profile && profile.user_id) {
+            profileMap[profile.user_id] = {
+              email: profile.email,
+              full_name: profile.name
+            };
+          }
+        });
+      }
+      
       // Merge the data
       const usersWithRoles: UserRole[] = roleData.map(role => {
-        const profile = profilesData.find(p => p.user_id === role.user_id) || {};
+        const profile = role.user_id && profileMap[role.user_id] ? profileMap[role.user_id] : {};
+        
         return {
           id: role.id,
           user_id: role.user_id,
           email: profile.email,
           full_name: profile.full_name,
           role: role.role,
-          created_at: role.created_at
+          created_at: role.assigned_at
         };
       });
       
@@ -99,7 +119,7 @@ const userRoleService = {
     try {
       const { data, error } = await supabase
         .from('user_role_assignments')
-        .update({ role })
+        .update({ role, updated_at: new Date().toISOString() })
         .eq('user_id', userId);
       
       if (error) throw error;
