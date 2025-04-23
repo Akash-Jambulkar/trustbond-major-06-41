@@ -9,7 +9,7 @@ import { useMode } from "@/contexts/ModeContext";
 import { toast } from "sonner";
 
 const AdminSettings = () => {
-  const { mode, enableBlockchain, toggleBlockchain, setProductionMode } = useMode();
+  const { enableBlockchain, toggleBlockchain } = useMode();
 
   const handleSaveNotificationSettings = () => {
     toast.success("Notification settings saved");
@@ -43,20 +43,13 @@ const AdminSettings = () => {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between border-b pb-3">
                 <div>
-                  <h3 className="text-sm font-medium">System Mode</h3>
+                  <h3 className="text-sm font-medium">System Status</h3>
                   <p className="text-sm text-muted-foreground">
-                    The application is running in production mode
+                    Current system operational status
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Label htmlFor="mode-toggle" className="text-sm">
-                    Production
-                  </Label>
-                  <Switch 
-                    id="mode-toggle" 
-                    checked={true}
-                    disabled={true}
-                  />
+                  <span className="text-sm text-green-600">Running</span>
                 </div>
               </div>
 

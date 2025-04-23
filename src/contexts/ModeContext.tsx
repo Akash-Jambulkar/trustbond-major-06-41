@@ -13,7 +13,6 @@ interface ModeProviderProps {
 }
 
 export const ModeProvider = ({ children }: ModeProviderProps) => {
-  // By default, blockchain features are disabled to ensure the app works without MetaMask
   const [enableBlockchain, setEnableBlockchain] = useState<boolean>(false);
 
   const toggleBlockchain = () => {
@@ -34,4 +33,3 @@ export const useMode = (): ModeContextType => {
   }
   return context;
 };
-
