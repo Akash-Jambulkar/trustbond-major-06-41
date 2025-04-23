@@ -544,38 +544,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const simulateBlockchainEvent = async () => {
-    if (!enableBlockchain || !isConnected || !user) {
-      toast.error("Wallet not connected");
-      return;
-    }
-
-    const eventTypes = ['kyc', 'loan', 'verification', 'repayment'];
-    const randomEventType = eventTypes[Math.floor(Math.random() * eventTypes.length)];
-    
-    const transactionHash = generateMockTransactionHash();
-
-    try {
-      await supabase
-        .from('transactions')
-        .insert([
-          {
-            transaction_hash: transactionHash,
-            type: randomEventType,
-            from_address: account,
-            status: 'confirmed',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            user_id: user.user_id
-          }
-        ]);
-      toast.success("Simulated blockchain event created");
-    } catch (error) {
-      console.error("Simulation error:", error);
-      toast.error("Failed to simulate blockchain event");
-    }
-  };
-
   const repayLoan = async (loanId: string, amountInWei: string): Promise<boolean> => {
     if (!enableBlockchain || !isConnected) {
       toast.error("Wallet not connected");
@@ -622,7 +590,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         approveLoan,
         rejectLoan,
         getTransactionHistory,
-        simulateBlockchainEvent,
         repayLoan,
         registerBank
       }}

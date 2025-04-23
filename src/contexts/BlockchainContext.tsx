@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { generateMockTransactionHash } from "@/utils/mockBlockchain";
-import { BlockchainContextType } from "@/utils/transactions";
+import { BlockchainContextType } from "@/contexts/blockchain/types";
 import { 
   Transaction,
   TransactionType,
