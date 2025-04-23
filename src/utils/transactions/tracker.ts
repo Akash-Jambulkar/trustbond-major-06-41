@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Transaction, TransactionType, createTransactionMetadata } from "./types";
+import { useAuth } from "@/contexts/AuthContext";
 
 /**
  * Add a transaction to the history
@@ -26,23 +27,24 @@ export const trackTransaction = async (
   };
 
   try {
-    // Convert TransactionMetadata to Json-compatible object
-    const txMetadata = createTransactionMetadata(transaction);
-
-    // Store transaction in Supabase with type assertion
+    // Get user ID from session
+    const { data: authData } = await supabase.auth.getSession();
+    const userId = authData.session?.user?.id;
+    
+    // Store transaction in database
     const { error } = await supabase
-      .from('blockchain_transactions' as any)
+      .from('transactions')
       .insert({
-        hash: transaction.hash,
-        from_address: transaction.account.toLowerCase(),
-        to_address: "",  // Optional in our schema
-        data_hash: transaction.hash, // Using hash as data_hash since it's required
-        gas_price: "0", // Default value, will be updated when transaction is confirmed
-        gas_used: "0", // Default value, will be updated when transaction is confirmed
+        transaction_hash: transaction.hash,
         type: transaction.type,
-        timestamp: transaction.timestamp,
-        metadata: txMetadata
-      } as any);
+        from_address: transaction.account.toLowerCase(),
+        to_address: metadata?.toAddress || "",
+        status: 'pending',
+        amount: metadata?.amount || 0,
+        user_id: userId,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
     
     if (error) {
       console.error("Error storing transaction:", error);
@@ -69,17 +71,43 @@ export const watchTransaction = async (
   account: string
 ): Promise<void> => {
   try {
+    // Poll for transaction receipt
     const receipt = await web3.eth.getTransactionReceipt(txHash);
     
     if (receipt) {
-      // Transaction confirmed
-      const { updateTransactionStatus } = await import('./status');
-      updateTransactionStatus(
-        txHash,
-        receipt.status ? 'confirmed' : 'failed',
-        account,
-        receipt.blockNumber
-      );
+      // Get user ID from session
+      const { data: authData } = await supabase.auth.getSession();
+      const userId = authData.session?.user?.id;
+      
+      // Transaction confirmed in blockchain
+      const status = receipt.status ? 'confirmed' : 'failed';
+      
+      // Update transaction in database
+      const { error } = await supabase
+        .from('transactions')
+        .update({
+          status,
+          updated_at: new Date().toISOString()
+        })
+        .eq('transaction_hash', txHash.toLowerCase())
+        .eq('from_address', account.toLowerCase());
+      
+      if (error) {
+        console.error("Error updating transaction status:", error);
+      }
+      
+      // Show notification
+      if (status === 'confirmed') {
+        toast.success(`Transaction confirmed`, {
+          description: `Block: ${receipt.blockNumber}`,
+          duration: 5000
+        });
+      } else {
+        toast.error(`Transaction failed`, {
+          description: `Please try again`,
+          duration: 5000
+        });
+      }
     } else {
       // Check again in 3 seconds
       setTimeout(() => watchTransaction(web3, txHash, account), 3000);

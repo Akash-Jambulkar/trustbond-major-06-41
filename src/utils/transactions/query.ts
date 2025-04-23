@@ -1,12 +1,22 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Transaction, TransactionStatus, TransactionType } from './types';
-import { safeFrom } from '@/utils/supabase-utils';
 
-// Get transactions for a specific user or all transactions
+// Get transactions for a specific user
 export async function getTransactions(userAddress?: string): Promise<Transaction[]> {
   try {
-    // Use transactions table instead of blockchain_transactions
+    // Get user ID from session if userAddress is not provided
+    let userId = null;
+    if (!userAddress) {
+      const { data: authData } = await supabase.auth.getSession();
+      userId = authData.session?.user?.id;
+      
+      if (!userId) {
+        return [];
+      }
+    }
+    
+    // Query based on either wallet address or user ID
     let query = supabase
       .from('transactions')
       .select('*')
@@ -14,6 +24,10 @@ export async function getTransactions(userAddress?: string): Promise<Transaction
       
     if (userAddress) {
       query = query.eq('from_address', userAddress.toLowerCase());
+    } else if (userId) {
+      query = query.eq('user_id', userId);
+    } else {
+      return [];
     }
     
     const { data, error } = await query;
@@ -29,14 +43,39 @@ export async function getTransactions(userAddress?: string): Promise<Transaction
       timestamp: new Date(tx.created_at).getTime(),
       status: (tx.status || 'pending') as TransactionStatus,
       type: (tx.type || 'other') as TransactionType,
-      description: tx.type === 'kyc' ? 'KYC Submission' : 'Blockchain transaction',
+      description: getTransactionDescription(tx),
       account: tx.from_address,
-      network: '1', // Default to mainnet
-      metadata: {}
+      network: tx.network_id || '1', // Default to mainnet
+      metadata: {
+        amount: tx.amount || 0,
+        toAddress: tx.to_address || null
+      }
     }));
   } catch (error) {
     console.error('Error in getTransactions:', error);
     throw error;
+  }
+}
+
+// Helper to generate a human-readable transaction description
+function getTransactionDescription(tx: any): string {
+  switch (tx.type) {
+    case 'kyc':
+      return 'KYC Document Submission';
+    case 'verification':
+      return 'KYC Verification';
+    case 'trust_score':
+      return 'Trust Score Update';
+    case 'loan_request':
+      return `Loan Request: ${tx.amount} ETH`;
+    case 'loan_approval':
+      return 'Loan Approval';
+    case 'loan_repayment':
+      return `Loan Repayment: ${tx.amount} ETH`;
+    case 'registration':
+      return 'Bank Registration';
+    default:
+      return 'Blockchain Transaction';
   }
 }
 
@@ -61,10 +100,13 @@ export async function getTransactionByHash(hash: string): Promise<Transaction | 
       timestamp: new Date(data.created_at).getTime(),
       status: (data.status || 'pending') as TransactionStatus,
       type: (data.type || 'other') as TransactionType,
-      description: data.type === 'kyc' ? 'KYC Submission' : 'Blockchain transaction',
+      description: getTransactionDescription(data),
       account: data.from_address,
-      network: '1', // Default to mainnet
-      metadata: {}
+      network: data.network_id || '1',
+      metadata: {
+        amount: data.amount || 0,
+        toAddress: data.to_address || null
+      }
     };
   } catch (error) {
     console.error('Error in getTransactionByHash:', error);
@@ -75,7 +117,6 @@ export async function getTransactionByHash(hash: string): Promise<Transaction | 
 // Add transaction
 export async function addBlockchainTransaction(transactionData: any) {
   try {
-    // Use transactions table
     const { data, error } = await supabase
       .from('transactions')
       .insert(transactionData)

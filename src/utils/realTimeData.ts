@@ -20,21 +20,21 @@ export enum RealTimeEventType {
  * Initialize real-time data subscriptions
  */
 export const initializeRealTimeSubscriptions = (userId: string) => {
-  if (!supabase) return;
+  if (!supabase || !userId) return;
 
-  // Subscribe to Supabase real-time updates for blockchain transactions
+  // Subscribe to Supabase real-time updates for transactions
   const transactionsSubscription = supabase
-    .channel('blockchain_transactions_changes')
+    .channel('transactions-channel')
     .on(
       'postgres_changes',
       {
         event: '*',
         schema: 'public',
-        table: 'blockchain_transactions',
-        filter: `from_address=eq.${userId.toLowerCase()}`
+        table: 'transactions',
+        filter: `user_id=eq.${userId}`
       },
       (payload) => {
-        // Emit the event for components to update
+        console.log('Transaction update received:', payload);
         realTimeEvents.emit(RealTimeEventType.TRANSACTION_UPDATED, payload.new);
       }
     )
@@ -42,7 +42,7 @@ export const initializeRealTimeSubscriptions = (userId: string) => {
 
   // Subscribe to KYC document submissions
   const kycSubscription = supabase
-    .channel('kyc_document_submissions_changes')
+    .channel('kyc-channel')
     .on(
       'postgres_changes',
       {
@@ -52,40 +52,48 @@ export const initializeRealTimeSubscriptions = (userId: string) => {
         filter: `user_id=eq.${userId}`
       },
       (payload) => {
+        console.log('KYC update received:', payload);
         realTimeEvents.emit(RealTimeEventType.KYC_UPDATED, payload.new);
       }
     )
     .subscribe();
 
-  // Subscribe to trust score updates
+  // Subscribe to profiles for trust score updates
   const trustScoreSubscription = supabase
-    .channel('trust_scores_changes')
+    .channel('trust-score-channel')
     .on(
       'postgres_changes',
       {
-        event: '*',
+        event: 'UPDATE',
         schema: 'public',
-        table: 'trust_scores',
-        filter: `user_address=eq.${userId.toLowerCase()}`
+        table: 'profiles',
+        filter: `id=eq.${userId}`
       },
       (payload) => {
-        realTimeEvents.emit(RealTimeEventType.TRUST_SCORE_UPDATED, payload.new);
+        if (payload.new.trust_score !== payload.old.trust_score) {
+          console.log('Trust score update received:', payload);
+          realTimeEvents.emit(RealTimeEventType.TRUST_SCORE_UPDATED, {
+            score: payload.new.trust_score,
+            change: payload.new.trust_score - (payload.old.trust_score || 0)
+          });
+        }
       }
     )
     .subscribe();
 
   // Subscribe to loan updates
   const loanSubscription = supabase
-    .channel('loans_changes')
+    .channel('loans-channel')
     .on(
       'postgres_changes',
       {
         event: '*',
         schema: 'public',
         table: 'loans',
-        filter: `borrower_address=eq.${userId.toLowerCase()}`
+        filter: `user_id=eq.${userId}`
       },
       (payload) => {
+        console.log('Loan update received:', payload);
         realTimeEvents.emit(RealTimeEventType.LOAN_UPDATED, payload.new);
       }
     )
@@ -101,16 +109,6 @@ export const initializeRealTimeSubscriptions = (userId: string) => {
 };
 
 /**
- * Simulate real-time blockchain event for development
- */
-export const simulateBlockchainEvent = (
-  eventType: RealTimeEventType,
-  data: any
-) => {
-  realTimeEvents.emit(eventType, data);
-};
-
-/**
  * Hook to use real-time data updates
  */
 export const useRealTimeUpdates = (
@@ -119,10 +117,12 @@ export const useRealTimeUpdates = (
 ) => {
   // Set up event listener when the component mounts
   useEffect(() => {
+    console.log(`Setting up real-time listener for: ${eventType}`);
     realTimeEvents.on(eventType, callback);
     
     // Clean up event listener when the component unmounts
     return () => {
+      console.log(`Cleaning up real-time listener for: ${eventType}`);
       realTimeEvents.off(eventType, callback);
     };
   }, [eventType, callback]);
