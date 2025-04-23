@@ -30,4 +30,7 @@ export interface BlockchainContextType {
   approveLoan: (loanId: string) => Promise<boolean>;
   rejectLoan: (loanId: string) => Promise<boolean>;
   submitLoanApplication: (loanData: any) => Promise<string | null>;
+  updateTrustScore: (userAddress: string, score: number) => Promise<boolean>;
+  getTrustScore: (userAddress?: string) => Promise<number>;
+  getUserLoans: (userAddress?: string) => Promise<any[]>;
 }

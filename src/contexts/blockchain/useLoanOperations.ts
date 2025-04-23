@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import Web3 from "web3";
 import { Contract } from "web3-eth-contract";
 import { supabase } from "@/integrations/supabase/client";
+import { Json } from "@/integrations/supabase/types";
 
 interface UseLoanOperationsProps {
   web3: Web3 | null;
@@ -86,12 +87,15 @@ export const useLoanOperations = ({
         const userId = authData.session?.user?.id;
         
         if (userId) {
+          // Convert amount to a number for the database
+          const amountNumber = parseFloat(amount);
+          
           // Store loan request
           await supabase
             .from('loans')
             .insert({
               user_id: userId,
-              amount: amount,
+              amount: amountNumber,
               interest_rate: interestRate,
               term_months: term,
               status: 'pending',
@@ -99,19 +103,19 @@ export const useLoanOperations = ({
               blockchain_address: account
             });
             
-          // Store loan event
+          // Store loan event - ensure amount is properly typed
           await supabase
             .from('loan_events')
             .insert({
               loan_id: loanId,
               event_type: 'requested',
-              amount: amount,
+              amount: amountNumber,
               transaction_hash: tx.transactionHash,
               metadata: {
                 interestRate,
                 term,
                 purpose
-              }
+              } as Json
             });
         }
       } catch (dbError) {
@@ -192,17 +196,20 @@ export const useLoanOperations = ({
               })
               .eq('id', loanData.id);
               
+            // Convert loanId to string for Supabase
+            const loanIdString = String(loanData.id);
+            
             // Store loan event
             await supabase
               .from('loan_events')
               .insert({
-                loan_id: loanData.id,
+                loan_id: loanIdString,
                 event_type: 'approved',
                 transaction_hash: tx.transactionHash,
                 metadata: {
                   approver: account,
                   bankId
-                }
+                } as Json
               });
           }
         }
@@ -275,18 +282,21 @@ export const useLoanOperations = ({
               })
               .eq('id', loanData.id);
               
+            // Convert loanId to string for Supabase
+            const loanIdString = String(loanData.id);
+            
             // Store loan event
             await supabase
               .from('loan_events')
               .insert({
-                loan_id: loanData.id,
+                loan_id: loanIdString,
                 event_type: 'rejected',
                 transaction_hash: tx.transactionHash,
                 metadata: {
                   rejecter: account,
                   bankId,
                   reason
-                }
+                } as Json
               });
           }
         }
@@ -346,8 +356,8 @@ export const useLoanOperations = ({
           .maybeSingle();
           
         if (loanData) {
-          // Calculate new repaid amount
-          const currentRepaid = parseFloat(loanData.repaid_amount || '0');
+          // Parse and convert numeric values
+          const currentRepaid = parseFloat(loanData.repaid_amount?.toString() || '0');
           const repaymentAmount = parseFloat(amount);
           const newRepaidTotal = currentRepaid + repaymentAmount;
           
@@ -361,13 +371,16 @@ export const useLoanOperations = ({
             })
             .eq('id', loanData.id);
             
-          // Store loan event
+          // Convert loanId to string for Supabase
+          const loanIdString = String(loanData.id);
+            
+          // Store loan event - ensure amount is a number
           await supabase
             .from('loan_events')
             .insert({
-              loan_id: loanData.id,
+              loan_id: loanIdString,
               event_type: 'repayment',
-              amount: amount,
+              amount: repaymentAmount,
               transaction_hash: tx.transactionHash
             });
         }
@@ -409,7 +422,7 @@ export const useLoanOperations = ({
           
           // Get loan status as a string
           let statusStr = '';
-          switch (loan.status.toString()) {
+          switch (String(loan.status)) {
             case '0': statusStr = 'pending'; break;
             case '1': statusStr = 'approved'; break;
             case '2': statusStr = 'rejected'; break;

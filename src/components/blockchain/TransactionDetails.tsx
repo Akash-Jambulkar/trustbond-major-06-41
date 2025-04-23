@@ -97,6 +97,11 @@ export const TransactionDetails: React.FC<TransactionDetailsProps> = ({ transact
         return;
       }
       
+      // Convert amount to a number if it exists
+      const amount = transaction.extraData?.amount ? 
+        parseFloat(transaction.extraData.amount) : 
+        null;
+      
       // Sync transaction to database
       await supabase
         .from('transactions')
@@ -106,7 +111,7 @@ export const TransactionDetails: React.FC<TransactionDetailsProps> = ({ transact
           status: transaction.status,
           from_address: transaction.extraData?.fromAddress,
           to_address: transaction.extraData?.toAddress,
-          amount: transaction.extraData?.amount,
+          amount: amount, // Ensure this is a number
           user_id: userId
         });
         
@@ -249,3 +254,4 @@ export const TransactionDetails: React.FC<TransactionDetailsProps> = ({ transact
 };
 
 export default TransactionDetails;
+

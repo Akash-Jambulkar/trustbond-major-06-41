@@ -47,7 +47,7 @@ export const BlockchainStateProvider = ({ children }: { children: ReactNode }) =
     getKYCStatus,
     updateTrustScore,
     getTrustScore,
-    requestLoan: submitLoanApplication,
+    requestLoan,
     approveLoan,
     rejectLoan,
     repayLoan,
@@ -69,6 +69,29 @@ export const BlockchainStateProvider = ({ children }: { children: ReactNode }) =
   const submitKYCWrapper = async (documentHash: string, feeInWei?: string): Promise<boolean> => {
     const result = await submitKYC(documentHash, 'default', feeInWei);
     return result.success;
+  };
+
+  // Create a wrapper for requestLoan to match the expected interface
+  const submitLoanApplication = async (loanData: any): Promise<string | null> => {
+    const result = await requestLoan(
+      loanData.amount.toString(), 
+      loanData.purpose || 'General Purpose', 
+      loanData.termMonths || 12
+    );
+    return result ? loanData.loanId || 'pending-id' : null;
+  };
+
+  // Create a wrapper for rejectLoan to match the expected interface
+  const rejectLoanWrapper = async (loanId: string): Promise<boolean> => {
+    return await rejectLoan(loanId, 'Rejected by bank');
+  };
+
+  // Create a wrapper for registerBank to match the expected interface
+  const registerBankWrapper = async (bankData: any): Promise<boolean> => {
+    return await registerBank(
+      bankData.name || 'Bank', 
+      bankData.regNumber || bankData.registrationNumber || '12345'
+    );
   };
 
   const contextValue: BlockchainContextType = {
@@ -94,10 +117,10 @@ export const BlockchainStateProvider = ({ children }: { children: ReactNode }) =
     verifyKYC,
     getTransactionHistory,
     switchNetwork,
-    registerBank,
+    registerBank: registerBankWrapper,
     repayLoan,
     approveLoan,
-    rejectLoan,
+    rejectLoan: rejectLoanWrapper,
     submitLoanApplication,
     updateTrustScore,
     getTrustScore,
