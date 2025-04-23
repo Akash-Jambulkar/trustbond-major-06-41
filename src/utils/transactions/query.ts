@@ -45,7 +45,8 @@ export async function getTransactions(userAddress?: string): Promise<Transaction
       type: (tx.type || 'other') as TransactionType,
       description: getTransactionDescription(tx),
       account: tx.from_address,
-      network: tx.network_id || '1', // Default to mainnet
+      // Default to mainnet (network_id doesn't exist in our schema)
+      network: '1',
       metadata: {
         amount: tx.amount || 0,
         toAddress: tx.to_address || null
@@ -102,7 +103,8 @@ export async function getTransactionByHash(hash: string): Promise<Transaction | 
       type: (data.type || 'other') as TransactionType,
       description: getTransactionDescription(data),
       account: data.from_address,
-      network: data.network_id || '1',
+      // Default to mainnet (network_id doesn't exist in our schema)
+      network: '1',
       metadata: {
         amount: data.amount || 0,
         toAddress: data.to_address || null

@@ -1,5 +1,5 @@
 
-import { RealTimeEventType, simulateBlockchainEvent } from './realTimeData';
+import { RealTimeEventType } from './realTimeData';
 
 /**
  * Generate a mock transaction hash
