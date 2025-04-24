@@ -1,20 +1,20 @@
 
-// Import from correct path
+// Import from correct paths
 import { getTransactions, clearTransactionHistory } from "./transactions/query";
 import { trackTransaction, watchTransaction } from "./transactions/tracker";
 import { updateTransactionStatus } from "./transactions/status";
 import type { TransactionStatus, TransactionType, Transaction } from "./transactions/types";
 
-// Export functions
+// Export all transaction-related functions together
 export { 
   getTransactions, 
   clearTransactionHistory, 
   trackTransaction, 
   watchTransaction, 
   updateTransactionStatus
-}
+};
 
-// Use export type for type re-exports
+// Re-export types for easy access
 export type { 
   TransactionStatus, 
   TransactionType,

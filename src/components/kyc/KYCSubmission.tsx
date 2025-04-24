@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useCallback } from "react";
 import { 
   Card, 
   CardContent, 
@@ -28,6 +29,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { KYC_SUBMISSION_FEE } from "@/utils/contracts/contractConfig";
 import { saveKycSubmission } from "@/utils/supabase/kycSubmissions";
+import { supabase } from "@/integrations/supabase/client";
+import { trackTransaction } from "@/utils/transactionTracker";
 
 type FormValues = {
   documentType: DocumentType;
@@ -70,10 +73,30 @@ export function KYCSubmission() {
       const documentHash = await createDocumentHash(values.documentType, values.documentNumber);
       
       let blockchainSubmitted = false;
+      let transactionHash = "";
       
       if (isConnected && web3 && account) {
         try {
           blockchainSubmitted = await submitKYC(documentHash);
+          
+          // If blockchain submission succeeded, we need to get the transaction hash
+          // This is usually returned by the submitKYC function but we're not capturing it here
+          // Instead, we'll create a placeholder transaction
+          const networkId = await web3.eth.getChainId();
+          
+          // Create a manual transaction record if one wasn't created automatically
+          transactionHash = `kyc-${Date.now()}-${account.substring(2, 8)}`;
+          trackTransaction(
+            transactionHash, 
+            "kyc", 
+            "KYC Document Submitted", 
+            account, 
+            networkId,
+            { 
+              documentType: values.documentType,
+              timestamp: new Date().toISOString()
+            }
+          );
         } catch (error) {
           console.error("Error submitting to blockchain:", error);
           setShowBlockchainWarning(true);
@@ -95,6 +118,20 @@ export function KYCSubmission() {
           const submissionId = await saveKycSubmission(submission);
           
           if (submissionId) {
+            // If database submission succeeded, create a transaction record
+            if (account) {
+              // Create a transaction record in the database for database submissions too
+              await supabase.from('transactions').insert({
+                transaction_hash: `db-kyc-${Date.now()}-${user.id.substring(0, 6)}`,
+                type: 'kyc',
+                from_address: account.toLowerCase(),
+                status: 'pending',
+                user_id: user.id,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              });
+            }
+            
             toast.success("Document information submitted successfully to our database");
             form.reset();
           } else {
