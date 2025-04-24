@@ -30,8 +30,15 @@ export const trackTransaction = async (
     const { data: authData } = await supabase.auth.getSession();
     const userId = authData.session?.user?.id;
     
+    console.log("Tracking transaction:", {
+      transaction_hash: transaction.hash,
+      type: transaction.type,
+      from_address: transaction.account.toLowerCase(),
+      user_id: userId || 'unknown'
+    });
+    
     // Store transaction in database
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('transactions')
       .insert({
         transaction_hash: transaction.hash,
@@ -44,10 +51,13 @@ export const trackTransaction = async (
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         value: metadata?.amount ? metadata.amount.toString() : "0" // Ensure value is populated
-      });
+      })
+      .select();
     
     if (error) {
       console.error("Error storing transaction:", error);
+    } else {
+      console.log("Transaction stored successfully:", data);
     }
   } catch (err) {
     console.error("Failed to store transaction in database:", err);
@@ -82,8 +92,14 @@ export const watchTransaction = async (
       // Transaction confirmed in blockchain
       const status = receipt.status ? 'confirmed' : 'failed';
       
+      console.log("Transaction confirmed:", {
+        txHash,
+        status,
+        blockNumber: receipt.blockNumber
+      });
+      
       // Update transaction in database
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('transactions')
         .update({
           status,
@@ -92,10 +108,13 @@ export const watchTransaction = async (
           block_number: receipt.blockNumber ? receipt.blockNumber.toString() : null
         })
         .eq('transaction_hash', txHash.toLowerCase())
-        .eq('from_address', account.toLowerCase());
+        .eq('from_address', account.toLowerCase())
+        .select();
       
       if (error) {
         console.error("Error updating transaction status:", error);
+      } else {
+        console.log("Transaction status updated:", data);
       }
       
       // Show notification

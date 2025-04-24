@@ -77,16 +77,21 @@ export function KYCSubmission() {
       
       if (isConnected && web3 && account) {
         try {
-          blockchainSubmitted = await submitKYC(documentHash);
-          
-          // If blockchain submission succeeded, we need to get the transaction hash
-          // This is usually returned by the submitKYC function but we're not capturing it here
-          // Instead, we'll create a placeholder transaction
+          // Get network ID before submission attempt
           const networkId = await web3.eth.getChainId();
+          console.log("Current network ID:", networkId);
           
-          // Create a manual transaction record if one wasn't created automatically
+          // Attempt blockchain submission
+          const result = await submitKYC(documentHash);
+          blockchainSubmitted = Boolean(result);
+          
+          console.log("Blockchain submission result:", result);
+          
+          // Create a transaction record regardless of submission result
+          // This ensures we always have a record of the attempt
           transactionHash = `kyc-${Date.now()}-${account.substring(2, 8)}`;
-          trackTransaction(
+          
+          await trackTransaction(
             transactionHash, 
             "kyc", 
             "KYC Document Submitted", 
@@ -94,9 +99,12 @@ export function KYCSubmission() {
             networkId,
             { 
               documentType: values.documentType,
-              timestamp: new Date().toISOString()
+              timestamp: new Date().toISOString(),
+              documentHash: documentHash
             }
           );
+          
+          console.log("Transaction tracked:", transactionHash);
         } catch (error) {
           console.error("Error submitting to blockchain:", error);
           setShowBlockchainWarning(true);
@@ -104,6 +112,7 @@ export function KYCSubmission() {
         }
       }
       
+      // If blockchain submission failed or wallet not connected, use database fallback
       if (!blockchainSubmitted) {
         const submission = {
           user_id: user.id,
@@ -118,18 +127,24 @@ export function KYCSubmission() {
           const submissionId = await saveKycSubmission(submission);
           
           if (submissionId) {
-            // If database submission succeeded, create a transaction record
-            if (account) {
-              // Create a transaction record in the database for database submissions too
-              await supabase.from('transactions').insert({
-                transaction_hash: `db-kyc-${Date.now()}-${user.id.substring(0, 6)}`,
-                type: 'kyc',
-                from_address: account.toLowerCase(),
-                status: 'pending',
-                user_id: user.id,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-              });
+            // Create transaction record for database submission
+            const dbTransactionHash = `db-kyc-${Date.now()}-${user.id.substring(0, 6)}`;
+            
+            // Insert the transaction directly into the database
+            const { error } = await supabase.from('transactions').insert({
+              transaction_hash: dbTransactionHash,
+              type: 'kyc',
+              from_address: account ? account.toLowerCase() : user.id,
+              status: 'pending',
+              user_id: user.id,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            });
+            
+            if (error) {
+              console.error("Error creating transaction record:", error);
+            } else {
+              console.log("Database transaction created:", dbTransactionHash);
             }
             
             toast.success("Document information submitted successfully to our database");
