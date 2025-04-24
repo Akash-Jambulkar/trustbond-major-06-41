@@ -31,21 +31,35 @@ export const useRoleSync = () => {
     // Initial fetch of user roles
     const fetchUserRoles = async () => {
       try {
-        const { data, error } = await supabase
-          .from('user_role_assignments')
-          .select('role')
-          .eq('user_id', user.id)
-          .single();
-
-        if (error && error.code !== 'PGRST116') { // No rows found error
-          console.error('Error fetching user roles:', error);
-          toast.error('Failed to fetch user roles');
+        // Try getting role from profiles table instead (as fallback)
+        if (user.role) {
+          console.log("Using role from user profile:", user.role);
+          setLoading(false);
           return;
         }
+        
+        // Try to get role from user_role_assignments table
+        try {
+          const { data, error } = await supabase
+            .from('user_role_assignments')
+            .select('role')
+            .eq('user_id', user.id)
+            .single();
 
-        if (data?.role && data.role !== user.role) {
-          setUser({ ...user, role: data.role as UserRole });
-          toast.info(`Your role is set to ${data.role}`);
+          if (error) {
+            if (error.code === '42P17') { // Infinite recursion error
+              console.log("Detected recursive policy issue, using profile role instead");
+              // Continue using the user.role from profiles
+            } else if (error.code !== 'PGRST116') { // No rows found error
+              console.error('Error fetching user roles from assignments:', error);
+              toast.error('Failed to fetch user role');
+            }
+          } else if (data?.role && data.role !== user.role) {
+            setUser({ ...user, role: data.role as UserRole });
+            toast.info(`Your role is set to ${data.role}`);
+          }
+        } catch (err) {
+          console.error('Exception in fetchRoleAssignments:', err);
         }
       } catch (err) {
         console.error('Exception in fetchUserRoles:', err);
