@@ -14,6 +14,13 @@ export const trackTransaction = async (
   network: string | number,
   metadata?: any
 ): Promise<Transaction> => {
+  console.log("Starting transaction tracking:", {
+    hash,
+    type,
+    description,
+    account
+  });
+
   const transaction: Transaction = {
     hash,
     timestamp: Date.now(),
@@ -30,12 +37,10 @@ export const trackTransaction = async (
     const { data: authData } = await supabase.auth.getSession();
     const userId = authData.session?.user?.id;
     
-    console.log("Tracking transaction:", {
-      transaction_hash: transaction.hash,
-      type: transaction.type,
-      from_address: transaction.account.toLowerCase(),
-      user_id: userId || 'unknown'
-    });
+    if (!userId) {
+      console.error("No user ID found for transaction tracking");
+      throw new Error("User not authenticated");
+    }
     
     // Store transaction in database
     const { data, error } = await supabase
@@ -50,36 +55,43 @@ export const trackTransaction = async (
         user_id: userId,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        value: metadata?.amount ? metadata.amount.toString() : "0" // Ensure value is populated
+        value: metadata?.amount ? metadata.amount.toString() : "0"
       })
       .select();
     
     if (error) {
       console.error("Error storing transaction:", error);
-    } else {
-      console.log("Transaction stored successfully:", data);
+      throw error;
     }
+    
+    console.log("Transaction stored successfully:", data);
+    
+    // Show toast notification
+    toast.success(`Transaction submitted: ${description}`, {
+      description: `Hash: ${hash.substring(0, 8)}...${hash.substring(hash.length - 6)}`,
+      duration: 5000
+    });
   } catch (err) {
-    console.error("Failed to store transaction in database:", err);
+    console.error("Failed to store transaction:", err);
+    toast.error("Failed to track transaction. Please try again.");
   }
-  
-  // Show toast notification
-  toast.success(`Transaction submitted: ${description}`, {
-    description: `Hash: ${hash.substring(0, 8)}...${hash.substring(hash.length - 6)}`,
-    duration: 5000
-  });
   
   return transaction;
 };
 
 /**
- * Listen for transaction confirmation
+ * Watch for transaction confirmation
  */
 export const watchTransaction = async (
   web3: any,
   txHash: string,
   account: string
 ): Promise<void> => {
+  console.log("Starting transaction watch:", {
+    txHash,
+    account
+  });
+
   try {
     // Poll for transaction receipt
     const receipt = await web3.eth.getTransactionReceipt(txHash);
@@ -89,6 +101,11 @@ export const watchTransaction = async (
       const { data: authData } = await supabase.auth.getSession();
       const userId = authData.session?.user?.id;
       
+      if (!userId) {
+        console.error("No user ID found for transaction update");
+        throw new Error("User not authenticated");
+      }
+
       // Transaction confirmed in blockchain
       const status = receipt.status ? 'confirmed' : 'failed';
       
@@ -104,8 +121,6 @@ export const watchTransaction = async (
         .update({
           status,
           updated_at: new Date().toISOString(),
-          gas_used: receipt.gasUsed ? receipt.gasUsed.toString() : null,
-          block_number: receipt.blockNumber ? receipt.blockNumber.toString() : null
         })
         .eq('transaction_hash', txHash.toLowerCase())
         .eq('from_address', account.toLowerCase())
@@ -113,9 +128,10 @@ export const watchTransaction = async (
       
       if (error) {
         console.error("Error updating transaction status:", error);
-      } else {
-        console.log("Transaction status updated:", data);
+        throw error;
       }
+      
+      console.log("Transaction status updated:", data);
       
       // Show notification
       if (status === 'confirmed') {
@@ -135,5 +151,6 @@ export const watchTransaction = async (
     }
   } catch (error) {
     console.error("Error watching transaction:", error);
+    toast.error("Error tracking transaction status");
   }
 };
