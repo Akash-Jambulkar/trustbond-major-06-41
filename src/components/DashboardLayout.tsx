@@ -24,8 +24,13 @@ export const DashboardLayout = ({ children, sidebarNavItems }: DashboardLayoutPr
   // Use real-time updates hook
   useRealTimeUpdates();
 
-  // Get navigation items based on user role
-  const navItems = user?.role ? getNavItems(user.role) : { mainItems: [], roleSpecificItems: [] };
+  // Get navigation items based on user role if not provided explicitly
+  const generatedNavItems = user?.role ? getNavItems(user.role).mainItems.concat(
+    getNavItems(user.role).roleSpecificItems
+  ) : [];
+  
+  // Use provided sidebarNavItems or generated ones based on user role
+  const finalNavItems = sidebarNavItems && sidebarNavItems.length > 0 ? sidebarNavItems : generatedNavItems;
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -43,7 +48,7 @@ export const DashboardLayout = ({ children, sidebarNavItems }: DashboardLayoutPr
         <SidebarNav 
           user={user} 
           onLogout={logout} 
-          navItems={sidebarNavItems || []} 
+          navItems={finalNavItems} 
         />
       </div>
 

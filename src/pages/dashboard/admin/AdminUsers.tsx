@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +25,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { 
@@ -37,22 +35,14 @@ import {
   Building, 
   Clock, 
   MoreHorizontal, 
-  AlertTriangle,
   RefreshCw
 } from "lucide-react";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
+import { getAllUsersWithRoles, updateUserRole } from "@/utils/roles";
+import { UserRole } from "@/contexts/auth/types";
 
-// Define a type for the user profile
-interface UserProfile {
-  email?: string;
-  full_name?: string;
-  [key: string]: any;
-}
-
-// Define a simpler UserRole type to avoid potential import issues
-interface UserRole {
+interface UserRoleDisplay {
   id: string;
   user_id: string;
   email?: string;
@@ -61,108 +51,15 @@ interface UserRole {
   created_at: string;
 }
 
-// Create a standalone service for user roles
-const userRoleService = {
-  getAllUserRoles: async (): Promise<UserRole[]> => {
-    try {
-      console.log("Fetching all user roles");
-      
-      // Get user roles from the user_role_assignments table
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_role_assignments')
-        .select('id, user_id, role, assigned_at');
-      
-      if (roleError) {
-        console.error("Error fetching user roles:", roleError);
-        throw roleError;
-      }
-      
-      console.log("Role data fetched:", roleData?.length || 0, "records");
-      
-      if (!roleData || roleData.length === 0) {
-        return [];
-      }
-      
-      // Get a list of unique user_ids to fetch their profile data
-      const userIds = roleData.map(role => role.user_id);
-      
-      // Fetch profiles separately
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('user_id, email, name');
-      
-      if (profilesError) {
-        console.error("Error fetching user profiles:", profilesError);
-        throw profilesError;
-      }
-      
-      console.log("Profiles fetched:", profilesData?.length || 0, "records");
-      
-      // Create a map for quick lookups
-      const profileMap: Record<string, UserProfile> = {};
-      if (profilesData) {
-        profilesData.forEach(profile => {
-          if (profile && profile.user_id) {
-            profileMap[profile.user_id] = {
-              email: profile.email,
-              full_name: profile.name
-            };
-          }
-        });
-      }
-      
-      // Merge the data
-      const usersWithRoles: UserRole[] = roleData.map(role => {
-        const profile = role.user_id && profileMap[role.user_id] ? profileMap[role.user_id] : {};
-        
-        return {
-          id: role.id,
-          user_id: role.user_id,
-          email: profile.email,
-          full_name: profile.full_name,
-          role: role.role,
-          created_at: role.assigned_at
-        };
-      });
-      
-      console.log("Final user roles data:", usersWithRoles.length, "records");
-      console.log("Role distribution:", usersWithRoles.reduce((acc, user) => {
-        acc[user.role] = (acc[user.role] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>));
-      
-      return usersWithRoles;
-    } catch (error) {
-      console.error("Error fetching user roles:", error);
-      return [];
-    }
-  },
-
-  updateUserRole: async (userId: string, role: string): Promise<boolean> => {
-    try {
-      const { data, error } = await supabase
-        .from('user_role_assignments')
-        .update({ role, updated_at: new Date().toISOString() })
-        .eq('user_id', userId);
-      
-      if (error) throw error;
-      return true;
-    } catch (error) {
-      console.error("Error updating user role:", error);
-      return false;
-    }
-  }
-};
-
 const AdminUsers = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const [users, setUsers] = useState<UserRole[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<UserRole[]>([]);
+  const [users, setUsers] = useState<UserRoleDisplay[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<UserRoleDisplay[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedUser, setSelectedUser] = useState<UserRole | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserRoleDisplay | null>(null);
   const [isEditRoleOpen, setIsEditRoleOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<'user' | 'bank' | 'admin'>("user");
   const [isRoleUpdateInProgress, setIsRoleUpdateInProgress] = useState(false);
@@ -170,8 +67,8 @@ const AdminUsers = () => {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      console.log("Fetching users from userRoleService...");
-      const usersData = await userRoleService.getAllUserRoles();
+      console.log("Fetching users...");
+      const usersData = await getAllUsersWithRoles();
       console.log("Users data fetched:", usersData.length, "users");
       setUsers(usersData);
       setFilteredUsers(usersData);
@@ -223,7 +120,7 @@ const AdminUsers = () => {
     }
   };
 
-  const handleEditRole = (user: UserRole) => {
+  const handleEditRole = (user: UserRoleDisplay) => {
     setSelectedUser(user);
     setSelectedRole(user.role as 'user' | 'bank' | 'admin');
     setIsEditRoleOpen(true);
@@ -234,12 +131,20 @@ const AdminUsers = () => {
     
     setIsRoleUpdateInProgress(true);
     try {
-      await userRoleService.updateUserRole(selectedUser.user_id, selectedRole);
-      toast({
-        title: "Role Updated",
-        description: `User ${selectedUser.email} role updated to ${selectedRole}.`,
-      });
-      fetchUsers(); // Refresh data
+      const success = await updateUserRole(selectedUser.user_id, selectedRole as UserRole);
+      if (success) {
+        toast({
+          title: "Role Updated",
+          description: `User ${selectedUser.email} role updated to ${selectedRole}.`,
+        });
+        fetchUsers(); // Refresh data
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Update Failed",
+          description: "There was an error updating the user role."
+        });
+      }
     } catch (error) {
       console.error("Error updating user role:", error);
       toast({
@@ -331,7 +236,7 @@ const AdminUsers = () => {
                       </TableCell>
                       <TableCell>{user.full_name || "—"}</TableCell>
                       <TableCell>{getRoleBadge(user.role)}</TableCell>
-                      <TableCell>{format(new Date(user.created_at), "MMM d, yyyy")}</TableCell>
+                      <TableCell>{user.created_at ? format(new Date(user.created_at), "MMM d, yyyy") : "—"}</TableCell>
                       <TableCell className="text-right">
                         <Button
                           variant="ghost"
@@ -351,7 +256,6 @@ const AdminUsers = () => {
         </CardContent>
       </Card>
 
-      {/* Edit Role Dialog */}
       <Dialog open={isEditRoleOpen} onOpenChange={setIsEditRoleOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

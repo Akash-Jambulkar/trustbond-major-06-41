@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,14 +13,24 @@ const UserDashboard = () => {
   const { user } = useAuth();
   const { isConnected, connectWallet } = useBlockchain();
   const location = useLocation();
+  const navigate = useNavigate();
   const [connectionAttempted, setConnectionAttempted] = useState(false);
   
-  // Get user-specific navigation items
-  const { mainItems, roleSpecificItems } = user?.role 
-    ? getNavItems(user.role) 
-    : { mainItems: [], roleSpecificItems: [] };
+  // Check if user is appropriate role for this dashboard
+  useEffect(() => {
+    if (user && user.role !== "user") {
+      console.log(`User role is ${user.role}, redirecting from user dashboard`);
+      navigate(`/dashboard/${user.role}`);
+    }
+  }, [user, navigate]);
+
+  // If user isn't available yet or isn't the correct role, show nothing
+  if (!user || user.role !== "user") {
+    return null;
+  }
   
-  // Update active state based on current route
+  // Get user-specific navigation from the utility function
+  const { mainItems, roleSpecificItems } = getNavItems("user");
   const sidebarNavItems = [...mainItems, ...roleSpecificItems].map(item => ({
     ...item,
     active: location.pathname === item.href
