@@ -6,6 +6,7 @@ interface NavItem {
   title: string;
   href: string;
   icon: any;
+  active?: boolean; // Make active optional to maintain compatibility
 }
 
 interface NavItems {

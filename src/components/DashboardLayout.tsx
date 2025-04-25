@@ -1,6 +1,6 @@
 
 import { ReactNode, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { SidebarNav } from "./dashboard/navigation/SidebarNav";
 import { DashboardHeader } from "./dashboard/navigation/DashboardHeader";
@@ -20,14 +20,19 @@ interface DashboardLayoutProps {
 export const DashboardLayout = ({ children, sidebarNavItems }: DashboardLayoutProps) => {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation(); // Get current location for setting active state
 
   // Use real-time updates hook
   useRealTimeUpdates();
 
   // Get navigation items based on user role if not provided explicitly
-  const generatedNavItems = user?.role ? getNavItems(user.role).mainItems.concat(
-    getNavItems(user.role).roleSpecificItems
-  ) : [];
+  const { mainItems, roleSpecificItems } = user?.role ? getNavItems(user.role) : { mainItems: [], roleSpecificItems: [] };
+  
+  // Add the 'active' property to each item
+  const generatedNavItems = [...mainItems, ...roleSpecificItems].map(item => ({
+    ...item,
+    active: item.href === location.pathname
+  }));
   
   // Use provided sidebarNavItems or generated ones based on user role
   const finalNavItems = sidebarNavItems && sidebarNavItems.length > 0 ? sidebarNavItems : generatedNavItems;
