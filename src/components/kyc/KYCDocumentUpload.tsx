@@ -90,7 +90,7 @@ export function KYCDocumentUpload() {
       // Create verification fee in Wei
       const verificationFee = web3.utils.toWei('0.001', 'ether');
       
-      // Submit to blockchain with fee
+      // Pass both parameters to submitKYC
       const success = await submitKYC(documentHash, verificationFee);
       
       if (success) {

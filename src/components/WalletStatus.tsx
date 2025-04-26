@@ -37,6 +37,7 @@ export const WalletStatus = () => {
   const { enableBlockchain } = useMode();
   const [showError, setShowError] = useState<boolean>(false);
   const [connecting, setConnecting] = useState<boolean>(false);
+  const [connectionAttempts, setConnectionAttempts] = useState(0);
 
   // Networks to display in the dropdown
   const networks = [
@@ -77,6 +78,17 @@ export const WalletStatus = () => {
     try {
       setConnecting(true);
       setShowError(false);
+      setConnectionAttempts(prev => prev + 1);
+      
+      // Add a slight delay before attempting connection
+      // This can help with MetaMask initialization issues
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Force MetaMask to reload if we've tried more than once
+      if (connectionAttempts > 0 && window.ethereum) {
+        console.log("Attempting to reset MetaMask connection...");
+      }
+      
       await connectWallet();
     } catch (error) {
       console.error("Connection error:", error);

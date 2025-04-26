@@ -70,21 +70,41 @@ export const useBlockchainConnection = ({ enableBlockchain }: UseBlockchainConne
     const checkConnection = async () => {
       if (window.ethereum) {
         try {
+          // Check if MetaMask is fully loaded
+          if (typeof window.ethereum.isMetaMask === 'undefined') {
+            console.log("Waiting for MetaMask to initialize...");
+            // Wait a moment and retry
+            setTimeout(checkConnection, 1000);
+            return;
+          }
+          
           const web3Instance = new Web3(window.ethereum);
           setWeb3(web3Instance);
           
-          const networkId = await web3Instance.eth.net.getId();
-          setNetworkId(networkId);
+          // Try to get network ID with error handling
+          try {
+            const networkId = await web3Instance.eth.net.getId();
+            setNetworkId(networkId);
+          } catch (netError) {
+            console.warn("Could not get network ID, may retry later:", netError);
+          }
           
-          const accounts = await web3Instance.eth.getAccounts();
-          if (accounts.length > 0) {
-            setAccount(accounts[0]);
-            console.log("Already connected to account:", accounts[0]);
+          // Check if already connected
+          try {
+            const accounts = await web3Instance.eth.getAccounts();
+            if (accounts.length > 0) {
+              setAccount(accounts[0]);
+              console.log("Already connected to account:", accounts[0]);
+            }
+          } catch (accountError) {
+            console.warn("Could not get accounts, may retry later:", accountError);
           }
         } catch (error) {
           console.error("Error checking existing connection:", error);
           setConnectionError("Error checking existing connection");
         }
+      } else {
+        console.log("MetaMask not detected");
       }
     };
     
@@ -94,30 +114,37 @@ export const useBlockchainConnection = ({ enableBlockchain }: UseBlockchainConne
   // Listen for account and network changes
   useEffect(() => {
     if (window.ethereum && enableBlockchain) {
-      window.ethereum.on("accountsChanged", (accounts: string[]) => {
+      const handleAccountsChanged = (accounts: string[]) => {
         if (accounts.length > 0) {
           setAccount(accounts[0]);
           toast.info(`Account changed to ${accounts[0].substring(0, 6)}...${accounts[0].substring(accounts[0].length - 4)}`);
         } else {
           disconnectWallet();
         }
-      });
-
-      window.ethereum.on("chainChanged", async () => {
+      };
+      
+      const handleChainChanged = async () => {
         if (web3) {
-          const newNetworkId = await web3.eth.net.getId();
-          setNetworkId(newNetworkId);
-          toast.info(`Network changed to ${getNetworkName(newNetworkId)}`);
+          try {
+            const newNetworkId = await web3.eth.net.getId();
+            setNetworkId(newNetworkId);
+            toast.info(`Network changed to ${getNetworkName(newNetworkId)}`);
+          } catch (error) {
+            console.error("Error getting network ID after chain change:", error);
+          }
         }
-      });
-    }
+      };
+      
+      window.ethereum.on("accountsChanged", handleAccountsChanged);
+      window.ethereum.on("chainChanged", handleChainChanged);
 
-    return () => {
-      if (window.ethereum) {
-        window.ethereum.removeListener("accountsChanged", () => {});
-        window.ethereum.removeListener("chainChanged", () => {});
-      }
-    };
+      return () => {
+        if (window.ethereum.removeListener) {
+          window.ethereum.removeListener("accountsChanged", handleAccountsChanged);
+          window.ethereum.removeListener("chainChanged", handleChainChanged);
+        }
+      };
+    }
   }, [web3, enableBlockchain]);
 
   // Connect wallet
@@ -131,20 +158,53 @@ export const useBlockchainConnection = ({ enableBlockchain }: UseBlockchainConne
         toast.error(error);
         throw new Error(error);
       }
-
-      const web3Instance = new Web3(window.ethereum);
-      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
       
+      // Check if MetaMask is fully initialized
+      if (typeof window.ethereum.isMetaMask === 'undefined') {
+        const error = "MetaMask is not fully initialized. Please reload the page and try again.";
+        setConnectionError(error);
+        toast.error(error);
+        throw new Error(error);
+      }
+
+      // Create a new Web3 instance with the current provider
+      const web3Instance = new Web3(window.ethereum);
+      setWeb3(web3Instance);
+      
+      // Request account access
+      let accounts;
+      try {
+        accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+      } catch (requestError: any) {
+        const errorMessage = requestError?.message || "Failed to request accounts";
+        setConnectionError(errorMessage);
+        throw new Error(errorMessage);
+      }
+      
+      if (!accounts || accounts.length === 0) {
+        const error = "No accounts found. Please unlock MetaMask.";
+        setConnectionError(error);
+        throw new Error(error);
+      }
+      
+      // Try to get network ID safely
       try {
         const networkId = await web3Instance.eth.net.getId();
         setNetworkId(networkId);
-      } catch (netError) {
+      } catch (netError: any) {
         console.error("Failed to get network ID:", netError);
         setConnectionError("Failed to get network ID. Make sure MetaMask is connected to a network.");
       }
       
-      setWeb3(web3Instance);
+      // Set the connected account
       setAccount(accounts[0]);
+      
+      // Store the account in local storage for persistence
+      try {
+        localStorage.setItem('lastConnectedAccount', accounts[0]);
+      } catch (storageError) {
+        console.warn("Could not store account in local storage:", storageError);
+      }
       
       toast.success("Wallet connected: " + accounts[0].substring(0, 6) + "..." + accounts[0].substring(accounts[0].length - 4));
       
@@ -169,6 +229,13 @@ export const useBlockchainConnection = ({ enableBlockchain }: UseBlockchainConne
     setTrustScoreContract(null);
     setLoanContract(null);
     setConnectionError(null);
+    
+    // Clear stored account
+    try {
+      localStorage.removeItem('lastConnectedAccount');
+    } catch (storageError) {
+      console.warn("Could not remove account from local storage:", storageError);
+    }
     
     toast.info("Wallet disconnected");
   }, []);

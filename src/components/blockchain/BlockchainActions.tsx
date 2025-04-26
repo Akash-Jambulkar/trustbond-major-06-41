@@ -56,6 +56,7 @@ export const BlockchainActions = () => {
     try {
       // Convert a small fee amount to Wei for the transaction
       const feeInWei = web3.utils.toWei('0.001', 'ether');
+      // Pass both hashedDocument and feeInWei to submitKYC
       await submitKYC(hashedDocument, feeInWei);
       setDocumentId("");
       setHashedDocument("");
