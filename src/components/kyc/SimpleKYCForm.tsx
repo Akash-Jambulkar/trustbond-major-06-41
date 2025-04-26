@@ -54,46 +54,61 @@ export function SimpleKYCForm() {
     setIsSubmitting(true);
     try {
       const documentHash = await createDocumentHash(DOCUMENT_TYPES[docType], values.documentNumber);
+      console.log("Generated document hash:", documentHash);
       
       // Update profile with additional information
-      const { error: profileError } = await supabase
+      const profileUpdateResult = await supabase
         .from('profiles')
         .update({
           name: values.fullName,
           phone: values.phoneNumber,
-          address: values.address
+          address: values.address,
+          kyc_status: 'pending',
+          updated_at: new Date().toISOString()
         })
         .eq('id', user.id);
 
-      if (profileError) {
-        console.error("Error updating profile:", profileError);
+      if (profileUpdateResult.error) {
+        console.error("Error updating profile:", profileUpdateResult.error);
         toast.error("Failed to update profile information");
+        setIsSubmitting(false);
         return;
       }
+      
+      console.log("Profile successfully updated");
 
-      // Submit KYC document
-      const { error: submitError } = await supabase
+      // Prepare KYC document submission data
+      const kycSubmissionData = {
+        user_id: user.id,
+        document_type: values.documentType,
+        document_hash: documentHash,
+        verification_status: 'pending',
+        submitted_at: new Date().toISOString(),
+        wallet_address: isConnected && window.ethereum?.selectedAddress ? window.ethereum.selectedAddress : null
+      };
+      
+      console.log("Submitting KYC data:", kycSubmissionData);
+
+      // Submit KYC document to the database
+      const kycSubmissionResult = await supabase
         .from('kyc_document_submissions')
-        .insert({
-          user_id: user.id,
-          document_type: values.documentType,
-          document_hash: documentHash,
-          verification_status: 'pending',
-          submitted_at: new Date().toISOString(),
-          wallet_address: isConnected ? window.ethereum?.selectedAddress : null
-        });
+        .insert([kycSubmissionData]);
 
-      if (submitError) {
-        console.error("Error submitting KYC:", submitError);
-        toast.error("Failed to submit KYC document");
+      if (kycSubmissionResult.error) {
+        console.error("Error submitting KYC:", kycSubmissionResult.error);
+        toast.error("Failed to submit KYC document to database");
+        setIsSubmitting(false);
         return;
       }
+      
+      console.log("KYC submission successful to database");
 
       // If connected to blockchain, submit there as well
       if (isConnected && submitKYC) {
         try {
           // Passing both required arguments - documentHash and an empty string for the second parameter
           await submitKYC(documentHash, "");
+          console.log("Blockchain submission successful");
         } catch (error) {
           console.error("Blockchain submission failed:", error);
           toast.error("Blockchain submission failed, but database submission was successful");
