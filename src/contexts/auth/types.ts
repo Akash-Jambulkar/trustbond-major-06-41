@@ -16,6 +16,11 @@ export interface User {
   user_id?: string; // Add this for backward compatibility
   phone?: string;
   address?: string;
+  // Add app_metadata and user_metadata
+  app_metadata?: any;
+  user_metadata?: any;
+  // Add other properties used in the codebase
+  aud?: string;
 }
 
 export interface AuthContextType {

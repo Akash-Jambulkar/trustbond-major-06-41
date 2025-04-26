@@ -91,11 +91,19 @@ const VerifyKYC = () => {
       }
       
       // Call blockchain verification
-      const result = await verifyKYC(kycId, status);
+      let result;
+      try {
+        result = await verifyKYC(kycId, status);
+      } catch (err) {
+        console.error('Error calling verifyKYC:', err);
+        toast.error('Failed to verify KYC on blockchain');
+        setVerifying(prev => ({ ...prev, [kycId]: false }));
+        return;
+      }
       
       if (result) {
         // Get transaction hash from result if available
-        const txHash = result && typeof result === 'object' && 'transactionHash' in result
+        const txHash = result && typeof result === 'object' && result !== null && 'transactionHash' in result
           ? result.transactionHash as string
           : 'blockchain-tx-' + Math.random().toString(36).substring(2, 15);
         

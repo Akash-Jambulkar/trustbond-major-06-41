@@ -21,6 +21,7 @@ const ConsensusVerificationPage = () => {
   const { user } = useAuth();
   const [documentsCount, setDocumentsCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [selectedLoanId, setSelectedLoanId] = useState<string>('default-loan-id');
   
   useEffect(() => {
     const fetchDocumentsCount = async () => {
@@ -40,6 +41,11 @@ const ConsensusVerificationPage = () => {
     
     fetchDocumentsCount();
   }, [isConnected, user]);
+  
+  const handleConsensusReached = (consensus: 'approved' | 'rejected') => {
+    toast.success(`Consensus reached: loan ${consensus}`);
+    // Additional logic for handling consensus result
+  };
   
   return (
     <div className="space-y-6 p-6">
@@ -72,7 +78,10 @@ const ConsensusVerificationPage = () => {
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <ConsensusVerificationPanel />
+          <ConsensusVerificationPanel 
+            loanId={selectedLoanId} 
+            onConsensusReached={handleConsensusReached} 
+          />
         </div>
         
         <div className="lg:col-span-1">

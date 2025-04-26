@@ -19,6 +19,9 @@ export function useRealTimeUpdates() {
   useEffect(() => {
     if (!user) return;
 
+    const userId = user.id || user.user_id;
+    if (!userId) return;
+
     // Subscribe to KYC document submissions table
     const kycSubscription = supabase
       .channel('kyc-channel')
@@ -31,13 +34,13 @@ export function useRealTimeUpdates() {
         },
         (payload) => {
           console.log('KYC update received:', payload);
+          const payloadData = payload.new as { user_id?: string };
 
           // For user role, show notifications about their own KYC status
-          if (user.role === 'user' && payload.new && 
-              ((payload.new.user_id && payload.new.user_id === user.id) || 
-               (payload.new.user_id && payload.new.user_id === user.user_id))) {
+          if (user.role === 'user' && payloadData && 
+              ((payloadData.user_id && payloadData.user_id === userId))) {
             if (payload.eventType === 'UPDATE') {
-              const status = payload.new.verification_status;
+              const status = payloadData.verification_status;
               
               if (status === 'verified') {
                 toast.success('KYC Verified!', {
@@ -45,7 +48,7 @@ export function useRealTimeUpdates() {
                 });
               } else if (status === 'rejected') {
                 toast.error('KYC Rejected', {
-                  description: `Your KYC document was rejected. Reason: ${payload.new?.rejection_reason || 'Not specified'}`,
+                  description: `Your KYC document was rejected. Reason: ${payloadData?.rejection_reason || 'Not specified'}`,
                 });
               }
             }
@@ -73,14 +76,13 @@ export function useRealTimeUpdates() {
         },
         (payload) => {
           console.log('Transaction update received:', payload);
+          const payloadData = payload.new as { user_id?: string };
 
           // Only show notifications for the current user's transactions
-          if (payload.new && 
-             ((payload.new.user_id && payload.new.user_id === user.id) ||
-              (payload.new.user_id && payload.new.user_id === user.user_id))) {
+          if (payloadData && payloadData.user_id && payloadData.user_id === userId) {
             if (payload.eventType === 'INSERT') {
-              const txType = payload.new.transaction_type;
-              const txStatus = payload.new.status;
+              const txType = payloadData.transaction_type;
+              const txStatus = payloadData.status;
               
               if (txStatus === 'completed') {
                 toast.success(`Transaction Complete`, {
