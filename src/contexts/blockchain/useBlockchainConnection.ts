@@ -4,6 +4,7 @@ import Web3 from "web3";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { CONTRACT_ADDRESSES } from "@/utils/contracts/contractConfig";
 
 export const useBlockchainConnection = ({ enableBlockchain = false }) => {
   const [web3, setWeb3] = useState<any>(null);
@@ -177,12 +178,11 @@ export const useBlockchainConnection = ({ enableBlockchain = false }) => {
     
     const loadContracts = async () => {
       try {
-        // Dynamically import contract configurations
-        // Using path to contracts directory at the project root instead of utils
-        const kycConfig = await import("@/contracts/abis/KYCVerifier.json");
-        const trustScoreConfig = await import("@/contracts/abis/TrustScore.json");
-        const loanConfig = await import("@/contracts/abis/LoanManager.json");
-        
+        // Import the contract ABIs
+        const KYCVerifierABI = await import("@/contracts/abis/KYCVerifier.json");
+        const TrustScoreABI = await import("@/contracts/abis/TrustScore.json");
+        const LoanManagerABI = await import("@/contracts/abis/LoanManager.json");
+
         // Get network ID
         const netId = await web3.eth.getChainId();
         setNetworkId(netId);
@@ -197,21 +197,21 @@ export const useBlockchainConnection = ({ enableBlockchain = false }) => {
         // Check if correct network for the environment
         setIsCorrectNetwork(isValidNetwork(netId));
         
-        // Get contract addresses based on network ID
-        const kycAddress = kycConfig.networks?.[netId]?.address;
-        const trustScoreAddress = trustScoreConfig.networks?.[netId]?.address;
-        const loanAddress = loanConfig.networks?.[netId]?.address;
+        // Use contract addresses from our config (or dynamic lookup in a production app)
+        const kycAddress = CONTRACT_ADDRESSES.KYC_VERIFIER;
+        const trustScoreAddress = CONTRACT_ADDRESSES.TRUST_SCORE;
+        const loanAddress = CONTRACT_ADDRESSES.LOAN_MANAGER;
         
         if (!kycAddress || !trustScoreAddress || !loanAddress) {
-          console.error("Contract addresses not found for network ID:", netId);
-          setConnectionError(`Contract addresses not found for network: ${netName}`);
+          console.error("Contract addresses not found in configuration");
+          setConnectionError(`Contract addresses not found in configuration`);
           return;
         }
         
-        // Initialize contracts
-        const kycContractInstance = new web3.eth.Contract(kycConfig.abi, kycAddress);
-        const trustScoreContractInstance = new web3.eth.Contract(trustScoreConfig.abi, trustScoreAddress);
-        const loanContractInstance = new web3.eth.Contract(loanConfig.abi, loanAddress);
+        // Initialize contracts with the imported ABIs
+        const kycContractInstance = new web3.eth.Contract(KYCVerifierABI, kycAddress);
+        const trustScoreContractInstance = new web3.eth.Contract(TrustScoreABI, trustScoreAddress);
+        const loanContractInstance = new web3.eth.Contract(LoanManagerABI, loanAddress);
         
         setContracts({
           kycContract: kycContractInstance,
@@ -219,7 +219,7 @@ export const useBlockchainConnection = ({ enableBlockchain = false }) => {
           loanContract: loanContractInstance
         });
         
-        console.log("Contracts initialized successfully");
+        console.log("Smart contracts initialized successfully");
       } catch (error) {
         console.error("Error loading contracts:", error);
         setConnectionError("Error loading contracts. Please ensure contracts are deployed on the network.");
