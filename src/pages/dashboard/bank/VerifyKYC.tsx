@@ -137,7 +137,7 @@ const VerifyKYCPage = () => {
       let success = false;
       if (submission.wallet_address) {
         try {
-          success = await verifyKYC(submission.id, verificationStatus);
+          success = await verifyKYC(submission.id, verificationStatus, !approved ? rejectionReason : undefined);
           console.log("Blockchain verification result:", success);
         } catch (error) {
           console.error("Blockchain verification failed:", error);

@@ -1,4 +1,5 @@
-
+// This file is no longer used, as we've consolidated the KYC operations into src/contexts/blockchain/useKYCOperations.ts
+// We'll keep this file for now to maintain compatibility with imports, but eventually we should remove it
 import { toast } from "sonner";
 import Web3 from "web3";
 import { Contract } from "web3-eth-contract";
