@@ -24,6 +24,8 @@ export const useBlockchainConnection = ({ enableBlockchain }: UseBlockchainConne
   const [trustScoreContract, setTrustScoreContract] = useState<Contract | null>(null);
   const [loanContract, setLoanContract] = useState<Contract | null>(null);
   const [connectionAttempts, setConnectionAttempts] = useState(0);
+  const [initializationAttempted, setInitializationAttempted] = useState(false);
+  const [contractInitialized, setContractInitialized] = useState(false);
 
   const networkName = getNetworkName(networkId);
   const isGanache = networkId === NETWORK_IDS.GANACHE || networkId === NETWORK_IDS.LOCALHOST;
@@ -34,43 +36,61 @@ export const useBlockchainConnection = ({ enableBlockchain }: UseBlockchainConne
 
   // Initialize smart contracts when connected
   useEffect(() => {
-    if (web3 && account) {
+    const initializeContracts = async () => {
+      if (!web3 || !account || contractInitialized) return;
+      
+      console.log("Attempting to initialize smart contracts...");
+      
       try {
-        const kyc = new web3.eth.Contract(
+        // Create a local web3 instance to avoid potential issues with the existing one
+        const localWeb3 = new Web3(web3.currentProvider);
+        
+        // Initialize KYC contract
+        const kyc = new localWeb3.eth.Contract(
           KYCVerifierABI.abi as AbiItem[],
           CONTRACT_ADDRESSES.KYC_VERIFIER
         );
         setKycContract(kyc);
-
-        const trustScore = new web3.eth.Contract(
+        
+        // Initialize TrustScore contract
+        const trustScore = new localWeb3.eth.Contract(
           TrustScoreABI.abi as AbiItem[],
           CONTRACT_ADDRESSES.TRUST_SCORE
         );
         setTrustScoreContract(trustScore);
-
-        const loan = new web3.eth.Contract(
+        
+        // Initialize Loan contract
+        const loan = new localWeb3.eth.Contract(
           LoanManagerABI.abi as AbiItem[],
           CONTRACT_ADDRESSES.LOAN_MANAGER
         );
         setLoanContract(loan);
         
         console.log("Smart contracts initialized successfully");
+        setContractInitialized(true);
       } catch (error) {
         console.error("Failed to initialize contracts:", error);
-        toast.error("Failed to initialize smart contracts");
+        toast.error("Failed to initialize smart contracts. Please try again.");
+        setContractInitialized(false);
       }
-    }
-  }, [web3, account, networkId]);
+    };
 
-  // Check for existing connection
+    initializeContracts();
+  }, [web3, account, networkId, contractInitialized]);
+
+  // Check for existing connection with retries
   useEffect(() => {
-    if (!enableBlockchain) {
+    if (!enableBlockchain || initializationAttempted) {
       return;
     }
+    
+    const maxRetries = 3;
+    let retryCount = 0;
     
     const checkConnection = async () => {
       if (!window.ethereum) {
         console.log("MetaMask not detected");
+        setInitializationAttempted(true);
         return;
       }
 
@@ -78,18 +98,39 @@ export const useBlockchainConnection = ({ enableBlockchain }: UseBlockchainConne
         // Check if MetaMask is fully loaded
         if (typeof window.ethereum.isMetaMask === 'undefined') {
           console.log("Waiting for MetaMask to initialize...");
+          
+          // If we've tried too many times, stop retrying
+          if (retryCount >= maxRetries) {
+            console.log("Maximum retries reached. MetaMask may not be properly initialized.");
+            setInitializationAttempted(true);
+            return;
+          }
+          
           // Wait a moment and retry
+          retryCount++;
           setTimeout(checkConnection, 1000);
           return;
         }
         
+        console.log("Creating Web3 instance...");
         const web3Instance = new Web3(window.ethereum);
         setWeb3(web3Instance);
         
         // Try to get network ID with error handling
         try {
-          const networkId = await web3Instance.eth.net.getId();
-          setNetworkId(networkId);
+          console.log("Getting network ID...");
+          const networkId = await safeGetNetworkId(web3Instance);
+          
+          if (networkId !== null) {
+            console.log("Network ID:", networkId);
+            setNetworkId(networkId);
+          } else {
+            console.warn("Could not determine network ID, using default");
+            // Use a fallback for development
+            if (import.meta.env.MODE === 'development') {
+              setNetworkId(NETWORK_IDS.GANACHE);
+            }
+          }
         } catch (netError) {
           console.warn("Could not get network ID, may retry later:", netError);
           // Don't set error message here to avoid annoying users on page load
@@ -97,22 +138,35 @@ export const useBlockchainConnection = ({ enableBlockchain }: UseBlockchainConne
         
         // Check if already connected
         try {
+          console.log("Checking for existing accounts...");
           const accounts = await web3Instance.eth.getAccounts();
-          if (accounts.length > 0) {
-            setAccount(accounts[0]);
+          if (accounts && accounts.length > 0) {
             console.log("Already connected to account:", accounts[0]);
+            setAccount(accounts[0]);
           }
         } catch (accountError) {
           console.warn("Could not get accounts, may retry later:", accountError);
         }
+        
+        setInitializationAttempted(true);
       } catch (error) {
         console.error("Error checking existing connection:", error);
-        // Don't set error message here to avoid annoying users on page load
+        
+        // If we've tried too many times, stop retrying
+        if (retryCount >= maxRetries) {
+          console.log("Maximum retries reached. Giving up on blockchain initialization.");
+          setInitializationAttempted(true);
+          return;
+        }
+        
+        // Wait a moment and retry
+        retryCount++;
+        setTimeout(checkConnection, 1000);
       }
     };
     
     checkConnection();
-  }, [enableBlockchain]);
+  }, [enableBlockchain, initializationAttempted]);
 
   // Listen for account and network changes
   useEffect(() => {
@@ -129,9 +183,14 @@ export const useBlockchainConnection = ({ enableBlockchain }: UseBlockchainConne
       const handleChainChanged = async () => {
         if (web3) {
           try {
-            const newNetworkId = await web3.eth.net.getId();
-            setNetworkId(newNetworkId);
-            toast.info(`Network changed to ${getNetworkName(newNetworkId)}`);
+            const newNetworkId = await safeGetNetworkId(web3);
+            if (newNetworkId !== null) {
+              setNetworkId(newNetworkId);
+              toast.info(`Network changed to ${getNetworkName(newNetworkId)}`);
+              
+              // Re-initialize contracts when network changes
+              setContractInitialized(false);
+            }
           } catch (error) {
             console.error("Error getting network ID after chain change:", error);
           }
@@ -152,17 +211,46 @@ export const useBlockchainConnection = ({ enableBlockchain }: UseBlockchainConne
 
   // Get network ID safely
   const safeGetNetworkId = async (web3Instance: Web3): Promise<number | null> => {
-    // Try multiple methods to get network ID
+    // Try multiple methods to get network ID with timeouts
     try {
-      return await web3Instance.eth.net.getId();
+      // Set a timeout for the network ID request
+      const timeoutPromise = new Promise<null>((_, reject) => 
+        setTimeout(() => reject(new Error("Network ID request timed out")), 5000)
+      );
+      
+      // Try the primary method with timeout
+      const networkIdPromise = web3Instance.eth.net.getId();
+      const networkId = await Promise.race([networkIdPromise, timeoutPromise]);
+      return networkId as number;
     } catch (error) {
       console.warn("Failed to get network ID with net.getId, trying eth.getChainId", error);
+      
       try {
-        // Try alternate method
-        const chainId = await web3Instance.eth.getChainId();
+        // Try alternate method with timeout
+        const timeoutPromise = new Promise<null>((_, reject) => 
+          setTimeout(() => reject(new Error("Chain ID request timed out")), 5000)
+        );
+        
+        const chainIdPromise = web3Instance.eth.getChainId();
+        const chainId = await Promise.race([chainIdPromise, timeoutPromise]);
         return Number(chainId);
       } catch (chainError) {
         console.error("Failed to get chain ID as fallback:", chainError);
+        
+        try {
+          // Last resort: try direct RPC request
+          const provider = web3Instance.currentProvider;
+          if (typeof provider !== 'string' && provider && 'request' in provider) {
+            const response = await (provider as any).request({ 
+              method: 'net_version', 
+              params: [] 
+            });
+            return Number(response);
+          }
+        } catch (directError) {
+          console.error("Direct RPC request also failed:", directError);
+        }
+        
         return null;
       }
     }
@@ -230,6 +318,9 @@ export const useBlockchainConnection = ({ enableBlockchain }: UseBlockchainConne
       // Set the connected account
       setAccount(accounts[0]);
       
+      // Reset contract initialization flag to trigger re-initialization
+      setContractInitialized(false);
+      
       // Store the account in local storage for persistence
       try {
         localStorage.setItem('lastConnectedAccount', accounts[0]);
@@ -267,6 +358,7 @@ export const useBlockchainConnection = ({ enableBlockchain }: UseBlockchainConne
     setTrustScoreContract(null);
     setLoanContract(null);
     setConnectionError(null);
+    setContractInitialized(false);
     
     // Reset connection attempts
     setConnectionAttempts(0);
@@ -321,6 +413,8 @@ export const useBlockchainConnection = ({ enableBlockchain }: UseBlockchainConne
           const newNetworkId = await safeGetNetworkId(web3);
           if (newNetworkId !== null) {
             setNetworkId(newNetworkId);
+            // Reset contract initialization flag to trigger re-initialization
+            setContractInitialized(false);
             toast.success(`Switched to ${getNetworkName(newNetworkId)}`);
           }
         } catch (netError) {

@@ -6,12 +6,12 @@ import { useBlockchain } from "@/contexts/BlockchainContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Wallet } from "lucide-react";
+import { AlertCircle, Wallet, Loader2 } from "lucide-react";
 import { getNavItems } from "@/components/dashboard/navigation/getNavItems";
 
 const UserDashboard = () => {
   const { user } = useAuth();
-  const { isConnected, connectWallet } = useBlockchain();
+  const { isConnected, connectWallet, isBlockchainLoading } = useBlockchain();
   const location = useLocation();
   const navigate = useNavigate();
   const [connectionAttempted, setConnectionAttempted] = useState(false);
@@ -38,13 +38,21 @@ const UserDashboard = () => {
 
   // Try to connect wallet automatically on first load
   useEffect(() => {
-    if (!isConnected && !connectionAttempted) {
-      connectWallet().catch(err => {
-        console.log("Auto wallet connection failed:", err);
-      });
-      setConnectionAttempted(true);
-    }
-  }, [isConnected, connectWallet, connectionAttempted]);
+    const autoConnectWallet = async () => {
+      if (!isConnected && !connectionAttempted && !isBlockchainLoading) {
+        console.log("Attempting to auto-connect wallet...");
+        setConnectionAttempted(true);
+        
+        try {
+          await connectWallet();
+        } catch (err) {
+          console.error("Auto wallet connection failed:", err);
+        }
+      }
+    };
+    
+    autoConnectWallet();
+  }, [isConnected, connectWallet, connectionAttempted, isBlockchainLoading]);
 
   return (
     <DashboardLayout sidebarNavItems={sidebarNavItems}>
@@ -62,9 +70,19 @@ const UserDashboard = () => {
                   connectWallet();
                   setConnectionAttempted(true);
                 }}
+                disabled={isBlockchainLoading}
               >
-                <Wallet className="h-4 w-4" />
-                Connect Wallet
+                {isBlockchainLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Connecting...
+                  </>
+                ) : (
+                  <>
+                    <Wallet className="h-4 w-4" />
+                    Connect Wallet
+                  </>
+                )}
               </Button>
             </CardContent>
           </Card>
