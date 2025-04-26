@@ -1,53 +1,18 @@
 
 import { useEffect } from "react";
-import { SimpleKYCForm } from "@/components/kyc/SimpleKYCForm";
+import { KYCVerificationForm } from "@/components/kyc/KYCVerificationForm";
 import { KYCWorkflowStatus } from "@/components/kyc/KYCWorkflowStatus";
 import { useAuth } from "@/contexts/AuthContext";
 import { useKYCSubmission } from "@/hooks/useKYCSubmission";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { useBlockchain } from "@/contexts/BlockchainContext";
-import { useRealTimeUpdates } from "@/hooks/useRealTimeUpdates";
-import { supabase } from "@/lib/supabase";
-import { toast } from "sonner";
 
 export default function KYCPage() {
   const { user } = useAuth();
   const { submission, isLoading, error, refetch } = useKYCSubmission(user?.id);
   const { isConnected, account } = useBlockchain();
 
-  // Set up real-time updates for KYC submissions
-  useRealTimeUpdates();
-
-  // Store wallet address in user profile when connected
-  useEffect(() => {
-    const updateWalletAddress = async () => {
-      if (user?.id && isConnected && account) {
-        try {
-          console.log("Updating wallet address in profile:", account);
-          const { error } = await supabase
-            .from('profiles')
-            .update({ 
-              wallet_address: account,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', user.id);
-            
-          if (error) {
-            console.error("Failed to update wallet address:", error);
-            toast.error("Failed to update wallet address in your profile");
-          } else {
-            console.log("Wallet address updated successfully");
-          }
-        } catch (err) {
-          console.error("Error updating wallet address:", err);
-        }
-      }
-    };
-    
-    updateWalletAddress();
-  }, [user?.id, isConnected, account]);
-  
   useEffect(() => {
     if (user?.id) {
       console.log("KYC page loaded for user:", user.id);
@@ -92,7 +57,7 @@ export default function KYCPage() {
       />
 
       {(!submission || submission.verification_status === 'rejected') && (
-        <SimpleKYCForm />
+        <KYCVerificationForm />
       )}
     </div>
   );
