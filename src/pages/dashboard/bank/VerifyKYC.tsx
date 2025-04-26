@@ -95,8 +95,8 @@ const VerifyKYC = () => {
       
       if (result) {
         // Get transaction hash from result if available
-        const txHash = typeof result === 'object' && result?.transactionHash 
-          ? result.transactionHash 
+        const txHash = result && typeof result === 'object' && 'transactionHash' in result
+          ? result.transactionHash as string
           : 'blockchain-tx-' + Math.random().toString(36).substring(2, 15);
         
         // Update verification status in database

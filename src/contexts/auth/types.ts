@@ -12,6 +12,10 @@ export interface User {
   walletAddress?: string;
   wallet_address?: string; // For backward compatibility
   trust_score?: number;
+  // Adding missing properties that are referenced in the code
+  user_id?: string; // Add this for backward compatibility
+  phone?: string;
+  address?: string;
 }
 
 export interface AuthContextType {

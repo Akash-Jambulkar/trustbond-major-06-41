@@ -82,7 +82,7 @@ export const MultifactorAuth = ({ onComplete, email }: MultifactorAuthProps) => 
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {user?.mfa_enabled ? (
+        {user?.mfaEnabled ? (
           
           <div className="space-y-4">
             <div className="flex items-start space-x-4">
@@ -151,7 +151,7 @@ export const MultifactorAuth = ({ onComplete, email }: MultifactorAuthProps) => 
         )}
       </CardContent>
       <CardFooter>
-        {user?.mfa_enabled ? (
+        {user?.mfaEnabled ? (
           <Button variant="destructive" onClick={handleDisableMFA} disabled={isDisabling} className="w-full">
             {isDisabling ? "Disabling..." : "Disable Two-Factor Authentication"}
           </Button>

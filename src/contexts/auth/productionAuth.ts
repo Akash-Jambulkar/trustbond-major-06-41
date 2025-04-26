@@ -1,9 +1,9 @@
 
-import { AuthUser, UserRole } from './types';
 import { toast } from 'sonner';
+import { User, UserRole } from './types';
 
 // Production user storage
-const PRODUCTION_USERS: AuthUser[] = [
+const PRODUCTION_USERS: User[] = [
   // Admin user
   {
     id: "admin-1",
@@ -11,7 +11,7 @@ const PRODUCTION_USERS: AuthUser[] = [
     email: "admin@trustbond.com",
     role: "admin",
     walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
-    mfa_enabled: true
+    mfaEnabled: true
   },
   // Bank user
   {
@@ -20,7 +20,7 @@ const PRODUCTION_USERS: AuthUser[] = [
     email: "bank@trustbond.com",
     role: "bank",
     walletAddress: "0x2234567890abcdef1234567890abcdef12345678",
-    mfa_enabled: false
+    mfaEnabled: false
   },
   // Regular user
   {
@@ -29,12 +29,12 @@ const PRODUCTION_USERS: AuthUser[] = [
     email: "user@trustbond.com",
     role: "user", 
     walletAddress: "0x3234567890abcdef1234567890abcdef12345678",
-    mfa_enabled: false
+    mfaEnabled: false
   }
 ];
 
 export const productionAuthService = {
-  login: async (email: string, password: string): Promise<AuthUser> => {
+  login: async (email: string, password: string): Promise<User> => {
     const user = PRODUCTION_USERS.find((user) => user.email === email);
     if (!user) {
       throw new Error("Invalid credentials. Please check your email and password.");
@@ -43,7 +43,7 @@ export const productionAuthService = {
     return user;
   },
 
-  loginWithWallet: async (walletAddress: string): Promise<AuthUser> => {
+  loginWithWallet: async (walletAddress: string): Promise<User> => {
     const user = PRODUCTION_USERS.find(
       (user) => user.walletAddress?.toLowerCase() === walletAddress.toLowerCase()
     );
@@ -56,7 +56,7 @@ export const productionAuthService = {
     return user;
   },
 
-  register: async (name: string, email: string, password: string): Promise<AuthUser> => {
+  register: async (name: string, email: string, password: string): Promise<User> => {
     const emailExists = PRODUCTION_USERS.some(user => user.email === email);
     if (emailExists) {
       throw new Error("Email already registered");
@@ -66,13 +66,13 @@ export const productionAuthService = {
     const randomWalletAddress = "0x" + Array.from({length: 40}, () => 
       Math.floor(Math.random() * 16).toString(16)).join('');
 
-    const newUser: AuthUser = {
+    const newUser: User = {
       id: Date.now().toString(),
       name,
       email,
       role: "user",
       walletAddress: randomWalletAddress,
-      mfa_enabled: false,
+      mfaEnabled: false,
     };
 
     PRODUCTION_USERS.push(newUser);
@@ -87,7 +87,7 @@ export const productionAuthService = {
       throw new Error("User not found");
     }
     
-    PRODUCTION_USERS[userIndex].mfa_enabled = true;
+    PRODUCTION_USERS[userIndex].mfaEnabled = true;
     return true;
   },
   
@@ -97,7 +97,7 @@ export const productionAuthService = {
       throw new Error("User not found");
     }
     
-    PRODUCTION_USERS[userIndex].mfa_enabled = false;
+    PRODUCTION_USERS[userIndex].mfaEnabled = false;
     return true;
   }
 };

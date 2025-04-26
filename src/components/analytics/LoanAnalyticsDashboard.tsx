@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Card,
@@ -101,7 +100,7 @@ export const LoanAnalyticsDashboard: React.FC = () => {
         const { data, error } = await supabase
           .from('loans')
           .select('*')
-          .eq('user_id', user.user_id);
+          .eq('user_id', user.id);
           
         if (error) {
           console.error("Error fetching user loans:", error);
