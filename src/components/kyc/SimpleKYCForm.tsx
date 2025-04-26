@@ -6,7 +6,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { createDocumentHash, validateDocument } from "@/utils/documentHash";
+import { createDocumentHash, validateDocument, DOCUMENT_TYPES } from "@/utils/documentHash";
 import { Shield, AlertCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useBlockchain } from "@/contexts/BlockchainContext";
@@ -43,14 +43,17 @@ export function SimpleKYCForm() {
       return;
     }
 
-    if (!validateDocument(values.documentType, values.documentNumber)) {
+    // Convert string to enum type for validation and hash creation
+    const docType = values.documentType as keyof typeof DOCUMENT_TYPES;
+    
+    if (!validateDocument(DOCUMENT_TYPES[docType], values.documentNumber)) {
       toast.error(`Invalid ${values.documentType} number format`);
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const documentHash = await createDocumentHash(values.documentType, values.documentNumber);
+      const documentHash = await createDocumentHash(DOCUMENT_TYPES[docType], values.documentNumber);
       
       // Update profile with additional information
       const { error: profileError } = await supabase
