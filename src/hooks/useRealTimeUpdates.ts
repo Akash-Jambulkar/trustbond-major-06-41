@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
+import { KycDocumentSubmissionType, TransactionType } from '@/types/supabase-extensions';
 
 export enum RealTimeEventType {
   KYC_UPDATED = 'kyc_updated',
@@ -34,11 +35,14 @@ export function useRealTimeUpdates() {
         },
         (payload) => {
           console.log('KYC update received:', payload);
-          const payloadData = payload.new as { user_id?: string };
+          // Type assertion to access the payload data with proper typing
+          const payloadData = payload.new as KycDocumentSubmissionType | undefined;
+
+          if (!payloadData) return;
 
           // For user role, show notifications about their own KYC status
-          if (user.role === 'user' && payloadData && 
-              ((payloadData.user_id && payloadData.user_id === userId))) {
+          if (user.role === 'user' && 
+              payloadData.user_id && payloadData.user_id === userId) {
             if (payload.eventType === 'UPDATE') {
               const status = payloadData.verification_status;
               
@@ -48,7 +52,7 @@ export function useRealTimeUpdates() {
                 });
               } else if (status === 'rejected') {
                 toast.error('KYC Rejected', {
-                  description: `Your KYC document was rejected. Reason: ${payloadData?.rejection_reason || 'Not specified'}`,
+                  description: `Your KYC document was rejected. Reason: ${payloadData.rejection_reason || 'Not specified'}`,
                 });
               }
             }
@@ -76,12 +80,15 @@ export function useRealTimeUpdates() {
         },
         (payload) => {
           console.log('Transaction update received:', payload);
-          const payloadData = payload.new as { user_id?: string };
+          // Type assertion to access the payload data with proper typing
+          const payloadData = payload.new as TransactionType | undefined;
+
+          if (!payloadData) return;
 
           // Only show notifications for the current user's transactions
-          if (payloadData && payloadData.user_id && payloadData.user_id === userId) {
+          if (payloadData.user_id && payloadData.user_id === userId) {
             if (payload.eventType === 'INSERT') {
-              const txType = payloadData.transaction_type;
+              const txType = payloadData.type;
               const txStatus = payloadData.status;
               
               if (txStatus === 'completed') {
