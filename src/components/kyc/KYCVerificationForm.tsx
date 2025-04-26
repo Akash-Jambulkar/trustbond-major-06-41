@@ -78,43 +78,55 @@ export function KYCVerificationForm() {
       const result = await submitKYC(documentHash, feeInWei ? feeInWei.toString() : '0');
 
       if (result) {
-        // Store KYC data in database
-        const { error } = await supabase
-          .from('kyc_document_submissions')
-          .insert({
-            user_id: user.id,
-            document_type: 'identity',
-            document_hash: documentHash,
-            verification_status: 'pending',
-            wallet_address: account,
-            submitted_at: new Date().toISOString()
-          });
+        try {
+          console.log("KYC blockchain submission successful, now saving to database");
+          
+          // Store KYC data in database
+          const { error: submissionError } = await supabase
+            .from('kyc_document_submissions')
+            .insert({
+              user_id: user.id,
+              document_type: 'identity',
+              document_hash: documentHash,
+              verification_status: 'pending',
+              wallet_address: account,
+              submitted_at: new Date().toISOString()
+            });
 
-        if (error) {
-          console.error("Error storing KYC data:", error);
-          toast.error("Failed to store KYC data");
-          return;
+          if (submissionError) {
+            console.error("Database error storing KYC data:", submissionError);
+            toast.error("Failed to store KYC data in database");
+            return;
+          }
+
+          console.log("KYC submission stored in database, now updating user profile");
+          
+          // Update user profile
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .update({
+              name: data.fullName,
+              phone: data.phoneNumber,
+              address: data.address,
+              kyc_status: 'pending',
+              wallet_address: account,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', user.id);
+
+          if (profileError) {
+            console.error("Error updating profile:", profileError);
+            toast.error("Failed to update user profile");
+          } else {
+            toast.success("KYC submitted successfully");
+            form.reset();
+          }
+        } catch (dbError) {
+          console.error("Database operation failed:", dbError);
+          toast.error("Database operation failed");
         }
-
-        // Update user profile
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
-            name: data.fullName,
-            phone: data.phoneNumber,
-            address: data.address,
-            kyc_status: 'pending',
-            wallet_address: account,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', user.id);
-
-        if (profileError) {
-          console.error("Error updating profile:", profileError);
-        }
-
-        toast.success("KYC submitted successfully");
-        form.reset();
+      } else {
+        toast.error("Blockchain submission failed");
       }
     } catch (error) {
       console.error("Error submitting KYC:", error);
