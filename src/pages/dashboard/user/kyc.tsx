@@ -9,12 +9,16 @@ import { AlertCircle } from "lucide-react";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import Web3 from "web3";
 import { KYC_SUBMISSION_FEE } from "@/utils/contracts/contractConfig";
+import { useRealTimeUpdates } from "@/hooks/useRealTimeUpdates";
 
 export default function KYCPage() {
   const { user } = useAuth();
-  const { submission, isLoading, error } = useKYCSubmission(user?.id);
+  const { submission, isLoading, error, refetch } = useKYCSubmission(user?.id);
   const { isConnected, web3 } = useBlockchain();
   const [formattedFee, setFormattedFee] = useState('0.01');
+
+  // Set up real-time updates for KYC submissions
+  useRealTimeUpdates();
 
   useEffect(() => {
     if (error) {
@@ -30,7 +34,14 @@ export default function KYCPage() {
         console.error("Error formatting fee:", e);
       }
     }
-  }, [error, web3]);
+    
+    // Set up a refresh interval for KYC status
+    const intervalId = setInterval(() => {
+      refetch();
+    }, 30000); // Check every 30 seconds
+    
+    return () => clearInterval(intervalId);
+  }, [error, web3, refetch]);
 
   return (
     <div className="space-y-6">

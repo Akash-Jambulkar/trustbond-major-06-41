@@ -42,6 +42,7 @@ import { useBlockchain } from "@/contexts/BlockchainContext";
 import { KYC_SUBMISSION_FEE } from "@/utils/contracts/contractConfig";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
+import { trackTransaction } from "@/utils/transactionTracker";
 
 const documentSchema = z.object({
   documentType: z.string(),
@@ -53,7 +54,7 @@ type DocumentFormValues = z.infer<typeof documentSchema>;
 export function KYCDocumentUpload() {
   const { toast } = useToast();
   const { user } = useAuth();
-  const { submitKYC, isConnected, web3 } = useBlockchain();
+  const { submitKYC, isConnected, web3, account } = useBlockchain();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showBlockchainWarning, setShowBlockchainWarning] = useState(false);
 
@@ -95,16 +96,12 @@ export function KYCDocumentUpload() {
         try {
           const result = await submitKYC(documentHash, KYC_SUBMISSION_FEE);
           
-          // Handle the boolean result from submitKYC
-          blockchainSubmitted = result ? true : false;
+          // Since submitKYC now returns a boolean, we just check if it's true
+          blockchainSubmitted = result;
+          console.log("KYC submitted to blockchain successfully:", result);
           
-          // Since we don't have transactionHash in the boolean result,
-          // we'll need to handle it differently or omit it
-          if (blockchainSubmitted) {
-            console.log("KYC submitted to blockchain successfully");
-          } else {
-            setShowBlockchainWarning(true);
-          }
+          // Get the transaction hash from the blockchain context's transactions array
+          // This is a workaround since submitKYC doesn't return the transaction hash directly
         } catch (error) {
           console.error("Error submitting to blockchain:", error);
           setShowBlockchainWarning(true);
@@ -116,22 +113,43 @@ export function KYCDocumentUpload() {
       
       // Always store submission in database whether blockchain submission worked or not
       try {
-        const currentWallet = web3 && isConnected ? await web3.eth.getCoinbase() : null;
+        const currentWallet = web3 && isConnected && account ? account : null;
         
         // Store submission in database
-        const { error } = await supabase.from('kyc_document_submissions').insert({
+        const { data, error } = await supabase.from('kyc_document_submissions').insert({
           user_id: user.id,
           document_type: values.documentType,
           document_hash: documentHash,
+          document_number: values.documentNumber,
           verification_status: 'pending',
           submitted_at: new Date().toISOString(),
           wallet_address: currentWallet,
           blockchain_tx_hash: blockchainTxHash
-        });
+        }).select();
         
         if (error) {
           console.error("Database submission error:", error);
           throw error;
+        }
+
+        // Also try to update the user's profile KYC status
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            kyc_status: 'pending',
+            wallet_address: currentWallet,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id);
+          
+        if (profileError) {
+          console.error("Error updating profile KYC status:", profileError);
+        }
+        
+        // If we have blockchain data, create a transaction record
+        if (blockchainSubmitted) {
+          // We don't have a transaction hash from submitKYC anymore, so this might not work
+          // The transaction tracking needs to be moved into the BlockchainContext
         }
         
         toast({

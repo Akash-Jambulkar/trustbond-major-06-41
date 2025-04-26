@@ -1,9 +1,8 @@
 
 import { useEffect } from 'react';
 import { toast } from 'sonner';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { KycDocumentSubmissionType, TransactionType } from '@/types/supabase-extensions';
 
 export enum RealTimeEventType {
   KYC_UPDATED = 'kyc_updated',
@@ -23,6 +22,8 @@ export function useRealTimeUpdates() {
     const userId = user.id;
     if (!userId) return;
 
+    console.log('Setting up real-time updates for user:', userId);
+    
     // Subscribe to KYC document submissions table
     const kycSubscription = supabase
       .channel('kyc-channel')
@@ -31,20 +32,17 @@ export function useRealTimeUpdates() {
         { 
           event: '*', 
           schema: 'public', 
-          table: 'kyc_document_submissions' 
+          table: 'kyc_document_submissions',
+          filter: user.role === 'user' ? `user_id=eq.${userId}` : undefined
         },
         (payload) => {
           console.log('KYC update received:', payload);
-          // Type assertion to access the payload data with proper typing
-          const payloadData = payload.new as KycDocumentSubmissionType;
-
-          if (!payloadData || !payloadData.user_id) return;
-
-          // For user role, show notifications about their own KYC status
+          
+          // For users, only show notifications about their own KYC
           if (user.role === 'user' && 
-              payloadData.user_id && payloadData.user_id === userId) {
+              payload.new && payload.new.user_id === userId) {
             if (payload.eventType === 'UPDATE') {
-              const status = payloadData.verification_status;
+              const status = payload.new.verification_status;
               
               if (status === 'verified') {
                 toast.success('KYC Verified!', {
@@ -52,13 +50,13 @@ export function useRealTimeUpdates() {
                 });
               } else if (status === 'rejected') {
                 toast.error('KYC Rejected', {
-                  description: `Your KYC document was rejected. Reason: ${payloadData.rejection_reason || 'Not specified'}`,
+                  description: `Your KYC document was rejected. Reason: ${payload.new.rejection_reason || 'Not specified'}`,
                 });
               }
             }
           }
           
-          // For bank role, show notifications about any new KYC submissions
+          // For bank role, show notifications about new KYC submissions
           if (user.role === 'bank' && payload.eventType === 'INSERT') {
             toast.info('New KYC Submission', {
               description: 'A new KYC document has been submitted for verification.',
@@ -76,26 +74,23 @@ export function useRealTimeUpdates() {
         { 
           event: '*', 
           schema: 'public', 
-          table: 'transactions' 
+          table: 'transactions',
+          filter: user.role === 'user' ? `user_id=eq.${userId}` : undefined
         },
         (payload) => {
           console.log('Transaction update received:', payload);
-          // Type assertion to access the payload data with proper typing
-          const payloadData = payload.new as TransactionType;
-
-          if (!payloadData || !payloadData.user_id) return;
-
+          
           // Only show notifications for the current user's transactions
-          if (payloadData.user_id && payloadData.user_id === userId) {
-            if (payload.eventType === 'INSERT') {
-              const txType = payloadData.type;
-              const txStatus = payloadData.status;
+          if (payload.new && payload.new.user_id === userId) {
+            if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+              const txType = payload.new.type;
+              const txStatus = payload.new.status;
               
               if (txStatus === 'confirmed') {
                 toast.success(`Transaction Complete`, {
                   description: `Your ${txType?.replace('_', ' ') || 'blockchain'} transaction has been processed successfully.`,
                 });
-              } else if (txStatus === 'pending') {
+              } else if (txStatus === 'pending' && payload.eventType === 'INSERT') {
                 toast.info(`Transaction Pending`, {
                   description: `Your ${txType?.replace('_', ' ') || 'blockchain'} transaction is being processed.`,
                 });
@@ -112,11 +107,9 @@ export function useRealTimeUpdates() {
 
     // Cleanup subscriptions on unmount
     return () => {
+      console.log('Cleaning up real-time subscriptions');
       supabase.removeChannel(kycSubscription);
       supabase.removeChannel(transactionsSubscription);
     };
   }, [user]);
-
-  // Return nothing as this is just a subscription hook
-  return;
 }
