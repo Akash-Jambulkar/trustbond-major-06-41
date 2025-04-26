@@ -165,8 +165,8 @@ export const useKYCOperations = ({
         if (docData) {
           submission = docData;
           
-          const walletAddr = docData.wallet_address as string | undefined;
-          const blockchainAddr = docData.blockchain_address as string | undefined;
+          const walletAddr = (docData as any).wallet_address;
+          const blockchainAddr = (docData as any).blockchain_address;
           
           if (walletAddr) {
             userAddress = walletAddr;

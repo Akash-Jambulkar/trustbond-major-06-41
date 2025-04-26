@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, ReactNode, useState } from "react";
 import { useMode } from "@/contexts/ModeContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -68,13 +67,11 @@ export const BlockchainStateProvider = ({ children }: { children: ReactNode }) =
     refreshTransactions: getTransactionHistory
   });
 
-  // Fix: Update submitKYCWrapper to unpack the result and return only boolean
   const submitKYCWrapper = async (documentHash: string, feeInWei?: string): Promise<boolean> => {
     const result = await submitKYC(documentHash, 'default', feeInWei);
     return result.success;
   };
 
-  // Fix: Update verifyKYCWrapper to properly handle parameter types
   const verifyKYCWrapper = async (kycId: string, verificationStatus: 'verified' | 'rejected'): Promise<boolean> => {
     return await verifyKYC(kycId, verificationStatus);
   };
