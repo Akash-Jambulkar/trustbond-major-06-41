@@ -5,7 +5,7 @@ import Web3 from 'web3';
 import KYCVerifierABI from '@/contracts/abis/KYCVerifier.json';
 import TrustScoreABI from '@/contracts/abis/TrustScore.json';
 import LoanManagerABI from '@/contracts/abis/LoanManager.json';
-import { CONTRACT_ADDRESSES } from '@/utils/contracts/contractConfig';
+import { CONTRACT_ADDRESSES, NETWORK_CONFIG } from '@/utils/contracts/contractConfig';
 
 interface BlockchainContextType {
   web3: Web3 | null;
@@ -49,12 +49,6 @@ const NETWORKS: Record<number, string> = {
   5: 'Goerli Testnet',
   1337: 'Ganache',
   11155111: 'Sepolia'
-};
-
-const CONTRACT_ADDRESSES = {
-  KYC_VERIFIER: '0x4242424242424242424242424242424242424242',
-  TRUST_SCORE: '0x4343434343434343434343434343434343434343',
-  LOAN_MANAGER: '0x4444444444444444444444444444444444444444'
 };
 
 interface BlockchainProviderProps {
