@@ -86,12 +86,10 @@ export function KYCSubmission() {
           const feeInWei = web3.utils.toWei(KYC_SUBMISSION_FEE, 'ether');
           console.log(`Using fee: ${KYC_SUBMISSION_FEE} ETH (${feeInWei} Wei)`);
           
-          // Fix: Handle the submitKYC return type correctly - it now returns boolean, not an object
-          const result = await submitKYC(documentHash, feeInWei);
-          blockchainSubmitted = result;
+          // Fix: submitKYC now returns a boolean, not an object
+          blockchainSubmitted = await submitKYC(documentHash, feeInWei);
           
-          // Since result is now a boolean, we need to get transactionHash differently
-          if (result) {
+          if (blockchainSubmitted) {
             // Try to get transaction hash from recent transactions
             console.log("Blockchain submission successful, checking recent transactions");
             const { data: txData } = await supabase

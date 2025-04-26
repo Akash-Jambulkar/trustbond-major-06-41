@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,7 +40,6 @@ const VerifyKYCPage = () => {
       
       console.log("Fetching KYC submissions...");
       
-      // Try kyc_document_submissions table first
       const { data: submissionsData, error: submissionsError } = await supabase
         .from('kyc_document_submissions')
         .select(`
@@ -60,7 +58,6 @@ const VerifyKYCPage = () => {
         console.log("Error fetching from kyc_document_submissions:", submissionsError);
       }
       
-      // Also try kyc_documents table
       const { data: docsData, error: docsError } = await supabase
         .from('kyc_documents')
         .select(`
@@ -78,7 +75,6 @@ const VerifyKYCPage = () => {
         console.log("Error fetching from kyc_documents:", docsError);
       }
       
-      // Combine results from both tables
       const allSubmissions = [
         ...(submissionsData || []), 
         ...(docsData || [])
@@ -133,12 +129,9 @@ const VerifyKYCPage = () => {
       const verificationStatus = approved ? 'verified' as const : 'rejected' as const;
       console.log(`Verifying KYC ${submission.id} as ${verificationStatus}`);
       
-      // Fix: verifyKYC accepts only two arguments: kycId and verificationStatus
-      // The rejection reason should be handled separately if needed
       let success = false;
       if (submission.wallet_address) {
         try {
-          // Remove the third argument (rejectionReason)
           success = await verifyKYC(submission.id, verificationStatus);
           console.log("Blockchain verification result:", success);
         } catch (error) {
@@ -146,8 +139,6 @@ const VerifyKYCPage = () => {
         }
       }
       
-      // Update database record regardless of blockchain result
-      // Try kyc_document_submissions first
       const { error: subError } = await supabase
         .from('kyc_document_submissions')
         .update({ 
@@ -160,7 +151,6 @@ const VerifyKYCPage = () => {
         
       if (subError) {
         console.log("Could not update kyc_document_submissions, trying kyc_documents");
-        // Try kyc_documents if submission update fails
         const { error: docError } = await supabase
           .from('kyc_documents')
           .update({ 
@@ -175,7 +165,6 @@ const VerifyKYCPage = () => {
         }
       }
       
-      // Update user profile KYC status
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ 
@@ -188,7 +177,6 @@ const VerifyKYCPage = () => {
         console.error("Error updating profile:", profileError);
       }
       
-      // Remove from list
       setSubmissions(prev => 
         prev.filter(sub => sub.id !== submission.id)
       );
@@ -338,7 +326,6 @@ const VerifyKYCPage = () => {
                 </div>
               </div>
               
-              {/* Add rejection reason input field */}
               <div className="pt-4">
                 <label htmlFor="rejectionReason" className="block text-sm font-medium text-gray-700 mb-1">
                   Rejection Reason (optional)
