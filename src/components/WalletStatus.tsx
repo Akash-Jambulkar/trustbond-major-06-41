@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Wallet, AlertTriangle, ExternalLink, AlertCircle } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Tooltip,
   TooltipContent,
@@ -36,6 +36,7 @@ export const WalletStatus = () => {
   
   const { enableBlockchain } = useMode();
   const [showError, setShowError] = useState<boolean>(false);
+  const [connecting, setConnecting] = useState<boolean>(false);
 
   // Networks to display in the dropdown
   const networks = [
@@ -43,6 +44,13 @@ export const WalletStatus = () => {
     { name: "Ethereum Mainnet", id: 1 },
     { name: "Goerli Testnet", id: 5 }
   ];
+
+  // Reset error display when connection status changes
+  useEffect(() => {
+    if (isConnected) {
+      setShowError(false);
+    }
+  }, [isConnected]);
 
   if (!enableBlockchain) {
     return (
@@ -66,10 +74,14 @@ export const WalletStatus = () => {
 
   const handleConnect = async () => {
     try {
-      await connectWallet();
+      setConnecting(true);
       setShowError(false);
+      await connectWallet();
     } catch (error) {
+      console.error("Connection error:", error);
       setShowError(true);
+    } finally {
+      setConnecting(false);
     }
   };
 
@@ -131,11 +143,11 @@ export const WalletStatus = () => {
             onClick={handleConnect}
             variant="outline" 
             className="flex items-center gap-2"
-            disabled={isBlockchainLoading}
+            disabled={isBlockchainLoading || connecting}
           >
             <Wallet size={20} />
             <span className="hidden md:inline">
-              {isBlockchainLoading ? "Connecting..." : "Connect MetaMask"}
+              {connecting || isBlockchainLoading ? "Connecting..." : "Connect MetaMask"}
             </span>
           </Button>
           {showError && connectionError && (
