@@ -55,8 +55,11 @@ export function SimpleKYCForm() {
     try {
       const documentHash = await createDocumentHash(DOCUMENT_TYPES[docType], values.documentNumber);
       console.log("Generated document hash:", documentHash);
+      console.log("Current user ID:", user.id);
+      console.log("Document type:", values.documentType);
       
       // Update profile with additional information
+      console.log("Updating profile information...");
       const profileUpdateResult = await supabase
         .from('profiles')
         .update({
@@ -90,22 +93,26 @@ export function SimpleKYCForm() {
       console.log("Submitting KYC data:", kycSubmissionData);
 
       // Submit KYC document to the database
+      console.log("Calling supabase.from('kyc_document_submissions').insert()");
       const kycSubmissionResult = await supabase
         .from('kyc_document_submissions')
         .insert([kycSubmissionData]);
 
       if (kycSubmissionResult.error) {
         console.error("Error submitting KYC:", kycSubmissionResult.error);
+        console.error("Error details:", kycSubmissionResult.error.details);
+        console.error("Error message:", kycSubmissionResult.error.message);
         toast.error("Failed to submit KYC document to database");
         setIsSubmitting(false);
         return;
       }
       
-      console.log("KYC submission successful to database");
+      console.log("KYC submission successful to database", kycSubmissionResult);
 
       // If connected to blockchain, submit there as well
       if (isConnected && submitKYC) {
         try {
+          console.log("Submitting to blockchain...");
           // Passing both required arguments - documentHash and an empty string for the second parameter
           await submitKYC(documentHash, "");
           console.log("Blockchain submission successful");

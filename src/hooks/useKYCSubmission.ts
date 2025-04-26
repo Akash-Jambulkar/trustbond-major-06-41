@@ -31,6 +31,7 @@ export function useKYCSubmission(userId?: string) {
         console.error('Error fetching KYC submission:', kycError);
         setError(kycError.message);
         toast.error('Failed to fetch KYC submission');
+        setIsLoading(false);
         return;
       }
       
@@ -38,6 +39,7 @@ export function useKYCSubmission(userId?: string) {
         console.log('Found KYC submission:', kycData);
         setSubmission(kycData);
       } else {
+        console.log('No KYC document_submissions found, checking kyc_documents table');
         // Try kyc_documents as fallback
         const { data: docData, error: docError } = await supabase
           .from('kyc_documents')
@@ -78,6 +80,8 @@ export function useKYCSubmission(userId?: string) {
   useEffect(() => {
     if (!userId) return;
     
+    console.log('Setting up real-time subscription for KYC submissions');
+    
     // Set up real-time subscription
     const channel = supabase
       .channel('kyc-updates')
@@ -107,6 +111,7 @@ export function useKYCSubmission(userId?: string) {
       .subscribe();
 
     return () => {
+      console.log('Cleaning up real-time subscriptions');
       supabase.removeChannel(channel);
       supabase.removeChannel(docsChannel);
     };

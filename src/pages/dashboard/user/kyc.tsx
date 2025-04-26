@@ -18,17 +18,22 @@ export default function KYCPage() {
   useRealTimeUpdates();
 
   useEffect(() => {
+    if (user?.id) {
+      console.log("KYC page loaded for user:", user.id);
+    }
+    
     if (error) {
       console.error('KYC submission error:', error);
     }
     
     // Set up a refresh interval for KYC status
     const intervalId = setInterval(() => {
+      console.log("Refreshing KYC status data...");
       refetch();
     }, 30000); // Check every 30 seconds
     
     return () => clearInterval(intervalId);
-  }, [error, refetch]);
+  }, [error, refetch, user]);
 
   return (
     <div className="space-y-6 p-6">
