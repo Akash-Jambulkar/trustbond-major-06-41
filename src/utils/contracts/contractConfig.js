@@ -4,9 +4,9 @@
 // Contract addresses - update these after deployment
 export const CONTRACT_ADDRESSES = {
   // Example addresses - replace with actual deployed addresses from Ganache
-  KYCVerifier: "0xF9D456e454B408Dc7Bc4BD201169E7e6e7aAe0F4",
-  TrustScore: "0xd12fDF106a3cB35388fBA1202c46a9cCaC0168B2",
-  LoanManager: "0x5341bDcD24CB14f353695257c9224849f9F2D6C7" // This will be updated after successful deployment
+  KYC_VERIFIER: "0xF9D456e454B408Dc7Bc4BD201169E7e6e7aAe0F4",
+  TRUST_SCORE: "0xd12fDF106a3cB35388fBA1202c46a9cCaC0168B2",
+  LOAN_MANAGER: "0x5341bDcD24CB14f353695257c9224849f9F2D6C7" 
 };
 
 // Network configuration
@@ -16,8 +16,8 @@ export const NETWORK_CONFIG = {
   rpcUrl: "http://localhost:7545"
 };
 
-// KYC submission fee in ETH
-export const KYC_SUBMISSION_FEE = "0.01"; // 0.01 ETH fee for KYC submission
+// KYC submission fee in Wei (0.01 ETH)
+export const KYC_SUBMISSION_FEE = "10000000000000000"; // 0.01 ETH in Wei
 
 // Helper function to initialize contracts
 export const initializeContracts = (web3) => {
