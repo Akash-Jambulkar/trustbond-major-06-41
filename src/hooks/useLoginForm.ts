@@ -48,8 +48,9 @@ export const useLoginForm = () => {
           description: "You've been logged in to your account.",
         });
         
-        const dashboardRoute = `/dashboard/${user?.role || 'user'}`;
-        navigate(dashboardRoute);
+        // Get the role from the returned user object
+        const userRole = user?.role || 'user';
+        navigate(`/dashboard/${userRole}`);
       }
     } catch (error) {
       console.error("Login error:", error);

@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -58,15 +59,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const profile = await fetchUserProfile(data.user.id);
       if (!profile) return false;
 
-      const { data: roleData } = await supabase
-        .from('user_role_assignments')
-        .select('role')
-        .eq('user_id', data.user.id)
-        .single();
-
+      // Try to get role from role assignments first for more accurate role info
+      let userRole: UserRole = 'user'; // Default role
+      
+      try {
+        const { data: roleData } = await supabase
+          .from('user_role_assignments')
+          .select('role')
+          .eq('user_id', data.user.id)
+          .single();
+          
+        if (roleData?.role) {
+          userRole = roleData.role as UserRole;
+        } else if (profile.role) {
+          userRole = profile.role as UserRole;
+        }
+      } catch (err) {
+        console.warn("Error fetching role, using profile role instead:", err);
+        userRole = profile.role as UserRole || 'user';
+      }
+      
       const userWithProfile = mapUserWithProfile(data.user, {
         ...profile,
-        role: roleData?.role || 'user'
+        role: userRole
       });
       
       setUser(userWithProfile);
@@ -76,8 +91,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsMFARequired(true);
         toast.info("Multi-factor authentication required");
         navigate("/mfa-verify");
+        return true;
       }
-
+      
+      // Role is now set before this point, so no need for the user to refresh
+      console.log("User successfully logged in with role:", userRole);
+      
       return true;
     } catch (error) {
       console.error("Login submission error:", error);
@@ -186,7 +205,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     <AuthContext.Provider
       value={{
         user,
-        setUser, // Add setUser to the context value
+        setUser,
         isAuthenticated,
         isLoading,
         login,

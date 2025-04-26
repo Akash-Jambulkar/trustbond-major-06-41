@@ -1,5 +1,5 @@
 
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { ReactNode } from "react";
 
@@ -11,6 +11,7 @@ interface ProtectedRouteProps {
 
 export const ProtectedRoute = ({ children, role, allowedRoles }: ProtectedRouteProps) => {
   const { user, isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
 
   // Show loading while authentication state is being determined
   if (isLoading) {
@@ -23,17 +24,20 @@ export const ProtectedRoute = ({ children, role, allowedRoles }: ProtectedRouteP
 
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    // Remember where the user was trying to go
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
   // Check if user has one of the allowed roles (if specified)
   if (allowedRoles && user?.role && !allowedRoles.includes(user.role)) {
+    console.log(`User role ${user.role} not in allowed roles:`, allowedRoles);
     // Redirect to the appropriate dashboard
     return <Navigate to={`/dashboard/${user.role}`} replace />;
   }
 
   // Check for single role requirement (legacy support)
   if (role && user?.role !== role) {
+    console.log(`User role ${user.role} doesn't match required role: ${role}`);
     // Redirect to the appropriate dashboard
     return <Navigate to={`/dashboard/${user.role}`} replace />;
   }
