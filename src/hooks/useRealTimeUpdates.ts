@@ -2,9 +2,11 @@
 import { useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBlockchain } from '@/contexts/BlockchainContext';
 
 export function useRealTimeUpdates() {
   const { user } = useAuth();
+  const { account } = useBlockchain();
   
   useEffect(() => {
     if (!user?.id) return;
@@ -36,11 +38,30 @@ export function useRealTimeUpdates() {
         console.log('Real-time update for KYC submission:', payload);
       })
       .subscribe();
+
+    // Set up real-time subscription for transactions when wallet connected
+    let transactionsChannel = null;
+    if (account) {
+      transactionsChannel = supabase
+        .channel('transaction-updates')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'transactions',
+          filter: `from_address=eq.${account.toLowerCase()}`
+        }, (payload) => {
+          console.log('Real-time update for transaction:', payload);
+        })
+        .subscribe();
+    }
     
     return () => {
       console.log('Cleaning up real-time subscriptions');
       supabase.removeChannel(profilesChannel);
       supabase.removeChannel(kycChannel);
+      if (transactionsChannel) {
+        supabase.removeChannel(transactionsChannel);
+      }
     };
-  }, [user]);
+  }, [user, account]); // Added account as dependency
 }
