@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -77,8 +76,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsMFARequired(true);
         toast.info("Multi-factor authentication required");
         navigate("/mfa-verify");
-      } else {
-        navigate(`/dashboard/${userWithProfile.role}`);
       }
 
       return true;

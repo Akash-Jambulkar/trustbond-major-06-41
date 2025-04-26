@@ -34,11 +34,8 @@ export const ProtectedRoute = ({ children, role, allowedRoles }: ProtectedRouteP
 
   // Check for single role requirement (legacy support)
   if (role && user?.role !== role) {
-    // Redirect to the appropriate dashboard or to login if no role matches
-    if (user?.role) {
-      return <Navigate to={`/dashboard/${user.role}`} replace />;
-    }
-    return <Navigate to="/login" replace />;
+    // Redirect to the appropriate dashboard
+    return <Navigate to={`/dashboard/${user.role}`} replace />;
   }
 
   // User is authenticated and has the required role (or no role was required)

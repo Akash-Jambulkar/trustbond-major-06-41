@@ -39,14 +39,21 @@ const Login = () => {
     setError("");
     
     try {
-      await login(formData.email, formData.password);
+      const success = await login(formData.email, formData.password);
       
-      toast({
-        title: "Login Successful",
-        description: "You've been logged in to your account.",
-      });
-      
-      navigate("/dashboard/user");
+      if (success) {
+        // The user object from useAuth now includes their role
+        const { user } = useAuth();
+        
+        toast({
+          title: "Login Successful",
+          description: "You've been logged in to your account.",
+        });
+        
+        // Redirect based on user role
+        const dashboardRoute = `/dashboard/${user?.role || 'user'}`;
+        navigate(dashboardRoute);
+      }
     } catch (error) {
       console.error("Login error:", error);
       setError("Invalid email or password. Please try again.");
