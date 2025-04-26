@@ -54,6 +54,14 @@ export const MetaMaskErrorHelp = ({ isOpen, onClose, errorType = "general" }: Me
           linkText: "Add Network to MetaMask"
         };
         
+      case "rpc error":
+        return {
+          title: "MetaMask RPC Connection Error",
+          description: "There was a problem with the MetaMask RPC connection. This often happens when MetaMask can't communicate with the Ethereum network.",
+          helpLink: "https://metamask.zendesk.com/hc/en-us/articles/360015489931-How-to-fix-common-MetaMask-connection-issues",
+          linkText: "Fix Connection Issues"
+        };
+        
       default:
         return {
           title: "MetaMask Connection Issue",
@@ -86,6 +94,13 @@ export const MetaMaskErrorHelp = ({ isOpen, onClose, errorType = "general" }: Me
             <li>• Check that your MetaMask is unlocked</li>
             <li>• Confirm you have an account set up in MetaMask</li>
             <li>• Try refreshing the page and connecting again</li>
+            {errorType === 'rpc error' && (
+              <>
+                <li>• Restart your browser</li>
+                <li>• Try a different network in MetaMask</li>
+                <li>• Reset your MetaMask account (Settings > Advanced > Reset Account)</li>
+              </>
+            )}
           </ul>
         </div>
         

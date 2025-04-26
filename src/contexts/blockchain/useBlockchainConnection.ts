@@ -23,6 +23,7 @@ export const useBlockchainConnection = ({ enableBlockchain }: UseBlockchainConne
   const [kycContract, setKycContract] = useState<Contract | null>(null);
   const [trustScoreContract, setTrustScoreContract] = useState<Contract | null>(null);
   const [loanContract, setLoanContract] = useState<Contract | null>(null);
+  const [connectionAttempts, setConnectionAttempts] = useState(0);
 
   const networkName = getNetworkName(networkId);
   const isGanache = networkId === NETWORK_IDS.GANACHE || networkId === NETWORK_IDS.LOCALHOST;
@@ -68,43 +69,45 @@ export const useBlockchainConnection = ({ enableBlockchain }: UseBlockchainConne
     }
     
     const checkConnection = async () => {
-      if (window.ethereum) {
-        try {
-          // Check if MetaMask is fully loaded
-          if (typeof window.ethereum.isMetaMask === 'undefined') {
-            console.log("Waiting for MetaMask to initialize...");
-            // Wait a moment and retry
-            setTimeout(checkConnection, 1000);
-            return;
-          }
-          
-          const web3Instance = new Web3(window.ethereum);
-          setWeb3(web3Instance);
-          
-          // Try to get network ID with error handling
-          try {
-            const networkId = await web3Instance.eth.net.getId();
-            setNetworkId(networkId);
-          } catch (netError) {
-            console.warn("Could not get network ID, may retry later:", netError);
-          }
-          
-          // Check if already connected
-          try {
-            const accounts = await web3Instance.eth.getAccounts();
-            if (accounts.length > 0) {
-              setAccount(accounts[0]);
-              console.log("Already connected to account:", accounts[0]);
-            }
-          } catch (accountError) {
-            console.warn("Could not get accounts, may retry later:", accountError);
-          }
-        } catch (error) {
-          console.error("Error checking existing connection:", error);
-          setConnectionError("Error checking existing connection");
-        }
-      } else {
+      if (!window.ethereum) {
         console.log("MetaMask not detected");
+        return;
+      }
+
+      try {
+        // Check if MetaMask is fully loaded
+        if (typeof window.ethereum.isMetaMask === 'undefined') {
+          console.log("Waiting for MetaMask to initialize...");
+          // Wait a moment and retry
+          setTimeout(checkConnection, 1000);
+          return;
+        }
+        
+        const web3Instance = new Web3(window.ethereum);
+        setWeb3(web3Instance);
+        
+        // Try to get network ID with error handling
+        try {
+          const networkId = await web3Instance.eth.net.getId();
+          setNetworkId(networkId);
+        } catch (netError) {
+          console.warn("Could not get network ID, may retry later:", netError);
+          // Don't set error message here to avoid annoying users on page load
+        }
+        
+        // Check if already connected
+        try {
+          const accounts = await web3Instance.eth.getAccounts();
+          if (accounts.length > 0) {
+            setAccount(accounts[0]);
+            console.log("Already connected to account:", accounts[0]);
+          }
+        } catch (accountError) {
+          console.warn("Could not get accounts, may retry later:", accountError);
+        }
+      } catch (error) {
+        console.error("Error checking existing connection:", error);
+        // Don't set error message here to avoid annoying users on page load
       }
     };
     
@@ -147,10 +150,30 @@ export const useBlockchainConnection = ({ enableBlockchain }: UseBlockchainConne
     }
   }, [web3, enableBlockchain]);
 
+  // Get network ID safely
+  const safeGetNetworkId = async (web3Instance: Web3): Promise<number | null> => {
+    // Try multiple methods to get network ID
+    try {
+      return await web3Instance.eth.net.getId();
+    } catch (error) {
+      console.warn("Failed to get network ID with net.getId, trying eth.getChainId", error);
+      try {
+        // Try alternate method
+        const chainId = await web3Instance.eth.getChainId();
+        return Number(chainId);
+      } catch (chainError) {
+        console.error("Failed to get chain ID as fallback:", chainError);
+        return null;
+      }
+    }
+  };
+
   // Connect wallet
   const connectWallet = async (): Promise<string | false> => {
     setIsBlockchainLoading(true);
     setConnectionError(null);
+    setConnectionAttempts(prev => prev + 1);
+    
     try {
       if (!window.ethereum) {
         const error = "MetaMask not detected. Please install MetaMask.";
@@ -171,10 +194,15 @@ export const useBlockchainConnection = ({ enableBlockchain }: UseBlockchainConne
       const web3Instance = new Web3(window.ethereum);
       setWeb3(web3Instance);
       
-      // Request account access
+      // Request account access with timeout to prevent hanging
       let accounts;
       try {
-        accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+        const requestAccountsPromise = window.ethereum.request({ method: "eth_requestAccounts" });
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error("Request timed out")), 15000)
+        );
+        
+        accounts = await Promise.race([requestAccountsPromise, timeoutPromise]);
       } catch (requestError: any) {
         const errorMessage = requestError?.message || "Failed to request accounts";
         setConnectionError(errorMessage);
@@ -188,12 +216,15 @@ export const useBlockchainConnection = ({ enableBlockchain }: UseBlockchainConne
       }
       
       // Try to get network ID safely
-      try {
-        const networkId = await web3Instance.eth.net.getId();
+      const networkId = await safeGetNetworkId(web3Instance);
+      if (networkId !== null) {
         setNetworkId(networkId);
-      } catch (netError: any) {
-        console.error("Failed to get network ID:", netError);
-        setConnectionError("Failed to get network ID. Make sure MetaMask is connected to a network.");
+      } else {
+        // If both methods fail, use a fallback value for development
+        console.warn("Failed to get network ID, using default fallback value");
+        if (import.meta.env.MODE === 'development') {
+          setNetworkId(NETWORK_IDS.GANACHE);
+        }
       }
       
       // Set the connected account
@@ -212,8 +243,15 @@ export const useBlockchainConnection = ({ enableBlockchain }: UseBlockchainConne
     } catch (error: any) {
       console.error("Failed to connect wallet:", error);
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      setConnectionError(errorMessage);
-      toast.error("Failed to connect wallet: " + errorMessage);
+      
+      // Provide more helpful error messages for common issues
+      let friendlyMessage = errorMessage;
+      if (errorMessage.includes("JsonRpcEngine")) {
+        friendlyMessage = "MetaMask connection issue. Please check that MetaMask is unlocked and try again. If the problem persists, try refreshing the page or restarting your browser.";
+      }
+      
+      setConnectionError(friendlyMessage);
+      toast.error("Failed to connect wallet: " + friendlyMessage);
       return false;
     } finally {
       setIsBlockchainLoading(false);
@@ -229,6 +267,9 @@ export const useBlockchainConnection = ({ enableBlockchain }: UseBlockchainConne
     setTrustScoreContract(null);
     setLoanContract(null);
     setConnectionError(null);
+    
+    // Reset connection attempts
+    setConnectionAttempts(0);
     
     // Clear stored account
     try {
@@ -274,10 +315,17 @@ export const useBlockchainConnection = ({ enableBlockchain }: UseBlockchainConne
         });
       }
 
+      // Verify the network was switched by checking the ID again
       if (web3) {
-        const newNetworkId = await web3.eth.net.getId();
-        setNetworkId(newNetworkId);
-        toast.success(`Switched to ${getNetworkName(newNetworkId)}`);
+        try {
+          const newNetworkId = await safeGetNetworkId(web3);
+          if (newNetworkId !== null) {
+            setNetworkId(newNetworkId);
+            toast.success(`Switched to ${getNetworkName(newNetworkId)}`);
+          }
+        } catch (netError) {
+          console.warn("Could not verify network change:", netError);
+        }
       }
       
       return true;

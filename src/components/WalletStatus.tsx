@@ -46,7 +46,8 @@ export const WalletStatus = () => {
   const networks = [
     { name: "Ganache (Local)", id: 1337 },
     { name: "Ethereum Mainnet", id: 1 },
-    { name: "Goerli Testnet", id: 5 }
+    { name: "Goerli Testnet", id: 5 },
+    { name: "Sepolia Testnet", id: 11155111 }
   ];
 
   // Reset error display when connection status changes
@@ -70,6 +71,8 @@ export const WalletStatus = () => {
       setErrorType("pending");
     } else if (connectionError.includes("network")) {
       setErrorType("wrong network");
+    } else if (connectionError.includes("JsonRpcEngine") || connectionError.includes("no error or result")) {
+      setErrorType("rpc error");
     } else {
       setErrorType("general");
     }
@@ -104,11 +107,6 @@ export const WalletStatus = () => {
       // Add a slight delay before attempting connection
       // This can help with MetaMask initialization issues
       await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Force MetaMask to reload if we've tried more than once
-      if (connectionAttempts > 0 && window.ethereum) {
-        console.log("Attempting to reset MetaMask connection...");
-      }
       
       await connectWallet();
     } catch (error) {
