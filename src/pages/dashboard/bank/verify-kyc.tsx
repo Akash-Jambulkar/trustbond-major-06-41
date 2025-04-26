@@ -9,8 +9,10 @@ import { useBlockchain } from "@/contexts/BlockchainContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabaseClient";
-import { CheckCircle, XCircle, FileText, Shield, AlertTriangle, Eye } from "lucide-react";
+import { CheckCircle, XCircle, FileText, Shield, AlertTriangle, Eye, Loader2 } from "lucide-react";
 import { format } from "date-fns";
+import { getAllKycSubmissions, getKycSubmissionsByStatus } from "@/utils/supabase-helper";
+import { useKYCRealTimeUpdates } from "@/hooks/useKYCRealTimeUpdates";
 
 const VerifyKYC = () => {
   const { user } = useAuth();
@@ -22,6 +24,11 @@ const VerifyKYC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedDocument, setSelectedDocument] = useState<any>(null);
   const [verifying, setVerifying] = useState(false);
+  
+  useKYCRealTimeUpdates(() => {
+    console.log("Real-time KYC update detected, refreshing documents...");
+    fetchDocuments();
+  });
 
   useEffect(() => {
     if (user && user.role === "bank") {
@@ -32,23 +39,11 @@ const VerifyKYC = () => {
   const fetchDocuments = async () => {
     setIsLoading(true);
     try {
-      // First get submissions from kyc_document_submissions table
-      const { data: submissions, error: submissionsError } = await supabase
-        .from("kyc_document_submissions")
-        .select("*")
-        .order("submitted_at", { ascending: false });
-        
-      if (submissionsError) {
-        console.error("Error fetching from kyc_document_submissions:", submissionsError);
-        toast.error("Failed to fetch KYC submissions");
-        setIsLoading(false);
-        return;
-      }
+      const allSubmissions = await getAllKycSubmissions();
       
-      // For each submission, get the user profile info
       let enhancedDocuments = [];
-      if (submissions && submissions.length > 0) {
-        for (const doc of submissions) {
+      if (allSubmissions && allSubmissions.length > 0) {
+        for (const doc of allSubmissions) {
           if (doc.user_id) {
             const { data: profile, error: profileError } = await supabase
               .from("profiles")
@@ -73,42 +68,6 @@ const VerifyKYC = () => {
               profiles: { name: "Unknown", email: "No email" }
             });
           }
-        }
-      }
-
-      // If no submissions in kyc_document_submissions, try kyc_documents table
-      if (enhancedDocuments.length === 0) {
-        const { data: documents, error: documentsError } = await supabase
-          .from("kyc_documents")
-          .select("*")
-          .order("created_at", { ascending: false });
-          
-        if (!documentsError && documents && documents.length > 0) {
-          for (const doc of documents) {
-            if (doc.user_id) {
-              const { data: profile, error: profileError } = await supabase
-                .from("profiles")
-                .select("name, email, wallet_address")
-                .eq("id", doc.user_id)
-                .single();
-              
-              if (!profileError && profile) {
-                enhancedDocuments.push({
-                  ...doc,
-                  submitted_at: doc.created_at,
-                  profiles: profile
-                });
-              } else {
-                enhancedDocuments.push({
-                  ...doc,
-                  submitted_at: doc.created_at,
-                  profiles: { name: "Unknown", email: "No email" }
-                });
-              }
-            }
-          }
-        } else if (documentsError) {
-          console.error("Error fetching from kyc_documents:", documentsError);
         }
       }
       
@@ -141,10 +100,8 @@ const VerifyKYC = () => {
         await verifyKYC(selectedDocument.id, verificationStatus);
       }
 
-      // Try to update the appropriate table based on where the document came from
       let updateResult = null;
       
-      // First try to update kyc_documents table
       const { data: kycDocResult, error: kycDocError } = await supabase
         .from('kyc_documents')
         .update({ 
@@ -158,7 +115,6 @@ const VerifyKYC = () => {
       if (kycDocError || !kycDocResult || kycDocResult.length === 0) {
         console.log("Document not found in kyc_documents, trying kyc_document_submissions");
         
-        // Try to update kyc_document_submissions table
         const { data: kycSubmissionResult, error: kycSubmissionError } = await supabase
           .from('kyc_document_submissions')
           .update({ 
@@ -233,7 +189,7 @@ const VerifyKYC = () => {
     if (isLoading) {
       return (
         <div className="flex justify-center items-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       );
     }
@@ -369,7 +325,6 @@ const VerifyKYC = () => {
         </CardContent>
       </Card>
 
-      {/* Document Verification Dialog */}
       <Dialog open={!!selectedDocument} onOpenChange={(open) => !open && setSelectedDocument(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

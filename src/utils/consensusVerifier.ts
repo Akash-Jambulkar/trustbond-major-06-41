@@ -1,72 +1,7 @@
 
 import { supabase } from '@/lib/supabaseClient';
 import { KycDocumentSubmissionType, KycVerificationVoteType } from '@/types/supabase-extensions';
-
-export async function getDocumentsNeedingConsensus(): Promise<KycDocumentSubmissionType[]> {
-  try {
-    console.log('Fetching documents needing consensus verification');
-    
-    // First try to get from kyc_document_submissions
-    const { data: kycSubmissions, error: kycError } = await supabase
-      .from('kyc_document_submissions')
-      .select('*')
-      .eq('verification_status', 'pending')
-      .order('submitted_at', { ascending: true });
-      
-    if (!kycError && kycSubmissions && kycSubmissions.length > 0) {
-      console.log('Found submissions in kyc_document_submissions:', kycSubmissions.length);
-      return kycSubmissions as KycDocumentSubmissionType[];
-    } else {
-      console.log('No submissions found in kyc_document_submissions or encountered error:', kycError);
-      
-      // If no data found or error occurred, try the kyc_documents table
-      const { data: kycDocuments, error: docsError } = await supabase
-        .from('kyc_documents')
-        .select('*')
-        .eq('verification_status', 'pending')
-        .order('created_at', { ascending: true });
-        
-      if (!docsError && kycDocuments && kycDocuments.length > 0) {
-        console.log('Found documents in kyc_documents:', kycDocuments.length);
-        // Convert to the expected type format
-        return kycDocuments.map(doc => ({
-          id: doc.id,
-          user_id: doc.user_id,
-          document_type: doc.document_type,
-          document_hash: doc.document_hash,
-          submitted_at: doc.created_at,
-          verification_status: doc.verification_status,
-          document_number: 'N/A' // Add required field with default value
-        })) as KycDocumentSubmissionType[];
-      } else {
-        console.log('No documents found in kyc_documents either:', docsError);
-        return [];
-      }
-    }
-  } catch (error) {
-    console.error('Error fetching documents needing consensus:', error);
-    return [];
-  }
-}
-
-export async function getVerificationVotes(documentId: string): Promise<KycVerificationVoteType[]> {
-  try {
-    // First try the kyc_verification_votes table
-    const { data: votesData, error: votesError } = await supabase
-      .from('kyc_verification_votes')
-      .select('*')
-      .eq('document_id', documentId);
-      
-    if (!votesError && votesData) {
-      return votesData as KycVerificationVoteType[];
-    }
-    
-    return [];
-  } catch (error) {
-    console.error('Error fetching verification votes:', error);
-    return [];
-  }
-}
+import { kycDocumentsTable, kycSubmissionsTable } from './supabase-helper';
 
 // Add the missing enum for consensus status
 export enum ConsensusStatusEnum {
@@ -101,6 +36,74 @@ export interface ConsensusResult {
   approvalsReceived: number;
   rejectionsReceived: number;
   votes?: VerificationVote[];
+}
+
+export async function getDocumentsNeedingConsensus(): Promise<KycDocumentSubmissionType[]> {
+  try {
+    console.log('Fetching documents needing consensus verification');
+    
+    // First try to get from kyc_document_submissions
+    const { data: kycSubmissions, error: kycError } = await kycSubmissionsTable()
+      .select('*')
+      .eq('verification_status', 'pending')
+      .order('submitted_at', { ascending: true });
+      
+    if (kycError) {
+      console.error('Error fetching from kyc_document_submissions:', kycError);
+      throw kycError;
+    }
+    
+    // Also try the kyc_documents table
+    const { data: kycDocuments, error: docsError } = await kycDocumentsTable()
+      .select('*')
+      .eq('verification_status', 'pending')
+      .order('created_at', { ascending: true });
+        
+    if (docsError) {
+      console.error('Error fetching from kyc_documents:', docsError);
+      throw docsError;
+    }
+    
+    // Convert kyc_documents to the expected format
+    const normalizedDocuments = (kycDocuments || []).map(doc => ({
+      id: doc.id,
+      user_id: doc.user_id,
+      document_type: doc.document_type,
+      document_hash: doc.document_hash,
+      submitted_at: doc.created_at,
+      verification_status: doc.verification_status,
+      document_number: 'N/A' // Add required field with default value
+    })) as KycDocumentSubmissionType[];
+    
+    // Combine both data sets
+    const allDocuments = [...(kycSubmissions || []), ...normalizedDocuments];
+    
+    console.log(`Found ${allDocuments.length} documents needing consensus verification`);
+    return allDocuments;
+  } catch (error) {
+    console.error('Error fetching documents needing consensus:', error);
+    throw error;
+  }
+}
+
+export async function getVerificationVotes(documentId: string): Promise<KycVerificationVoteType[]> {
+  try {
+    // First try the kyc_verification_votes table
+    const { data: votesData, error: votesError } = await supabase
+      .from('kyc_verification_votes')
+      .select('*')
+      .eq('document_id', documentId);
+      
+    if (votesError) {
+      console.error('Error fetching verification votes:', votesError);
+      throw votesError;
+    }
+    
+    return votesData || [];
+  } catch (error) {
+    console.error('Error fetching verification votes:', error);
+    throw error;
+  }
 }
 
 export async function checkConsensusStatus(documentId: string): Promise<ConsensusResult> {
@@ -156,6 +159,7 @@ export async function checkConsensusStatus(documentId: string): Promise<Consensu
     };
   } catch (error) {
     console.error('Error checking consensus status:', error);
+    // Return a default result object when error occurs
     return {
       approved: false,
       votesCount: 0,

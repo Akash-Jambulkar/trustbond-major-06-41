@@ -8,9 +8,9 @@ export function useKYCRealTimeUpdates(onUpdate?: () => void) {
   const [latestChange, setLatestChange] = useState<KycDocumentSubmissionType | null>(null);
 
   useEffect(() => {
-    // Set up subscription for KYC document changes
-    const kycUpdatesChannel = supabase
-      .channel('kyc-updates')
+    // Set up subscription for KYC document submissions table
+    const kycSubmissionsChannel = supabase
+      .channel('kyc-submissions-updates')
       .on('postgres_changes', 
         { 
           event: '*',  // Listen for all events (INSERT, UPDATE, DELETE)
@@ -18,7 +18,7 @@ export function useKYCRealTimeUpdates(onUpdate?: () => void) {
           table: 'kyc_document_submissions' 
         },
         payload => {
-          console.log('Real-time KYC update received:', payload);
+          console.log('Real-time KYC submission update received:', payload);
           
           // Store the latest change
           setLatestChange(payload.new as KycDocumentSubmissionType);
@@ -52,7 +52,9 @@ export function useKYCRealTimeUpdates(onUpdate?: () => void) {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('KYC submissions channel status:', status);
+      });
       
     // Also listen to the kyc_documents table
     const kycDocumentsChannel = supabase
@@ -83,11 +85,14 @@ export function useKYCRealTimeUpdates(onUpdate?: () => void) {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('KYC documents channel status:', status);
+      });
 
     // Clean up subscriptions
     return () => {
-      supabase.removeChannel(kycUpdatesChannel);
+      console.log('Cleaning up KYC real-time update subscriptions');
+      supabase.removeChannel(kycSubmissionsChannel);
       supabase.removeChannel(kycDocumentsChannel);
     };
   }, [onUpdate]);

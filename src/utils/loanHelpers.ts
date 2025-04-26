@@ -1,5 +1,6 @@
 
 import { supabase } from '@/lib/supabaseClient';
+import { loansTable, profilesTable } from './supabase-helper';
 
 export interface Loan {
   id: string;
@@ -28,14 +29,13 @@ export interface Loan {
 export async function fetchLoansWithBorrowerInfo(): Promise<Loan[]> {
   try {
     // First, fetch all loans
-    const { data: loans, error: loansError } = await supabase
-      .from('loans')
+    const { data: loans, error: loansError } = await loansTable()
       .select('*')
       .order('created_at', { ascending: false });
 
     if (loansError) {
       console.error('Error fetching loans:', loansError);
-      return [];
+      throw loansError;
     }
 
     if (!loans || loans.length === 0) {
@@ -47,8 +47,7 @@ export async function fetchLoansWithBorrowerInfo(): Promise<Loan[]> {
       loans.map(async (loan) => {
         if (loan.user_id) {
           // Fetch borrower profile
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
+          const { data: profile, error: profileError } = await profilesTable()
             .select('name, email, kyc_status, trust_score')
             .eq('id', loan.user_id)
             .maybeSingle();
@@ -80,7 +79,7 @@ export async function fetchLoansWithBorrowerInfo(): Promise<Loan[]> {
     return enhancedLoans;
   } catch (error) {
     console.error('Exception in fetchLoansWithBorrowerInfo:', error);
-    return [];
+    throw error;
   }
 }
 
@@ -89,21 +88,20 @@ export async function fetchLoansWithBorrowerInfo(): Promise<Loan[]> {
  */
 export async function fetchUserLoans(userId: string): Promise<Loan[]> {
   try {
-    const { data: loans, error } = await supabase
-      .from('loans')
+    const { data: loans, error } = await loansTable()
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error fetching user loans:', error);
-      return [];
+      throw error;
     }
 
     return loans || [];
   } catch (error) {
     console.error('Exception in fetchUserLoans:', error);
-    return [];
+    throw error;
   }
 }
 
@@ -113,15 +111,14 @@ export async function fetchUserLoans(userId: string): Promise<Loan[]> {
 export async function fetchBankLoans(bankId: string): Promise<Loan[]> {
   try {
     // First, fetch all loans for this bank
-    const { data: loans, error: loansError } = await supabase
-      .from('loans')
+    const { data: loans, error: loansError } = await loansTable()
       .select('*')
       .eq('bank_id', bankId)
       .order('created_at', { ascending: false });
 
     if (loansError) {
       console.error('Error fetching bank loans:', loansError);
-      return [];
+      throw loansError;
     }
 
     if (!loans || loans.length === 0) {
@@ -133,8 +130,7 @@ export async function fetchBankLoans(bankId: string): Promise<Loan[]> {
       loans.map(async (loan) => {
         if (loan.user_id) {
           // Fetch borrower profile
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
+          const { data: profile, error: profileError } = await profilesTable()
             .select('name, email, kyc_status, trust_score')
             .eq('id', loan.user_id)
             .maybeSingle();
@@ -166,7 +162,7 @@ export async function fetchBankLoans(bankId: string): Promise<Loan[]> {
     return enhancedLoans;
   } catch (error) {
     console.error('Exception in fetchBankLoans:', error);
-    return [];
+    throw error;
   }
 }
 
