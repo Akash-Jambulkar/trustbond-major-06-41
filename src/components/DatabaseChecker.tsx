@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle, Loader2 } from "lucide-react";
+import { safeFrom } from "@/utils/supabase-utils";
 
 interface TableStatus {
   name: string;
@@ -34,8 +35,8 @@ export function DatabaseChecker() {
       const statuses = await Promise.all(
         tables.map(async (table): Promise<TableStatus> => {
           try {
-            const { count, error } = await supabase
-              .from(table)
+            // Use the safeFrom utility instead of directly calling supabase.from with a string variable
+            const { count, error } = await safeFrom(table)
               .select('*', { count: 'exact', head: true });
 
             if (error) {
