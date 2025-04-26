@@ -9,6 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Wallet } from "lucide-react";
 import { createDocumentHash } from "@/utils/documentHash";
 import { TransactionHistory } from "./TransactionHistory";
+import { DOCUMENT_TYPES } from '@/utils/documentHash';
 
 export const BlockchainActions = () => {
   const { 
@@ -25,9 +26,7 @@ export const BlockchainActions = () => {
   const [isHashing, setIsHashing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Setup event listeners when contracts are available
   useEffect(() => {
-    // Setup basic event listeners if needed
   }, [isConnected]);
 
   const handleGenerateHash = async () => {
@@ -37,9 +36,7 @@ export const BlockchainActions = () => {
 
     setIsHashing(true);
     try {
-      // Use createDocumentHash instead of hashDocument
-      // For simplicity, we'll just use 'pan' as a default document type here
-      const hash = await createDocumentHash('pan', documentId);
+      const hash = await createDocumentHash(DOCUMENT_TYPES.PAN, documentId);
       setHashedDocument(hash);
     } catch (error) {
       console.error("Error hashing document:", error);
