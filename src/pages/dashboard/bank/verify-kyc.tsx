@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,10 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabaseClient";
 import { CheckCircle, XCircle, FileText, Shield, AlertTriangle, Eye } from "lucide-react";
 import { format } from "date-fns";
-import { KycDocumentSubmissionType } from "@/types/supabase-extensions";
 
 const VerifyKYC = () => {
   const { user } = useAuth();
@@ -34,38 +32,91 @@ const VerifyKYC = () => {
   const fetchDocuments = async () => {
     setIsLoading(true);
     try {
-      // First try to fetch from kyc_documents table
-      let { data, error } = await supabase
-        .from("kyc_documents")
-        .select("*, profiles(name, email, wallet_address)")
-        .order("created_at", { ascending: false });
-
-      // If there's an error or no data from kyc_documents, try kyc_document_submissions
-      if (error || !data || data.length === 0) {
-        console.log("Trying to fetch from kyc_document_submissions table instead");
+      // First get submissions from kyc_document_submissions table
+      const { data: submissions, error: submissionsError } = await supabase
+        .from("kyc_document_submissions")
+        .select("*")
+        .order("submitted_at", { ascending: false });
         
-        const { data: submissionsData, error: submissionsError } = await supabase
-          .from("kyc_document_submissions")
-          .select("*, profiles:user_id(name, email, wallet_address)")
-          .order("submitted_at", { ascending: false });
-        
-        if (submissionsError) {
-          console.error("Error fetching from kyc_document_submissions:", submissionsError);
-          throw submissionsError;
+      if (submissionsError) {
+        console.error("Error fetching from kyc_document_submissions:", submissionsError);
+        toast.error("Failed to fetch KYC submissions");
+        setIsLoading(false);
+        return;
+      }
+      
+      // For each submission, get the user profile info
+      let enhancedDocuments = [];
+      if (submissions && submissions.length > 0) {
+        for (const doc of submissions) {
+          if (doc.user_id) {
+            const { data: profile, error: profileError } = await supabase
+              .from("profiles")
+              .select("name, email, wallet_address")
+              .eq("id", doc.user_id)
+              .single();
+            
+            if (!profileError && profile) {
+              enhancedDocuments.push({
+                ...doc,
+                profiles: profile
+              });
+            } else {
+              enhancedDocuments.push({
+                ...doc,
+                profiles: { name: "Unknown", email: "No email", wallet_address: doc.wallet_address }
+              });
+            }
+          } else {
+            enhancedDocuments.push({
+              ...doc,
+              profiles: { name: "Unknown", email: "No email" }
+            });
+          }
         }
-        
-        data = submissionsData;
       }
 
-      if (!data) {
-        data = [];
+      // If no submissions in kyc_document_submissions, try kyc_documents table
+      if (enhancedDocuments.length === 0) {
+        const { data: documents, error: documentsError } = await supabase
+          .from("kyc_documents")
+          .select("*")
+          .order("created_at", { ascending: false });
+          
+        if (!documentsError && documents && documents.length > 0) {
+          for (const doc of documents) {
+            if (doc.user_id) {
+              const { data: profile, error: profileError } = await supabase
+                .from("profiles")
+                .select("name, email, wallet_address")
+                .eq("id", doc.user_id)
+                .single();
+              
+              if (!profileError && profile) {
+                enhancedDocuments.push({
+                  ...doc,
+                  submitted_at: doc.created_at,
+                  profiles: profile
+                });
+              } else {
+                enhancedDocuments.push({
+                  ...doc,
+                  submitted_at: doc.created_at,
+                  profiles: { name: "Unknown", email: "No email" }
+                });
+              }
+            }
+          }
+        } else if (documentsError) {
+          console.error("Error fetching from kyc_documents:", documentsError);
+        }
       }
-
-      console.log("Fetched documents:", data);
-      setDocuments(data || []);
-      setPendingDocuments(data.filter(doc => doc.verification_status === "pending") || []);
-      setVerifiedDocuments(data.filter(doc => doc.verification_status === "verified") || []);
-      setRejectedDocuments(data.filter(doc => doc.verification_status === "rejected") || []);
+      
+      console.log("Fetched and enhanced documents:", enhancedDocuments);
+      setDocuments(enhancedDocuments || []);
+      setPendingDocuments(enhancedDocuments.filter(doc => doc.verification_status === "pending") || []);
+      setVerifiedDocuments(enhancedDocuments.filter(doc => doc.verification_status === "verified") || []);
+      setRejectedDocuments(enhancedDocuments.filter(doc => doc.verification_status === "rejected") || []);
     } catch (error) {
       console.error("Error fetching documents:", error);
       toast.error("Failed to fetch KYC submissions");
@@ -344,7 +395,7 @@ const VerifyKYC = () => {
               <div>
                 <p className="text-sm font-medium mb-1">Wallet Address</p>
                 <p className="text-sm font-mono text-xs break-all">
-                  {selectedDocument.profiles?.wallet_address || "Not provided"}
+                  {selectedDocument.profiles?.wallet_address || selectedDocument.wallet_address || "Not provided"}
                 </p>
               </div>
 
@@ -355,7 +406,7 @@ const VerifyKYC = () => {
                 </div>
                 <div>
                   <p className="text-sm font-medium mb-1">Submitted Date</p>
-                  <p className="text-sm">{formatDate(selectedDocument.created_at)}</p>
+                  <p className="text-sm">{formatDate(selectedDocument.submitted_at || selectedDocument.created_at)}</p>
                 </div>
               </div>
 
