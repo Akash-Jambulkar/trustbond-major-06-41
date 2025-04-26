@@ -1,4 +1,5 @@
 
+import { useState, useEffect } from "react";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { useMode } from "@/contexts/ModeContext";
 import { Button } from "@/components/ui/button";
@@ -12,13 +13,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Wallet, AlertTriangle, ExternalLink, AlertCircle } from "lucide-react";
-import { useState, useEffect } from "react";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { MetaMaskErrorHelp } from "./MetaMaskErrorHelp";
 
 export const WalletStatus = () => {
   const { 
@@ -38,6 +39,8 @@ export const WalletStatus = () => {
   const [showError, setShowError] = useState<boolean>(false);
   const [connecting, setConnecting] = useState<boolean>(false);
   const [connectionAttempts, setConnectionAttempts] = useState(0);
+  const [showErrorHelp, setShowErrorHelp] = useState(false);
+  const [errorType, setErrorType] = useState("general");
 
   // Networks to display in the dropdown
   const networks = [
@@ -51,8 +54,26 @@ export const WalletStatus = () => {
     if (isConnected) {
       setShowError(false);
       setConnecting(false);
+      setShowErrorHelp(false);
     }
   }, [isConnected]);
+
+  // Determine error type from the error message
+  useEffect(() => {
+    if (!connectionError) return;
+    
+    if (connectionError.includes("not detected") || connectionError.includes("install")) {
+      setErrorType("not installed");
+    } else if (connectionError.includes("rejected")) {
+      setErrorType("rejected");
+    } else if (connectionError.includes("pending")) {
+      setErrorType("pending");
+    } else if (connectionError.includes("network")) {
+      setErrorType("wrong network");
+    } else {
+      setErrorType("general");
+    }
+  }, [connectionError]);
 
   if (!enableBlockchain) {
     return (
@@ -152,17 +173,31 @@ export const WalletStatus = () => {
         </DropdownMenu>
       ) : (
         <div className="flex flex-col">
-          <Button 
-            onClick={handleConnect}
-            variant="outline" 
-            className="flex items-center gap-2"
-            disabled={isBlockchainLoading || connecting}
-          >
-            <Wallet size={20} />
-            <span className="hidden md:inline">
-              {connecting || isBlockchainLoading ? "Connecting..." : "Connect MetaMask"}
-            </span>
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={handleConnect}
+              variant="outline" 
+              className="flex items-center gap-2"
+              disabled={isBlockchainLoading || connecting}
+            >
+              <Wallet size={20} />
+              <span className="hidden md:inline">
+                {connecting || isBlockchainLoading ? "Connecting..." : "Connect MetaMask"}
+              </span>
+            </Button>
+            
+            {showError && connectionError && (
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => setShowErrorHelp(true)}
+                className="text-red-500 hover:text-red-600 hover:bg-red-50"
+              >
+                <AlertCircle size={20} />
+              </Button>
+            )}
+          </div>
+          
           {showError && connectionError && (
             <div className="text-xs text-red-500 mt-1 flex items-center gap-1">
               <AlertCircle size={12} />
@@ -171,6 +206,12 @@ export const WalletStatus = () => {
           )}
         </div>
       )}
+      
+      <MetaMaskErrorHelp 
+        isOpen={showErrorHelp}
+        onClose={() => setShowErrorHelp(false)}
+        errorType={errorType}
+      />
     </div>
   );
 };
