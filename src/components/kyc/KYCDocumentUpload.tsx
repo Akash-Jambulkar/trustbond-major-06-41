@@ -94,11 +94,14 @@ export function KYCDocumentUpload() {
       if (isConnected && web3 && submitKYC) {
         try {
           const result = await submitKYC(documentHash, KYC_SUBMISSION_FEE);
-          blockchainSubmitted = result.success;
-          blockchainTxHash = result.transactionHash;
           
-          if (blockchainSubmitted && blockchainTxHash) {
-            console.log("KYC submitted to blockchain with hash:", blockchainTxHash);
+          // Handle the boolean result from submitKYC
+          blockchainSubmitted = result ? true : false;
+          
+          // Since we don't have transactionHash in the boolean result,
+          // we'll need to handle it differently or omit it
+          if (blockchainSubmitted) {
+            console.log("KYC submitted to blockchain successfully");
           } else {
             setShowBlockchainWarning(true);
           }
