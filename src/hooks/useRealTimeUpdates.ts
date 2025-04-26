@@ -33,7 +33,7 @@ export function useRealTimeUpdates() {
           console.log('KYC update received:', payload);
 
           // For user role, show notifications about their own KYC status
-          if (user.role === 'user' && payload.new?.user_id === user.id) {
+          if (user.role === 'user' && payload.new && payload.new.user_id === user.id) {
             if (payload.eventType === 'UPDATE') {
               const status = payload.new.verification_status;
               
@@ -43,7 +43,7 @@ export function useRealTimeUpdates() {
                 });
               } else if (status === 'rejected') {
                 toast.error('KYC Rejected', {
-                  description: `Your KYC document was rejected. Reason: ${payload.new.rejection_reason || 'Not specified'}`,
+                  description: `Your KYC document was rejected. Reason: ${payload.new?.rejection_reason || 'Not specified'}`,
                 });
               }
             }
@@ -73,22 +73,22 @@ export function useRealTimeUpdates() {
           console.log('Transaction update received:', payload);
 
           // Only show notifications for the current user's transactions
-          if (payload.new?.user_id === user.id || user.role === 'admin') {
+          if (payload.new && (payload.new.user_id === user.id || user.role === 'admin')) {
             if (payload.eventType === 'INSERT') {
               const txType = payload.new.transaction_type;
               const txStatus = payload.new.status;
               
               if (txStatus === 'completed') {
                 toast.success(`Transaction Complete`, {
-                  description: `Your ${txType.replace('_', ' ')} transaction has been processed successfully.`,
+                  description: `Your ${txType?.replace('_', ' ') || 'blockchain'} transaction has been processed successfully.`,
                 });
               } else if (txStatus === 'pending') {
                 toast.info(`Transaction Pending`, {
-                  description: `Your ${txType.replace('_', ' ')} transaction is being processed.`,
+                  description: `Your ${txType?.replace('_', ' ') || 'blockchain'} transaction is being processed.`,
                 });
               } else if (txStatus === 'failed') {
                 toast.error(`Transaction Failed`, {
-                  description: `Your ${txType.replace('_', ' ')} transaction has failed. Please try again.`,
+                  description: `Your ${txType?.replace('_', ' ') || 'blockchain'} transaction has failed. Please try again.`,
                 });
               }
             }

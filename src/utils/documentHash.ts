@@ -50,6 +50,11 @@ export async function createDocumentHash(documentType: DocumentType, documentNum
   }
 }
 
+// Alias for createDocumentHash for compatibility with existing code
+export async function hashDocument(documentType: DocumentType, documentNumber: string): Promise<string> {
+  return createDocumentHash(documentType, documentNumber);
+}
+
 // Simulate document verification (for development/testing)
 export function simulateDocumentVerification(documentHash: string): Promise<boolean> {
   return new Promise((resolve) => {
