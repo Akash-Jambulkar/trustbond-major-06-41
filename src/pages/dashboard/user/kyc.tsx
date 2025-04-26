@@ -7,14 +7,14 @@ import { useKYCSubmission } from "@/hooks/useKYCSubmission";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { useBlockchain } from "@/contexts/BlockchainContext";
-import { KYC_SUBMISSION_FEE } from "@/utils/contracts/contractConfig";
 import Web3 from "web3";
+import { KYC_SUBMISSION_FEE } from "@/utils/contracts/contractConfig";
 
 export default function KYCPage() {
   const { user } = useAuth();
   const { submission, isLoading, error } = useKYCSubmission(user?.id);
   const { isConnected, web3 } = useBlockchain();
-  const [formattedFee, setFormattedFee] = useState(KYC_SUBMISSION_FEE);
+  const [formattedFee, setFormattedFee] = useState('0.01');
 
   useEffect(() => {
     if (error) {
