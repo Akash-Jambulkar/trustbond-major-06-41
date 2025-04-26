@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,12 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabaseClient";
-import { CheckCircle, XCircle, FileText, Shield, AlertTriangle, Eye, Loader2 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { CheckCircle, XCircle, Shield, AlertTriangle, Eye, Loader2, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
-import { getAllKycSubmissions, getKycSubmissionsByStatus } from "@/utils/supabase-helper";
-import { useKYCRealTimeUpdates } from "@/hooks/useKYCRealTimeUpdates";
-import { KycDocumentSubmissionType } from "@/types/supabase-extensions";
 
 const VerifyKYC = () => {
   const { user } = useAuth();
@@ -25,11 +23,6 @@ const VerifyKYC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedDocument, setSelectedDocument] = useState<any>(null);
   const [verifying, setVerifying] = useState(false);
-  
-  useKYCRealTimeUpdates(() => {
-    console.log("Real-time KYC update detected, refreshing documents...");
-    fetchDocuments();
-  });
 
   useEffect(() => {
     if (user && user.role === "bank") {
@@ -40,47 +33,50 @@ const VerifyKYC = () => {
   const fetchDocuments = async () => {
     setIsLoading(true);
     try {
-      const allSubmissions = await getAllKycSubmissions();
+      // Fetch all KYC submissions
+      const { data: submissions, error: submissionsError } = await supabase
+        .from('kyc_document_submissions')
+        .select('*')
+        .order('submitted_at', { ascending: false });
       
-      let enhancedDocuments = [];
-      if (allSubmissions && allSubmissions.length > 0) {
-        for (const doc of allSubmissions) {
-          if (doc.user_id) {
-            const { data: profile, error: profileError } = await supabase
-              .from("profiles")
-              .select("name, email, wallet_address")
-              .eq("id", doc.user_id)
-              .single();
-            
-            if (!profileError && profile) {
-              enhancedDocuments.push({
-                ...doc,
-                profiles: profile
-              });
-            } else {
-              enhancedDocuments.push({
-                ...doc,
-                profiles: { 
-                  name: "Unknown", 
-                  email: "No email", 
-                  wallet_address: (doc as any).wallet_address || null 
-                }
-              });
-            }
-          } else {
-            enhancedDocuments.push({
-              ...doc,
-              profiles: { name: "Unknown", email: "No email" }
-            });
-          }
-        }
+      if (submissionsError) {
+        console.error("Error fetching KYC submissions:", submissionsError);
+        throw submissionsError;
       }
       
-      console.log("Fetched and enhanced documents:", enhancedDocuments);
-      setDocuments(enhancedDocuments || []);
-      setPendingDocuments(enhancedDocuments.filter(doc => doc.verification_status === "pending") || []);
-      setVerifiedDocuments(enhancedDocuments.filter(doc => doc.verification_status === "verified") || []);
-      setRejectedDocuments(enhancedDocuments.filter(doc => doc.verification_status === "rejected") || []);
+      // Enhance documents with user information
+      const enhancedDocuments = await Promise.all((submissions || []).map(async (doc) => {
+        if (doc.user_id) {
+          const { data: profile, error: profileError } = await supabase
+            .from("profiles")
+            .select("name, email, wallet_address")
+            .eq("id", doc.user_id)
+            .single();
+          
+          if (!profileError && profile) {
+            return {
+              ...doc,
+              profiles: profile
+            };
+          }
+        }
+        
+        return {
+          ...doc,
+          profiles: { 
+            name: "Unknown", 
+            email: "No email", 
+            wallet_address: doc.wallet_address || null 
+          }
+        };
+      }));
+      
+      console.log("Fetched and enhanced KYC submissions:", enhancedDocuments);
+      
+      setDocuments(enhancedDocuments);
+      setPendingDocuments(enhancedDocuments.filter(doc => doc.verification_status === "pending"));
+      setVerifiedDocuments(enhancedDocuments.filter(doc => doc.verification_status === "verified"));
+      setRejectedDocuments(enhancedDocuments.filter(doc => doc.verification_status === "rejected"));
     } catch (error) {
       console.error("Error fetching documents:", error);
       toast.error("Failed to fetch KYC submissions");
@@ -101,51 +97,47 @@ const VerifyKYC = () => {
       
       const verificationStatus = approve ? 'verified' as const : 'rejected' as const;
       
+      // Try blockchain verification if available
       if (verifyKYC) {
-        await verifyKYC(selectedDocument.id, verificationStatus);
+        try {
+          await verifyKYC(selectedDocument.id, verificationStatus);
+        } catch (error) {
+          console.error("Blockchain verification failed, continuing with database update:", error);
+        }
       }
 
-      let updateResult = null;
-      
-      const { data: kycDocResult, error: kycDocError } = await supabase
-        .from('kyc_documents')
+      // Always update database record
+      const { data: updateResult, error: updateError } = await supabase
+        .from('kyc_document_submissions')
         .update({ 
           verification_status: verificationStatus,
-          verified_by: account,
-          updated_at: new Date().toISOString()
+          verified_at: new Date().toISOString(),
+          verifier_address: account,
+          rejection_reason: !approve ? "Document verification failed" : null
         })
         .eq('id', selectedDocument.id)
         .select();
         
-      if (kycDocError || !kycDocResult || kycDocResult.length === 0) {
-        console.log("Document not found in kyc_documents, trying kyc_document_submissions");
-        
-        const { data: kycSubmissionResult, error: kycSubmissionError } = await supabase
-          .from('kyc_document_submissions')
+      if (updateError) {
+        throw updateError;
+      }
+      
+      // Update user profile KYC status
+      if (selectedDocument.user_id) {
+        const { error: profileError } = await supabase
+          .from('profiles')
           .update({ 
-            verification_status: verificationStatus,
-            verified_at: new Date().toISOString(),
-            verifier_address: account,
-            rejection_reason: !approve ? "Document verification failed" : null
+            kyc_status: verificationStatus,
+            updated_at: new Date().toISOString()
           })
-          .eq('id', selectedDocument.id)
-          .select();
+          .eq('id', selectedDocument.user_id);
           
-        if (kycSubmissionError) {
-          throw kycSubmissionError;
+        if (profileError) {
+          console.error("Error updating profile KYC status:", profileError);
         }
-        
-        updateResult = kycSubmissionResult;
-      } else {
-        updateResult = kycDocResult;
       }
       
-      if (updateResult) {
-        toast.success(`Document ${approve ? 'verified' : 'rejected'} successfully`);
-      } else {
-        toast.error("Failed to update document status");
-      }
-      
+      toast.success(`Document ${approve ? 'verified' : 'rejected'} successfully`);
       setSelectedDocument(null);
       fetchDocuments();
     } catch (error) {
@@ -190,7 +182,7 @@ const VerifyKYC = () => {
     }
   };
 
-  const DocumentTable = ({ documents, showActions = false }: { documents: any[], showActions?: boolean }) => {
+  const DocumentTable = ({ documents }: { documents: any[] }) => {
     if (isLoading) {
       return (
         <div className="flex justify-center items-center py-8">
@@ -228,7 +220,7 @@ const VerifyKYC = () => {
                 </div>
               </TableCell>
               <TableCell>{doc.document_type}</TableCell>
-              <TableCell>{formatDate(doc.created_at || doc.submitted_at)}</TableCell>
+              <TableCell>{formatDate(doc.submitted_at)}</TableCell>
               <TableCell>{getStatusBadge(doc.verification_status)}</TableCell>
               <TableCell className="text-right">
                 <Button
@@ -264,24 +256,6 @@ const VerifyKYC = () => {
     );
   }
 
-  if (!isConnected) {
-    return (
-      <div className="p-6">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex flex-col items-center justify-center py-10">
-              <Shield className="h-16 w-16 text-gray-300 mb-4" />
-              <h3 className="text-xl font-medium text-center mb-2">Wallet Not Connected</h3>
-              <p className="text-muted-foreground text-center mb-6 max-w-md">
-                Please connect your wallet to verify KYC documents
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="p-6">
       <div className="mb-6">
@@ -292,14 +266,20 @@ const VerifyKYC = () => {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-trustbond-primary" />
-            Document Verification
-          </CardTitle>
-          <CardDescription>
-            Verify customer identity documents and update their KYC status
-          </CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-primary" />
+              Document Verification
+            </CardTitle>
+            <CardDescription>
+              Verify customer identity documents and update their KYC status
+            </CardDescription>
+          </div>
+          <Button variant="outline" size="sm" onClick={fetchDocuments}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="pending">
@@ -315,7 +295,7 @@ const VerifyKYC = () => {
               <TabsTrigger value="all">All Documents</TabsTrigger>
             </TabsList>
             <TabsContent value="pending">
-              <DocumentTable documents={pendingDocuments} showActions={true} />
+              <DocumentTable documents={pendingDocuments} />
             </TabsContent>
             <TabsContent value="verified">
               <DocumentTable documents={verifiedDocuments} />
@@ -366,7 +346,7 @@ const VerifyKYC = () => {
                 </div>
                 <div>
                   <p className="text-sm font-medium mb-1">Submitted Date</p>
-                  <p className="text-sm">{formatDate(selectedDocument.submitted_at || selectedDocument.created_at)}</p>
+                  <p className="text-sm">{formatDate(selectedDocument.submitted_at)}</p>
                 </div>
               </div>
 

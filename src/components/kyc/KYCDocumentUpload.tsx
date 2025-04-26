@@ -55,7 +55,6 @@ export function KYCDocumentUpload() {
   const { user } = useAuth();
   const { submitKYC, isConnected, web3 } = useBlockchain();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [documentHash, setDocumentHash] = useState<string | null>(null);
   const [showBlockchainWarning, setShowBlockchainWarning] = useState(false);
 
   const form = useForm<DocumentFormValues>({
@@ -87,22 +86,21 @@ export function KYCDocumentUpload() {
     try {
       // Generate document hash
       const documentHash = await createDocumentHash(values.documentType as DocumentType, values.documentNumber);
-      setDocumentHash(documentHash);
       
       let blockchainSubmitted = false;
+      let blockchainTxHash = null;
       
       // Try blockchain submission if connected
-      if (isConnected && web3) {
+      if (isConnected && web3 && submitKYC) {
         try {
-          // Submit KYC with fee
-          blockchainSubmitted = await submitKYC(documentHash, KYC_SUBMISSION_FEE);
+          const result = await submitKYC(documentHash, KYC_SUBMISSION_FEE);
+          blockchainSubmitted = result.success;
+          blockchainTxHash = result.transactionHash;
           
-          if (blockchainSubmitted) {
-            toast({
-              title: "KYC document submitted successfully",
-              description: "Your document has been submitted via blockchain",
-            });
-            form.reset();
+          if (blockchainSubmitted && blockchainTxHash) {
+            console.log("KYC submitted to blockchain with hash:", blockchainTxHash);
+          } else {
+            setShowBlockchainWarning(true);
           }
         } catch (error) {
           console.error("Error submitting to blockchain:", error);
@@ -113,36 +111,40 @@ export function KYCDocumentUpload() {
         setShowBlockchainWarning(true);
       }
       
-      // If blockchain submission failed or wallet not connected, use database fallback
-      if (!blockchainSubmitted) {
-        try {
-          // Store submission in database
-          const { error } = await supabase.from('kyc_document_submissions').insert({
-            user_id: user.id,
-            document_type: values.documentType,
-            document_hash: documentHash,
-            verification_status: 'pending',
-            submitted_at: new Date().toISOString(),
-            wallet_address: web3 && isConnected ? await web3.eth.getCoinbase() : null,
-          });
-          
-          if (error) {
-            throw error;
-          }
-          
-          toast({
-            title: "KYC document submitted successfully",
-            description: "Your document has been submitted for verification",
-          });
-          form.reset();
-        } catch (dbError) {
-          console.error("Database submission error:", dbError);
-          toast({
-            title: "Error submitting document",
-            description: "Please try again later",
-            variant: "destructive"
-          });
+      // Always store submission in database whether blockchain submission worked or not
+      try {
+        const currentWallet = web3 && isConnected ? await web3.eth.getCoinbase() : null;
+        
+        // Store submission in database
+        const { error } = await supabase.from('kyc_document_submissions').insert({
+          user_id: user.id,
+          document_type: values.documentType,
+          document_hash: documentHash,
+          verification_status: 'pending',
+          submitted_at: new Date().toISOString(),
+          wallet_address: currentWallet,
+          blockchain_tx_hash: blockchainTxHash
+        });
+        
+        if (error) {
+          console.error("Database submission error:", error);
+          throw error;
         }
+        
+        toast({
+          title: "KYC document submitted successfully",
+          description: blockchainSubmitted 
+            ? "Your document has been submitted via blockchain" 
+            : "Your document has been submitted for verification",
+        });
+        form.reset();
+      } catch (dbError) {
+        console.error("Database submission error:", dbError);
+        toast({
+          title: "Error saving submission to database",
+          description: "Please try again later",
+          variant: "destructive"
+        });
       }
     } catch (error) {
       console.error("Error submitting document:", error);
