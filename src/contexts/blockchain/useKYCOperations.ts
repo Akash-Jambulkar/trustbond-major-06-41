@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 import Web3 from "web3";
 import { Contract } from "web3-eth-contract";
@@ -32,7 +31,6 @@ export const useKYCOperations = ({
     try {
       console.log("Starting KYC submission with document hash:", documentHash);
       
-      // Get user ID from session
       const { data: authData } = await supabase.auth.getSession();
       const userId = authData.session?.user?.id;
       
@@ -40,7 +38,6 @@ export const useKYCOperations = ({
         throw new Error("User not authenticated");
       }
       
-      // Ensure we have a fee in Wei
       let fee = feeInWei;
       if (!fee) {
         fee = web3.utils.toWei('0.001', 'ether'); // Default fee
@@ -51,7 +48,6 @@ export const useKYCOperations = ({
       
       console.log(`Submitting KYC with fee: ${web3.utils.fromWei(fee, 'ether')} ETH`);
       
-      // Ensure we have enough balance
       const balance = await web3.eth.getBalance(account);
       console.log(`Account balance: ${web3.utils.fromWei(balance, 'ether')} ETH`);
       
@@ -60,7 +56,6 @@ export const useKYCOperations = ({
         return { success: false };
       }
 
-      // Estimate gas with the fee value
       const gasEstimate = await kycContract.methods.submitKYC(documentHash).estimateGas({
         from: account,
         value: fee
@@ -69,7 +64,6 @@ export const useKYCOperations = ({
       const gasLimit = Math.round(Number(gasEstimate) * 1.2).toString();
       console.log(`Gas estimate: ${gasEstimate}, Gas limit: ${gasLimit}`);
       
-      // Send transaction with fee
       const tx = await kycContract.methods.submitKYC(documentHash).send({ 
         from: account,
         value: fee,
@@ -78,7 +72,6 @@ export const useKYCOperations = ({
       
       console.log("Transaction successful:", tx.transactionHash);
       
-      // Store submission in the database
       const { error: submissionError } = await supabase
         .from('kyc_document_submissions')
         .insert({
@@ -95,7 +88,6 @@ export const useKYCOperations = ({
         console.error("Error storing KYC submission:", submissionError);
       }
       
-      // Update user profile
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
@@ -110,7 +102,6 @@ export const useKYCOperations = ({
         console.error("Error updating profile:", profileError);
       }
       
-      // Track transaction
       trackAndWatchTransaction(
         tx.transactionHash,
         'kyc',
@@ -125,7 +116,6 @@ export const useKYCOperations = ({
       
       toast.success("KYC documents submitted successfully");
       
-      // Clear cache and refresh transactions
       clearBlockchainCache();
       await refreshTransactions();
       
@@ -145,11 +135,9 @@ export const useKYCOperations = ({
     try {
       console.log(`Verifying KYC submission ${kycId} as ${verificationStatus}`);
       
-      // Get submission details - check both tables
       let submission: any = null;
       let userAddress: string | null = null;
       
-      // Try kyc_document_submissions first
       const { data: submissionData, error: submissionError } = await supabase
         .from('kyc_document_submissions')
         .select('wallet_address, document_hash, user_id')
@@ -164,7 +152,6 @@ export const useKYCOperations = ({
         submission = submissionData;
         userAddress = submissionData.wallet_address;
       } else {
-        // Try kyc_documents if no result
         const { data: docData, error: docError } = await supabase
           .from('kyc_documents')
           .select('*')
@@ -178,11 +165,11 @@ export const useKYCOperations = ({
         if (docData) {
           submission = docData;
           
-          // Fix 3: Check if wallet_address exists in the document, otherwise get from profiles
-          if (docData.blockchain_address) {
+          if (docData.wallet_address) {
+            userAddress = docData.wallet_address;
+          } else if (docData.blockchain_address) {  
             userAddress = docData.blockchain_address;
           } else {
-            // Try to get wallet address from user profile
             const { data: profileData } = await supabase
               .from('profiles')
               .select('wallet_address')
@@ -199,7 +186,6 @@ export const useKYCOperations = ({
       if (!userAddress) {
         console.log("No wallet address found for KYC submission");
         
-        // We can still update the database status even without blockchain confirmation
         const { error: updateError } = await supabase
           .from('kyc_document_submissions')
           .update({ 
@@ -221,12 +207,9 @@ export const useKYCOperations = ({
       console.log("Found user wallet address:", userAddress);
       const status = verificationStatus === 'verified';
       
-      // Call blockchain method
-      console.log(`Calling blockchain verifyKYC(${userAddress}, ${status})`);
       const tx = await kycContract.methods.verifyKYC(userAddress, status).send({ from: account });
       console.log("Blockchain verification tx:", tx.transactionHash);
       
-      // Track transaction
       trackAndWatchTransaction(
         tx.transactionHash,
         'verification',
@@ -241,7 +224,6 @@ export const useKYCOperations = ({
       
       toast.success(`KYC ${status ? 'approved' : 'rejected'} for ${userAddress}`);
       
-      // Update submission status
       const { error: updateError } = await supabase
         .from('kyc_document_submissions')
         .update({ 
@@ -255,7 +237,6 @@ export const useKYCOperations = ({
         
       if (updateError) {
         console.log("Could not update kyc_document_submissions, trying kyc_documents");
-        // Try kyc_documents if submission update fails
         const { error: docError } = await supabase
           .from('kyc_documents')
           .update({ 
@@ -269,7 +250,6 @@ export const useKYCOperations = ({
         }
       }
       
-      // Update user profile status
       await supabase
         .from('profiles')
         .update({ 
@@ -279,7 +259,6 @@ export const useKYCOperations = ({
         })
         .eq('id', submission.user_id);
       
-      // Clear cache and refresh transactions
       clearBlockchainCache();
       await refreshTransactions();
       
@@ -298,7 +277,6 @@ export const useKYCOperations = ({
     }
 
     try {
-      // Try to get from cache first
       const cacheKey = getCacheKey('kycStatus', userAddress);
       const cachedStatus = getFromCache<boolean>(cacheKey, 'kycStatus');
       
@@ -306,14 +284,10 @@ export const useKYCOperations = ({
         return cachedStatus;
       }
       
-      // Check status on blockchain
-      console.log("Checking KYC status on blockchain for:", userAddress);
       const status = await kycContract.methods.getKYCStatus(userAddress).call();
       console.log("Blockchain KYC status:", status);
       
-      // If not verified on blockchain, check database
       if (!status) {
-        // Get user ID from wallet address
         const { data: userProfile } = await supabase
           .from('profiles')
           .select('id, kyc_status')
@@ -322,13 +296,11 @@ export const useKYCOperations = ({
           
         if (userProfile && userProfile.kyc_status === 'verified') {
           console.log("User verified in database but not blockchain");
-          // Store in cache
           storeInCache(cacheKey, 'kycStatus', true);
           return true;
         }
       }
       
-      // Store blockchain status in cache
       storeInCache(cacheKey, 'kycStatus', status);
       
       return status;

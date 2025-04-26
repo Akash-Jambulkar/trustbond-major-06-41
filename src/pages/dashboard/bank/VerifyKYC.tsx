@@ -133,11 +133,13 @@ const VerifyKYCPage = () => {
       const verificationStatus = approved ? 'verified' as const : 'rejected' as const;
       console.log(`Verifying KYC ${submission.id} as ${verificationStatus}`);
       
-      // Try blockchain verification first
+      // Fix: verifyKYC accepts only two arguments: kycId and verificationStatus
+      // The rejection reason should be handled separately if needed
       let success = false;
       if (submission.wallet_address) {
         try {
-          success = await verifyKYC(submission.id, verificationStatus, !approved ? rejectionReason : undefined);
+          // Remove the third argument (rejectionReason)
+          success = await verifyKYC(submission.id, verificationStatus);
           console.log("Blockchain verification result:", success);
         } catch (error) {
           console.error("Blockchain verification failed:", error);

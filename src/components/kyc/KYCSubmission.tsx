@@ -1,6 +1,3 @@
-
-// Adding only the changed part of this large file
-// This fixes the type issue for the result of submitKYC
 import { useState, useEffect, useCallback } from "react";
 import { 
   Card, 
@@ -89,34 +86,28 @@ export function KYCSubmission() {
           const feeInWei = web3.utils.toWei(KYC_SUBMISSION_FEE, 'ether');
           console.log(`Using fee: ${KYC_SUBMISSION_FEE} ETH (${feeInWei} Wei)`);
           
-          // Attempt blockchain submission with fee
-          // Fix: Handle the new return type with success property
+          // Fix: Handle the submitKYC return type correctly - it now returns boolean, not an object
           const result = await submitKYC(documentHash, feeInWei);
           blockchainSubmitted = result;
           
-          // If blockchain submission was successful, get the transaction hash from the result
+          // Since result is now a boolean, we need to get transactionHash differently
           if (result) {
-            transactionHash = result.transactionHash || "";
-            if (transactionHash) {
-              console.log("Blockchain submission successful. Transaction hash:", transactionHash);
+            // Try to get transaction hash from recent transactions
+            console.log("Blockchain submission successful, checking recent transactions");
+            const { data: txData } = await supabase
+              .from('transactions')
+              .select('transaction_hash')
+              .eq('type', 'kyc')
+              .eq('from_address', account.toLowerCase())
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .single();
+              
+            if (txData && txData.transaction_hash) {
+              transactionHash = txData.transaction_hash;
+              console.log("Found transaction hash from recent submissions:", transactionHash);
             } else {
-              // If transactionHash is not available from result, try to get it from recent transactions
-              console.log("Transaction hash not returned directly, checking recent transactions");
-              const { data: txData } = await supabase
-                .from('transactions')
-                .select('transaction_hash')
-                .eq('type', 'kyc')
-                .eq('from_address', account.toLowerCase())
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .single();
-                
-              if (txData && txData.transaction_hash) {
-                transactionHash = txData.transaction_hash;
-                console.log("Found transaction hash from recent submissions:", transactionHash);
-              } else {
-                console.log("Transaction found in blockchain but hash not recorded");
-              }
+              console.log("Transaction found in blockchain but hash not recorded");
             }
           } else {
             console.log("Blockchain submission failed");
