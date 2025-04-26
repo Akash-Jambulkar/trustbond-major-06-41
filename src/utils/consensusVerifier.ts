@@ -68,12 +68,39 @@ export async function getVerificationVotes(documentId: string): Promise<KycVerif
   }
 }
 
+// Add the missing enum for consensus status
+export enum ConsensusStatusEnum {
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  IN_PROGRESS = 'in_progress',
+  PENDING = 'pending'
+}
+
+// Add the VerificationVote type
+export type VerificationVote = {
+  bankId: string;
+  bankName: string;
+  approved: boolean;
+  timestamp: string;
+  notes?: string;
+};
+
+// Enhanced ConsensusResult type with all required properties
 export interface ConsensusResult {
   approved: boolean;
   votesCount: number;
   approvalsCount: number;
   rejectionsCount: number;
   consensusReached: boolean;
+  
+  // New properties to match component usage
+  status: ConsensusStatusEnum;
+  progress: number;
+  votesReceived: number;
+  votesRequired: number;
+  approvalsReceived: number;
+  rejectionsReceived: number;
+  votes?: VerificationVote[];
 }
 
 export async function checkConsensusStatus(documentId: string): Promise<ConsensusResult> {
@@ -85,18 +112,47 @@ export async function checkConsensusStatus(documentId: string): Promise<Consensu
     
     // Default consensus threshold is 66%
     const consensusThreshold = 0.66;
-    const consensusReached = totalVotes >= 3 && 
+    const votesRequired = 3; // Minimum votes required
+    const consensusReached = totalVotes >= votesRequired && 
       (approvals / totalVotes >= consensusThreshold || 
        rejections / totalVotes >= consensusThreshold);
     
     const approved = approvals / totalVotes >= consensusThreshold;
+    
+    // Calculate progress as percentage toward required votes
+    const progress = Math.min(100, Math.round((totalVotes / votesRequired) * 100));
+    
+    // Determine status based on consensus state
+    let status = ConsensusStatusEnum.PENDING;
+    if (totalVotes > 0) {
+      status = ConsensusStatusEnum.IN_PROGRESS;
+      if (consensusReached) {
+        status = approved ? ConsensusStatusEnum.APPROVED : ConsensusStatusEnum.REJECTED;
+      }
+    }
+    
+    // Format votes for display
+    const formattedVotes = votes.map(vote => ({
+      bankId: vote.bank_id,
+      bankName: vote.bank_name || 'Bank',
+      approved: vote.approved,
+      timestamp: vote.created_at,
+      notes: vote.notes
+    }));
     
     return {
       approved,
       votesCount: totalVotes,
       approvalsCount: approvals,
       rejectionsCount: rejections,
-      consensusReached
+      consensusReached,
+      status,
+      progress,
+      votesReceived: totalVotes,
+      votesRequired,
+      approvalsReceived: approvals,
+      rejectionsReceived: rejections,
+      votes: formattedVotes
     };
   } catch (error) {
     console.error('Error checking consensus status:', error);
@@ -105,7 +161,14 @@ export async function checkConsensusStatus(documentId: string): Promise<Consensu
       votesCount: 0,
       approvalsCount: 0,
       rejectionsCount: 0,
-      consensusReached: false
+      consensusReached: false,
+      status: ConsensusStatusEnum.PENDING,
+      progress: 0,
+      votesReceived: 0,
+      votesRequired: 3,
+      approvalsReceived: 0,
+      rejectionsReceived: 0,
+      votes: []
     };
   }
 }
