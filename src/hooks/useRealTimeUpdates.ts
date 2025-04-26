@@ -33,7 +33,7 @@ export function useRealTimeUpdates() {
           console.log('KYC update received:', payload);
 
           // For user role, show notifications about their own KYC status
-          if (user.role === 'user' && payload.new && payload.new?.user_id === user.id) {
+          if (user.role === 'user' && payload.new && payload.new.user_id === user.id) {
             if (payload.eventType === 'UPDATE') {
               const status = payload.new.verification_status;
               
@@ -73,7 +73,7 @@ export function useRealTimeUpdates() {
           console.log('Transaction update received:', payload);
 
           // Only show notifications for the current user's transactions
-          if (payload.new && (payload.new?.user_id === user.id || user.role === 'admin')) {
+          if (payload.new && payload.new.user_id === user.id) {
             if (payload.eventType === 'INSERT') {
               const txType = payload.new.transaction_type;
               const txStatus = payload.new.status;

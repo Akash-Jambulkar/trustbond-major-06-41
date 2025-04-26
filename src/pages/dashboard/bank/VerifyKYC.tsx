@@ -53,8 +53,22 @@ const VerifyKYC = () => {
       if (error) {
         console.error('Error fetching KYC submissions:', error);
         toast.error('Failed to fetch KYC submissions');
-      } else {
-        setSubmissions(data || []);
+      } else if (data) {
+        // Transform the data to match our expected KYCSubmission type
+        const formattedSubmissions: KYCSubmission[] = data.map(item => ({
+          id: item.id,
+          document_type: item.document_type,
+          document_hash: item.document_hash,
+          verification_status: item.verification_status,
+          submitted_at: item.submitted_at,
+          user_id: item.user_id,
+          wallet_address: item.wallet_address,
+          user: item.user && Array.isArray(item.user) && item.user.length > 0 
+            ? { name: item.user[0].name, email: item.user[0].email }
+            : { name: 'Unknown User', email: 'No email' }
+        }));
+        
+        setSubmissions(formattedSubmissions);
       }
     } catch (error) {
       console.error('Error in fetchKYCSubmissions:', error);
@@ -81,9 +95,9 @@ const VerifyKYC = () => {
       
       if (result) {
         // Get transaction hash from result if available
-        const txHash = typeof result === 'object' && result.transactionHash ? 
-          result.transactionHash : 
-          'blockchain-tx-' + Math.random().toString(36).substring(2, 15);
+        const txHash = typeof result === 'object' && result?.transactionHash 
+          ? result.transactionHash 
+          : 'blockchain-tx-' + Math.random().toString(36).substring(2, 15);
         
         // Update verification status in database
         const { error: updateError } = await supabase
@@ -92,7 +106,7 @@ const VerifyKYC = () => {
             verification_status: status,
             verified_at: new Date().toISOString(),
             verification_tx_hash: txHash,
-            verifier_address: user.wallet_address || 'bank-verification'
+            verifier_address: user.walletAddress || 'bank-verification'
           })
           .eq('id', kycId);
 
@@ -125,7 +139,7 @@ const VerifyKYC = () => {
               transaction_hash: txHash,
               type: 'kyc_verification',
               status: 'completed',
-              from_address: user.wallet_address || user.id,
+              from_address: user.walletAddress || user.id,
               user_id: submission?.user_id,
               bank_id: user.id
             });
