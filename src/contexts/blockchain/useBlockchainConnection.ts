@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import Web3 from "web3";
 import { toast } from "sonner";
@@ -45,7 +46,7 @@ export const useBlockchainConnection = ({ enableBlockchain = false }) => {
   const connectWallet = useCallback(async () => {
     if (!web3 || !enableBlockchain) {
       setConnectionError("Web3 not initialized or blockchain features disabled");
-      return;
+      return false;
     }
     
     setIsBlockchainLoading(true);
@@ -177,9 +178,10 @@ export const useBlockchainConnection = ({ enableBlockchain = false }) => {
     const loadContracts = async () => {
       try {
         // Dynamically import contract configurations
-        const kycConfig = await import("@/utils/contracts/KYC.json");
-        const trustScoreConfig = await import("@/utils/contracts/TrustScore.json");
-        const loanConfig = await import("@/utils/contracts/Loan.json");
+        // Using path to contracts directory at the project root instead of utils
+        const kycConfig = await import("@/contracts/abis/KYCVerifier.json");
+        const trustScoreConfig = await import("@/contracts/abis/TrustScore.json");
+        const loanConfig = await import("@/contracts/abis/LoanManager.json");
         
         // Get network ID
         const netId = await web3.eth.getChainId();
@@ -196,9 +198,9 @@ export const useBlockchainConnection = ({ enableBlockchain = false }) => {
         setIsCorrectNetwork(isValidNetwork(netId));
         
         // Get contract addresses based on network ID
-        const kycAddress = kycConfig.networks[netId]?.address;
-        const trustScoreAddress = trustScoreConfig.networks[netId]?.address;
-        const loanAddress = loanConfig.networks[netId]?.address;
+        const kycAddress = kycConfig.networks?.[netId]?.address;
+        const trustScoreAddress = trustScoreConfig.networks?.[netId]?.address;
+        const loanAddress = loanConfig.networks?.[netId]?.address;
         
         if (!kycAddress || !trustScoreAddress || !loanAddress) {
           console.error("Contract addresses not found for network ID:", netId);

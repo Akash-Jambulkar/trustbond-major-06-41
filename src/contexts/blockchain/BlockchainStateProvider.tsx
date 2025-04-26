@@ -27,9 +27,9 @@ export const BlockchainStateProvider = ({ children }: { children: ReactNode }) =
     kycContract,
     trustScoreContract,
     loanContract,
-    connectWallet,
+    connectWallet: originalConnectWallet,
     disconnectWallet,
-    switchNetwork
+    switchNetwork: originalSwitchNetwork
   } = useBlockchainConnection({ enableBlockchain });
 
   const { 
@@ -67,6 +67,26 @@ export const BlockchainStateProvider = ({ children }: { children: ReactNode }) =
     trackAndWatchTransaction: trackTransaction,
     refreshTransactions: getTransactionHistory
   });
+
+  // Wrapper to make connectWallet return string | false as per type definition
+  const connectWallet = async (): Promise<string | false> => {
+    const success = await originalConnectWallet();
+    if (success && account) {
+      return account;
+    }
+    return false;
+  };
+
+  // Wrapper to make switchNetwork return boolean as per type definition
+  const switchNetwork = async (chainId: number): Promise<boolean> => {
+    try {
+      await originalSwitchNetwork(chainId);
+      return true;
+    } catch (error) {
+      console.error("Error switching network:", error);
+      return false;
+    }
+  };
 
   const submitKYCWrapper = async (documentHash: string, feeInWei?: string): Promise<boolean> => {
     const result = await submitKYC(documentHash, 'default', feeInWei);
