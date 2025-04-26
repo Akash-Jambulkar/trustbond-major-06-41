@@ -33,55 +33,86 @@ const VerifyKYC = () => {
   const fetchDocuments = async () => {
     setIsLoading(true);
     try {
-      // Fetch all KYC submissions
+      console.log("Fetching KYC submissions...");
+
+      // First try kyc_document_submissions table
       const { data: submissions, error: submissionsError } = await supabase
         .from('kyc_document_submissions')
         .select('*')
         .order('submitted_at', { ascending: false });
       
       if (submissionsError) {
-        console.error("Error fetching KYC submissions:", submissionsError);
+        console.error("Error fetching from kyc_document_submissions:", submissionsError);
         throw submissionsError;
       }
+
+      console.log("Fetched kyc_document_submissions:", submissions);
       
-      // Enhance submissions with profile data through separate queries
-      const enhancedSubmissions = await Promise.all((submissions || []).map(async (doc) => {
-        // Get profile info for each submission's user_id
-        if (doc.user_id) {
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('name, email, wallet_address')
-            .eq('id', doc.user_id)
-            .maybeSingle();
-          
-          if (!profileError && profileData) {
-            return {
-              ...doc,
-              user_info: {
-                name: profileData.name || 'Unknown',
-                email: profileData.email || 'No email',
-                wallet_address: profileData.wallet_address || doc.wallet_address || null
-              }
-            };
-          }
-        }
+      // Then try kyc_documents table as fallback
+      const { data: kycDocuments, error: kycDocumentsError } = await supabase
+        .from('kyc_documents')
+        .select('*')
+        .order('created_at', { ascending: false });
         
-        return {
-          ...doc,
-          user_info: { 
-            name: "Unknown", 
-            email: "No email", 
-            wallet_address: doc.wallet_address || null 
+      if (kycDocumentsError) {
+        console.error("Error fetching from kyc_documents:", kycDocumentsError);
+      } else {
+        console.log("Fetched kyc_documents:", kycDocuments);
+      }
+      
+      // Normalize documents from kyc_documents to match structure
+      const normalizedDocuments = kycDocuments?.map(doc => ({
+        id: doc.id,
+        user_id: doc.user_id,
+        document_type: doc.document_type,
+        document_hash: doc.document_hash,
+        submitted_at: doc.created_at,
+        verification_status: doc.verification_status,
+        wallet_address: null
+      })) || [];
+      
+      // Combine both data sets
+      let allSubmissions = [...(submissions || []), ...normalizedDocuments];
+      
+      // Enhance submissions with profile data
+      if (allSubmissions.length > 0) {
+        allSubmissions = await Promise.all(allSubmissions.map(async (doc) => {
+          if (doc.user_id) {
+            const { data: profileData, error: profileError } = await supabase
+              .from('profiles')
+              .select('name, email, wallet_address')
+              .eq('id', doc.user_id)
+              .maybeSingle();
+            
+            if (!profileError && profileData) {
+              return {
+                ...doc,
+                user_info: {
+                  name: profileData.name || 'Unknown',
+                  email: profileData.email || 'No email',
+                  wallet_address: doc.wallet_address || profileData.wallet_address || null
+                }
+              };
+            }
           }
-        };
-      }));
+          
+          return {
+            ...doc,
+            user_info: { 
+              name: "Unknown User", 
+              email: "No email", 
+              wallet_address: doc.wallet_address || null 
+            }
+          };
+        }));
+      }
       
-      console.log("Fetched and enhanced KYC submissions:", enhancedSubmissions);
+      console.log("Combined and enhanced KYC submissions:", allSubmissions);
       
-      setDocuments(enhancedSubmissions);
-      setPendingDocuments(enhancedSubmissions.filter(doc => doc.verification_status === "pending"));
-      setVerifiedDocuments(enhancedSubmissions.filter(doc => doc.verification_status === "verified"));
-      setRejectedDocuments(enhancedSubmissions.filter(doc => doc.verification_status === "rejected"));
+      setDocuments(allSubmissions);
+      setPendingDocuments(allSubmissions.filter(doc => doc.verification_status === "pending"));
+      setVerifiedDocuments(allSubmissions.filter(doc => doc.verification_status === "verified"));
+      setRejectedDocuments(allSubmissions.filter(doc => doc.verification_status === "rejected"));
     } catch (error) {
       console.error("Error fetching documents:", error);
       toast.error("Failed to fetch KYC submissions");
@@ -103,16 +134,19 @@ const VerifyKYC = () => {
       const verificationStatus = approve ? 'verified' as const : 'rejected' as const;
       
       // Try blockchain verification if available
-      if (verifyKYC) {
+      if (verifyKYC && selectedDocument.user_info?.wallet_address) {
         try {
           await verifyKYC(selectedDocument.id, verificationStatus);
+          console.log("Blockchain verification successful");
         } catch (error) {
           console.error("Blockchain verification failed, continuing with database update:", error);
         }
+      } else {
+        console.log("Skipping blockchain verification - no wallet address or verifyKYC function");
       }
 
       // Always update database record
-      const { data: updateResult, error: updateError } = await supabase
+      const { error: updateError } = await supabase
         .from('kyc_document_submissions')
         .update({ 
           verification_status: verificationStatus,
@@ -120,11 +154,24 @@ const VerifyKYC = () => {
           verifier_address: account,
           rejection_reason: !approve ? "Document verification failed" : null
         })
-        .eq('id', selectedDocument.id)
-        .select();
+        .eq('id', selectedDocument.id);
         
       if (updateError) {
-        throw updateError;
+        console.error("Error updating kyc_document_submissions:", updateError);
+        
+        // Try updating kyc_documents as fallback
+        const { error: docUpdateError } = await supabase
+          .from('kyc_documents')
+          .update({ 
+            verification_status: verificationStatus,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', selectedDocument.id);
+          
+        if (docUpdateError) {
+          console.error("Error updating kyc_documents:", docUpdateError);
+          throw docUpdateError;
+        }
       }
       
       // Update user profile KYC status
