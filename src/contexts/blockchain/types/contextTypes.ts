@@ -26,7 +26,7 @@ export interface BlockchainContextType {
   getKYCStatus: (address: string) => Promise<boolean>;
   submitLoanApplication: (loanData: any) => Promise<string | null>;
   approveLoan: (loanId: string) => Promise<boolean>;
-  rejectLoan: (loanId: string) => Promise<boolean>;
+  rejectLoan: (loanId: string, reason?: string) => Promise<boolean>;
   getTransactionHistory: () => Promise<any[]>;
   repayLoan: (loanId: string, amountInWei: string) => Promise<boolean>;
   registerBank: (bankData: any) => Promise<boolean>;

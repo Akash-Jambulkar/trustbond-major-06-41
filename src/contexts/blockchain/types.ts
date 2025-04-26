@@ -28,18 +28,21 @@ export interface BlockchainContextType {
   kycContract: Contract | null;
   trustScoreContract: Contract | null;
   loanContract: Contract | null;
-  isContractsInitialized?: boolean;
-  kycStatus?: string; // Added for LoanApplicationPage
-  connectWallet: () => Promise<string | false>;
+  isContractsInitialized: boolean;
+  kycStatus: 'not_verified' | 'pending' | 'verified' | 'rejected';
+  connectWallet: () => Promise<any>;
   disconnectWallet: () => void;
   submitKYC: (documentHash: string, feeInWei?: string) => Promise<boolean>;
   getKYCStatus: (address: string) => Promise<boolean>;
   verifyKYC: (kycId: string, verificationStatus: 'verified' | 'rejected') => Promise<boolean>;
-  switchNetwork: (networkId: number) => Promise<boolean>; 
+  switchNetwork: (chainId: number) => Promise<any>; 
   registerBank: (bankData: any) => Promise<boolean>;
   getTransactionHistory: () => Promise<any[]>;
   repayLoan: (loanId: string, amountInWei: string) => Promise<boolean>;
   approveLoan: (loanId: string) => Promise<boolean>;
-  rejectLoan: (loanId: string) => Promise<boolean>;
+  rejectLoan: (loanId: string, reason?: string) => Promise<boolean>;
   submitLoanApplication: (loanData: any) => Promise<string | null>;
+  getUserLoans: () => Promise<any[]>;
+  updateTrustScore?: (address: string, score: number) => Promise<boolean>;
+  getTrustScore?: (address: string) => Promise<number>;
 }

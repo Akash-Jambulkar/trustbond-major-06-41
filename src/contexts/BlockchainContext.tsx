@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useMode } from './ModeContext';
 import { toast } from 'sonner';
@@ -12,6 +11,7 @@ interface BlockchainContextType {
   web3: Web3 | null;
   account: string | null;
   isConnected: boolean;
+  networkId: number | null;
   networkName: string;
   isCorrectNetwork: boolean;
   isGanache: boolean;
@@ -21,7 +21,18 @@ interface BlockchainContextType {
   connectWallet: () => Promise<void>;
   disconnectWallet: () => void;
   submitKYC: (documentHash: string, fee: string) => Promise<boolean>;
-  switchNetwork: (chainId: number) => Promise<void>;
+  getKYCStatus: (address: string) => Promise<boolean>;
+  verifyKYC: (kycId: string, verificationStatus: 'verified' | 'rejected') => Promise<boolean>;
+  getTransactionHistory: () => Promise<any[]>;
+  registerBank: (bankData: any) => Promise<boolean>;
+  repayLoan: (loanId: string, amountInWei: string) => Promise<boolean>;
+  approveLoan: (loanId: string) => Promise<boolean>;
+  rejectLoan: (loanId: string, reason?: string) => Promise<boolean>;
+  submitLoanApplication: (loanData: any) => Promise<string | null>;
+  getUserLoans: () => Promise<any[]>;
+  updateTrustScore: (address: string, score: number) => Promise<boolean>;
+  getTrustScore: (address: string) => Promise<number>;
+  kycStatus: 'not_verified' | 'pending' | 'verified' | 'rejected';
 }
 
 // Create blockchain context
@@ -59,7 +70,7 @@ export const BlockchainProvider = ({ children }: BlockchainProviderProps) => {
   // Contract instances
   const [kycVerifierContract, setKycVerifierContract] = useState<any>(null);
   const [trustScoreContract, setTrustScoreContract] = useState<any>(null);
-  const [loanManagerContract, setLoanManagerContract] = useState<any>(null);
+  const [loanContract, setLoanManagerContract] = useState<any>(null);
 
   // Connect to wallet function
   const connectWallet = async () => {
@@ -186,6 +197,218 @@ export const BlockchainProvider = ({ children }: BlockchainProviderProps) => {
     }
   };
 
+  // Get KYC status for an address
+  const getKYCStatus = async (address: string): Promise<boolean> => {
+    if (!web3 || !kycVerifierContract || !isContractsInitialized) {
+      return false;
+    }
+    try {
+      const status = await kycVerifierContract.methods.getKYCStatus(address).call();
+      return status;
+    } catch (error) {
+      console.error("Error getting KYC status:", error);
+      return false;
+    }
+  };
+
+  // Verify KYC document
+  const verifyKYC = async (kycId: string, verificationStatus: 'verified' | 'rejected'): Promise<boolean> => {
+    if (!web3 || !account || !kycVerifierContract || !isContractsInitialized) {
+      toast.error("Blockchain connection not initialized");
+      return false;
+    }
+    
+    try {
+      const isApproved = verificationStatus === 'verified';
+      await kycVerifierContract.methods.verifyKYC(kycId, isApproved).send({ from: account });
+      toast.success(`KYC ${verificationStatus} successfully`);
+      return true;
+    } catch (error) {
+      console.error("Error verifying KYC:", error);
+      toast.error(`Failed to ${verificationStatus} KYC document`);
+      return false;
+    }
+  };
+
+  // Get transaction history
+  const getTransactionHistory = async (): Promise<any[]> => {
+    // In a real implementation, this would fetch actual transaction history
+    // For now, we're returning a mock history
+    return [
+      {
+        id: '1',
+        hash: '0x123...abc',
+        type: 'KYC Submission',
+        status: 'confirmed',
+        timestamp: new Date().getTime() - 3600000
+      },
+      {
+        id: '2',
+        hash: '0x456...def',
+        type: 'Loan Request',
+        status: 'pending',
+        timestamp: new Date().getTime() - 7200000
+      }
+    ];
+  };
+
+  // Register bank
+  const registerBank = async (bankData: any): Promise<boolean> => {
+    // Simulate a blockchain transaction
+    try {
+      // In a real implementation, this would be a contract call
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      toast.success("Bank registration submitted to blockchain");
+      return true;
+    } catch (error) {
+      console.error("Error registering bank:", error);
+      toast.error("Failed to register bank on blockchain");
+      return false;
+    }
+  };
+
+  // Repay loan
+  const repayLoan = async (loanId: string, amountInWei: string): Promise<boolean> => {
+    if (!web3 || !account || !loanContract || !isContractsInitialized) {
+      toast.error("Blockchain connection not initialized");
+      return false;
+    }
+    
+    try {
+      await loanContract.methods.repayLoan(loanId, amountInWei).send({ 
+        from: account, 
+        value: amountInWei 
+      });
+      
+      toast.success("Loan repayment successful");
+      return true;
+    } catch (error) {
+      console.error("Error repaying loan:", error);
+      toast.error("Loan repayment failed");
+      return false;
+    }
+  };
+
+  // Approve loan
+  const approveLoan = async (loanId: string): Promise<boolean> => {
+    if (!web3 || !account || !loanContract || !isContractsInitialized) {
+      toast.error("Blockchain connection not initialized");
+      return false;
+    }
+    
+    try {
+      // Default interest rate of 5%
+      await loanContract.methods.approveLoan(loanId, 5).send({ from: account });
+      
+      toast.success("Loan approved successfully");
+      return true;
+    } catch (error) {
+      console.error("Error approving loan:", error);
+      toast.error("Failed to approve loan");
+      return false;
+    }
+  };
+
+  // Reject loan
+  const rejectLoan = async (loanId: string, reason: string = "Application rejected"): Promise<boolean> => {
+    if (!web3 || !account || !loanContract || !isContractsInitialized) {
+      toast.error("Blockchain connection not initialized");
+      return false;
+    }
+    
+    try {
+      await loanContract.methods.rejectLoan(loanId).send({ from: account });
+      
+      toast.success("Loan rejected successfully");
+      return true;
+    } catch (error) {
+      console.error("Error rejecting loan:", error);
+      toast.error("Failed to reject loan");
+      return false;
+    }
+  };
+
+  // Submit loan application
+  const submitLoanApplication = async (loanData: any): Promise<string | null> => {
+    if (!web3 || !account || !loanContract || !isContractsInitialized) {
+      toast.error("Blockchain connection not initialized");
+      return null;
+    }
+    
+    try {
+      const { amount, purpose, termMonths } = loanData;
+      const amountWei = web3.utils.toWei(amount.toString(), 'ether');
+      
+      const loanId = await loanContract.methods
+        .requestLoan(amountWei, purpose || 'General', termMonths || 12)
+        .send({ from: account });
+        
+      toast.success("Loan application submitted successfully");
+      return loanId;
+    } catch (error) {
+      console.error("Error submitting loan application:", error);
+      toast.error("Failed to submit loan application");
+      return null;
+    }
+  };
+
+  // Get user loans
+  const getUserLoans = async (): Promise<any[]> => {
+    if (!web3 || !account || !loanContract || !isContractsInitialized) {
+      return [];
+    }
+    
+    try {
+      const loanIds = await loanContract.methods.getUserLoans(account).call();
+      
+      const loans = await Promise.all(
+        loanIds.map(async (id: string) => {
+          const loan = await loanContract.methods.getLoan(id).call();
+          return loan;
+        })
+      );
+      
+      return loans;
+    } catch (error) {
+      console.error("Error fetching user loans:", error);
+      return [];
+    }
+  };
+
+  // Update trust score
+  const updateTrustScore = async (address: string, score: number): Promise<boolean> => {
+    if (!web3 || !account || !trustScoreContract || !isContractsInitialized) {
+      toast.error("Blockchain connection not initialized");
+      return false;
+    }
+    
+    try {
+      await trustScoreContract.methods.updateScore(address, score).send({ from: account });
+      
+      toast.success("Trust score updated successfully");
+      return true;
+    } catch (error) {
+      console.error("Error updating trust score:", error);
+      toast.error("Failed to update trust score");
+      return false;
+    }
+  };
+
+  // Get trust score
+  const getTrustScore = async (address: string): Promise<number> => {
+    if (!web3 || !trustScoreContract || !isContractsInitialized) {
+      return 0;
+    }
+    
+    try {
+      const score = await trustScoreContract.methods.calculateScore(address).call();
+      return parseInt(score);
+    } catch (error) {
+      console.error("Error getting trust score:", error);
+      return 0;
+    }
+  };
+
   // Switch Ethereum network
   const switchNetwork = async (chainId: number) => {
     if (!web3 || !window.ethereum) {
@@ -294,16 +517,32 @@ export const BlockchainProvider = ({ children }: BlockchainProviderProps) => {
     web3,
     account,
     isConnected,
+    networkId,
     networkName,
     isCorrectNetwork,
     isGanache,
     isBlockchainLoading,
     isContractsInitialized,
     connectionError,
+    kycContract: kycVerifierContract,
+    trustScoreContract,
+    loanContract,
+    kycStatus: 'pending', // Default value, would be updated from database in a real app
     connectWallet,
     disconnectWallet,
     submitKYC,
-    switchNetwork
+    getKYCStatus,
+    verifyKYC,
+    switchNetwork,
+    getTransactionHistory,
+    registerBank,
+    repayLoan,
+    approveLoan,
+    rejectLoan,
+    submitLoanApplication,
+    getUserLoans,
+    updateTrustScore,
+    getTrustScore
   };
 
   return (
