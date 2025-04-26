@@ -98,7 +98,7 @@ export const MetaMaskErrorHelp = ({ isOpen, onClose, errorType = "general" }: Me
               <>
                 <li>• Restart your browser</li>
                 <li>• Try a different network in MetaMask</li>
-                <li>• Reset your MetaMask account (Settings > Advanced > Reset Account)</li>
+                <li>• Reset your MetaMask account (Settings &gt; Advanced &gt; Reset Account)</li>
               </>
             )}
           </ul>
@@ -121,3 +121,4 @@ export const MetaMaskErrorHelp = ({ isOpen, onClose, errorType = "general" }: Me
 };
 
 export default MetaMaskErrorHelp;
+
