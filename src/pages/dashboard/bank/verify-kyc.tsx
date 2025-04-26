@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { CheckCircle, XCircle, FileText, Shield, AlertTriangle, Eye } from "lucide-react";
 import { format } from "date-fns";
+import { KycDocumentSubmissionType } from "@/types/supabase-extensions";
 
 const VerifyKYC = () => {
   const { user } = useAuth();
@@ -32,20 +34,41 @@ const VerifyKYC = () => {
   const fetchDocuments = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      // First try to fetch from kyc_documents table
+      let { data, error } = await supabase
         .from("kyc_documents")
         .select("*, profiles(name, email, wallet_address)")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      // If there's an error or no data from kyc_documents, try kyc_document_submissions
+      if (error || !data || data.length === 0) {
+        console.log("Trying to fetch from kyc_document_submissions table instead");
+        
+        const { data: submissionsData, error: submissionsError } = await supabase
+          .from("kyc_document_submissions")
+          .select("*, profiles:user_id(name, email, wallet_address)")
+          .order("submitted_at", { ascending: false });
+        
+        if (submissionsError) {
+          console.error("Error fetching from kyc_document_submissions:", submissionsError);
+          throw submissionsError;
+        }
+        
+        data = submissionsData;
+      }
 
+      if (!data) {
+        data = [];
+      }
+
+      console.log("Fetched documents:", data);
       setDocuments(data || []);
-      setPendingDocuments(data?.filter(doc => doc.verification_status === "pending") || []);
-      setVerifiedDocuments(data?.filter(doc => doc.verification_status === "verified") || []);
-      setRejectedDocuments(data?.filter(doc => doc.verification_status === "rejected") || []);
+      setPendingDocuments(data.filter(doc => doc.verification_status === "pending") || []);
+      setVerifiedDocuments(data.filter(doc => doc.verification_status === "verified") || []);
+      setRejectedDocuments(data.filter(doc => doc.verification_status === "rejected") || []);
     } catch (error) {
       console.error("Error fetching documents:", error);
-      toast.error("Failed to load documents");
+      toast.error("Failed to fetch KYC submissions");
     } finally {
       setIsLoading(false);
     }
@@ -66,22 +89,55 @@ const VerifyKYC = () => {
       if (verifyKYC) {
         await verifyKYC(selectedDocument.id, verificationStatus);
       }
+
+      // Try to update the appropriate table based on where the document came from
+      let updateResult = null;
       
-      const { error } = await supabase
+      // First try to update kyc_documents table
+      const { data: kycDocResult, error: kycDocError } = await supabase
         .from('kyc_documents')
         .update({ 
           verification_status: verificationStatus,
           verified_by: account,
           updated_at: new Date().toISOString()
         })
-        .eq('id', selectedDocument.id);
+        .eq('id', selectedDocument.id)
+        .select();
         
-      if (error) throw error;
+      if (kycDocError || !kycDocResult || kycDocResult.length === 0) {
+        console.log("Document not found in kyc_documents, trying kyc_document_submissions");
+        
+        // Try to update kyc_document_submissions table
+        const { data: kycSubmissionResult, error: kycSubmissionError } = await supabase
+          .from('kyc_document_submissions')
+          .update({ 
+            verification_status: verificationStatus,
+            verified_at: new Date().toISOString(),
+            verifier_address: account,
+            rejection_reason: !approve ? "Document verification failed" : null
+          })
+          .eq('id', selectedDocument.id)
+          .select();
+          
+        if (kycSubmissionError) {
+          throw kycSubmissionError;
+        }
+        
+        updateResult = kycSubmissionResult;
+      } else {
+        updateResult = kycDocResult;
+      }
       
-      toast.success(`Document ${approve ? 'verified' : 'rejected'} successfully`);
+      if (updateResult) {
+        toast.success(`Document ${approve ? 'verified' : 'rejected'} successfully`);
+      } else {
+        toast.error("Failed to update document status");
+      }
+      
       setSelectedDocument(null);
       fetchDocuments();
     } catch (error) {
+      console.error("Error verifying document:", error);
       toast.error("Error verifying document");
     } finally {
       setVerifying(false);
@@ -89,7 +145,11 @@ const VerifyKYC = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return format(new Date(dateString), "PPP");
+    try {
+      return format(new Date(dateString), "PPP");
+    } catch (error) {
+      return "Invalid date";
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -156,7 +216,7 @@ const VerifyKYC = () => {
                 </div>
               </TableCell>
               <TableCell>{doc.document_type}</TableCell>
-              <TableCell>{formatDate(doc.created_at)}</TableCell>
+              <TableCell>{formatDate(doc.created_at || doc.submitted_at)}</TableCell>
               <TableCell>{getStatusBadge(doc.verification_status)}</TableCell>
               <TableCell className="text-right">
                 <Button

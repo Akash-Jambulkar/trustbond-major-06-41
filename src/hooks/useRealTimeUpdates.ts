@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabaseClient';
@@ -19,7 +20,7 @@ export function useRealTimeUpdates() {
   useEffect(() => {
     if (!user) return;
 
-    const userId = user.id || user.user_id;
+    const userId = user.id;
     if (!userId) return;
 
     // Subscribe to KYC document submissions table
@@ -35,9 +36,9 @@ export function useRealTimeUpdates() {
         (payload) => {
           console.log('KYC update received:', payload);
           // Type assertion to access the payload data with proper typing
-          const payloadData = payload.new as KycDocumentSubmissionType | undefined;
+          const payloadData = payload.new as KycDocumentSubmissionType;
 
-          if (!payloadData) return;
+          if (!payloadData || !payloadData.user_id) return;
 
           // For user role, show notifications about their own KYC status
           if (user.role === 'user' && 
@@ -80,9 +81,9 @@ export function useRealTimeUpdates() {
         (payload) => {
           console.log('Transaction update received:', payload);
           // Type assertion to access the payload data with proper typing
-          const payloadData = payload.new as TransactionType | undefined;
+          const payloadData = payload.new as TransactionType;
 
-          if (!payloadData) return;
+          if (!payloadData || !payloadData.user_id) return;
 
           // Only show notifications for the current user's transactions
           if (payloadData.user_id && payloadData.user_id === userId) {
