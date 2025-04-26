@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabaseClient';
@@ -91,7 +90,7 @@ export function useRealTimeUpdates() {
               const txType = payloadData.type;
               const txStatus = payloadData.status;
               
-              if (txStatus === 'completed') {
+              if (txStatus === 'confirmed') {
                 toast.success(`Transaction Complete`, {
                   description: `Your ${txType?.replace('_', ' ') || 'blockchain'} transaction has been processed successfully.`,
                 });
