@@ -77,34 +77,45 @@ export function KYCSubmission() {
       
       if (isConnected && web3 && account) {
         try {
+          console.log("Attempting blockchain KYC submission");
+          
           // Get network ID before submission attempt
           const networkId = await web3.eth.getChainId();
           console.log("Current network ID:", networkId);
           
-          // Attempt blockchain submission
-          const result = await submitKYC(documentHash);
-          blockchainSubmitted = Boolean(result);
+          // Convert KYC submission fee to Wei
+          const feeInWei = web3.utils.toWei(KYC_SUBMISSION_FEE, 'ether');
+          console.log(`Using fee: ${KYC_SUBMISSION_FEE} ETH (${feeInWei} Wei)`);
           
-          console.log("Blockchain submission result:", result);
+          // Attempt blockchain submission with fee
+          const result = await submitKYC(documentHash, feeInWei);
+          blockchainSubmitted = Boolean(result && result.success);
+          
+          if (result && result.transactionHash) {
+            transactionHash = result.transactionHash;
+            console.log("Blockchain submission successful. Transaction hash:", transactionHash);
+          } else {
+            console.log("Blockchain submission returned no transaction hash");
+          }
           
           // Create a transaction record regardless of submission result
-          // This ensures we always have a record of the attempt
-          transactionHash = `kyc-${Date.now()}-${account.substring(2, 8)}`;
-          
-          await trackTransaction(
-            transactionHash, 
-            "kyc", 
-            "KYC Document Submitted", 
-            account, 
-            networkId,
-            { 
-              documentType: values.documentType,
-              timestamp: new Date().toISOString(),
-              documentHash: documentHash
-            }
-          );
-          
-          console.log("Transaction tracked:", transactionHash);
+          if (transactionHash) {
+            await trackTransaction(
+              transactionHash, 
+              "kyc", 
+              "KYC Document Submitted", 
+              account, 
+              networkId,
+              { 
+                documentType: values.documentType,
+                timestamp: new Date().toISOString(),
+                documentHash,
+                fee: KYC_SUBMISSION_FEE
+              }
+            );
+            
+            console.log("Transaction tracked:", transactionHash);
+          }
         } catch (error) {
           console.error("Error submitting to blockchain:", error);
           setShowBlockchainWarning(true);
@@ -124,6 +135,7 @@ export function KYCSubmission() {
         };
         
         try {
+          console.log("Falling back to database submission");
           const submissionId = await saveKycSubmission(submission);
           
           if (submissionId) {
@@ -138,7 +150,8 @@ export function KYCSubmission() {
               status: 'pending',
               user_id: user.id,
               created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
+              updated_at: new Date().toISOString(),
+              amount: KYC_SUBMISSION_FEE, // Include fee even for database submissions
             });
             
             if (error) {

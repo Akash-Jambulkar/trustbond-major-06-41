@@ -18,7 +18,8 @@ export const trackTransaction = async (
     hash,
     type,
     description,
-    account
+    account,
+    metadata
   });
 
   const transaction: Transaction = {
@@ -42,6 +43,10 @@ export const trackTransaction = async (
       throw new Error("User not authenticated");
     }
     
+    // Extract fee amount if present in metadata
+    const amount = metadata?.fee || metadata?.amount || 0;
+    console.log(`Transaction amount: ${amount}`);
+
     // Store transaction in database
     const { data, error } = await supabase
       .from('transactions')
@@ -51,11 +56,11 @@ export const trackTransaction = async (
         from_address: transaction.account.toLowerCase(),
         to_address: metadata?.toAddress || "",
         status: 'pending',
-        amount: metadata?.amount || 0,
+        amount: amount,
         user_id: userId,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        value: metadata?.amount ? metadata.amount.toString() : "0"
+        value: metadata?.amount ? metadata.amount.toString() : amount.toString()
       })
       .select();
     
