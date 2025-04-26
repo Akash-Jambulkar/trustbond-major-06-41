@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { useBlockchain } from '@/contexts/BlockchainContext';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 
@@ -16,7 +16,7 @@ interface KYCSubmission {
   submitted_at: string;
   user_id: string;
   wallet_address?: string;
-  user?: {
+  user_info?: {
     name: string;
     email: string;
   };
@@ -36,43 +36,59 @@ const VerifyKYC = () => {
   const fetchKYCSubmissions = async () => {
     setLoading(true);
     try {
+      // First fetch the KYC submissions
       const { data, error } = await supabase
         .from('kyc_document_submissions')
-        .select(`
-          id,
-          document_type,
-          document_hash,
-          verification_status,
-          submitted_at,
-          user_id,
-          wallet_address,
-          user:profiles(name, email)
-        `)
+        .select('*')
         .eq('verification_status', 'pending');
 
       if (error) {
         console.error('Error fetching KYC submissions:', error);
         toast.error('Failed to fetch KYC submissions');
-      } else if (data) {
-        // Transform the data to match our expected KYCSubmission type
-        const formattedSubmissions: KYCSubmission[] = data.map(item => ({
-          id: item.id,
-          document_type: item.document_type,
-          document_hash: item.document_hash,
-          verification_status: item.verification_status,
-          submitted_at: item.submitted_at,
-          user_id: item.user_id,
-          wallet_address: item.wallet_address,
-          user: item.user && Array.isArray(item.user) && item.user.length > 0 
-            ? { name: item.user[0].name, email: item.user[0].email }
-            : { name: 'Unknown User', email: 'No email' }
-        }));
-        
-        setSubmissions(formattedSubmissions);
+        setSubmissions([]);
+        return;
       }
+      
+      if (!data || data.length === 0) {
+        setSubmissions([]);
+        setLoading(false);
+        return;
+      }
+
+      // Then fetch user profiles separately and combine the data
+      const enhancedSubmissions = await Promise.all(data.map(async (submission) => {
+        if (submission.user_id) {
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('name, email')
+            .eq('id', submission.user_id)
+            .maybeSingle();
+            
+          if (!profileError && profileData) {
+            return {
+              ...submission,
+              user_info: {
+                name: profileData.name || 'Unknown User',
+                email: profileData.email || 'No email'
+              }
+            };
+          }
+        }
+        
+        return {
+          ...submission,
+          user_info: { 
+            name: 'Unknown User', 
+            email: 'No email' 
+          }
+        };
+      }));
+      
+      setSubmissions(enhancedSubmissions);
     } catch (error) {
       console.error('Error in fetchKYCSubmissions:', error);
       toast.error('An error occurred while fetching KYC submissions');
+      setSubmissions([]);
     } finally {
       setLoading(false);
     }
@@ -85,12 +101,14 @@ const VerifyKYC = () => {
     setVerifying(prev => ({ ...prev, [kycId]: true }));
     
     try {
-      if (!userWalletAddress) {
-        toast.error('User wallet address not found');
+      // Find the submission
+      const submission = submissions.find(s => s.id === kycId);
+      if (!submission) {
+        toast.error('Submission not found');
         return;
       }
       
-      // Call blockchain verification
+      // Call blockchain verification if available
       let result;
       try {
         result = await verifyKYC(kycId, status);
@@ -101,66 +119,56 @@ const VerifyKYC = () => {
         return;
       }
       
-      if (result) {
-        // Get transaction hash from result if available
-        const txHash = result && typeof result === 'object' && result !== null && 'transactionHash' in result
-          ? result.transactionHash as string
-          : 'blockchain-tx-' + Math.random().toString(36).substring(2, 15);
-        
-        // Update verification status in database
-        const { error: updateError } = await supabase
-          .from('kyc_document_submissions')
-          .update({
-            verification_status: status,
-            verified_at: new Date().toISOString(),
-            verification_tx_hash: txHash,
-            verifier_address: user.walletAddress || 'bank-verification'
-          })
-          .eq('id', kycId);
+      // Get transaction hash from result if available
+      const txHash = result && typeof result === 'object' && result !== null && 'transactionHash' in result
+        ? result.transactionHash as string
+        : 'blockchain-tx-' + Math.random().toString(36).substring(2, 15);
+      
+      // Update verification status in database
+      const { error: updateError } = await supabase
+        .from('kyc_document_submissions')
+        .update({
+          verification_status: status,
+          verified_at: new Date().toISOString(),
+          verification_tx_hash: txHash,
+          verifier_address: user.walletAddress || 'bank-verification'
+        })
+        .eq('id', kycId);
 
-        if (updateError) {
-          console.error('Error updating KYC submission:', updateError);
-          toast.error('Failed to update verification status in database');
-        } else {
-          // Also update user's profile KYC status
-          const { data: submission } = await supabase
-            .from('kyc_document_submissions')
-            .select('user_id')
-            .eq('id', kycId)
-            .single();
-            
-          if (submission) {
-            const { error: profileError } = await supabase
-              .from('profiles')
-              .update({ kyc_status: status })
-              .eq('id', submission.user_id);
-              
-            if (profileError) {
-              console.error('Error updating user KYC status:', profileError);
-            }
-          }
-          
-          // Log transaction
-          const { error: txError } = await supabase
-            .from('transactions')
-            .insert({
-              transaction_hash: txHash,
-              type: 'kyc_verification',
-              status: 'completed',
-              from_address: user.walletAddress || user.id,
-              user_id: submission?.user_id,
-              bank_id: user.id
-            });
-            
-          if (txError) {
-            console.error('Error recording transaction:', txError);
-          }
-          
-          toast.success(`KYC ${status === 'verified' ? 'verified' : 'rejected'} successfully`);
-          fetchKYCSubmissions(); // Refresh the list
-        }
+      if (updateError) {
+        console.error('Error updating KYC submission:', updateError);
+        toast.error('Failed to update verification status in database');
       } else {
-        toast.error('Verification failed. Please try again.');
+        // Also update user's profile KYC status
+        if (submission.user_id) {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .update({ kyc_status: status })
+            .eq('id', submission.user_id);
+            
+          if (profileError) {
+            console.error('Error updating user KYC status:', profileError);
+          }
+        }
+        
+        // Log transaction
+        const { error: txError } = await supabase
+          .from('transactions')
+          .insert({
+            transaction_hash: txHash,
+            type: 'kyc_verification',
+            status: 'completed',
+            from_address: user.walletAddress || user.id,
+            user_id: submission.user_id,
+            bank_id: user.id
+          });
+          
+        if (txError) {
+          console.error('Error recording transaction:', txError);
+        }
+        
+        toast.success(`KYC ${status === 'verified' ? 'verified' : 'rejected'} successfully`);
+        fetchKYCSubmissions(); // Refresh the list
       }
     } catch (error) {
       console.error('Error verifying KYC:', error);
@@ -187,10 +195,10 @@ const VerifyKYC = () => {
           {submissions.map(submission => (
             <Card key={submission.id} className="p-4">
               <h3 className="text-lg font-semibold">
-                {submission.user?.name || 'Unknown User'}
+                {submission.user_info?.name || 'Unknown User'}
               </h3>
               <p className="text-sm text-gray-600 mb-2">
-                {submission.user?.email || 'No email'}
+                {submission.user_info?.email || 'No email'}
               </p>
               
               <div className="space-y-2 mb-4">

@@ -44,26 +44,31 @@ const VerifyKYC = () => {
         throw submissionsError;
       }
       
-      // Enhance documents with user information
-      const enhancedDocuments = await Promise.all((submissions || []).map(async (doc) => {
+      // Enhance submissions with profile data through separate queries
+      const enhancedSubmissions = await Promise.all((submissions || []).map(async (doc) => {
+        // Get profile info for each submission's user_id
         if (doc.user_id) {
-          const { data: profile, error: profileError } = await supabase
-            .from("profiles")
-            .select("name, email, wallet_address")
-            .eq("id", doc.user_id)
-            .single();
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('name, email, wallet_address')
+            .eq('id', doc.user_id)
+            .maybeSingle();
           
-          if (!profileError && profile) {
+          if (!profileError && profileData) {
             return {
               ...doc,
-              profiles: profile
+              user_info: {
+                name: profileData.name || 'Unknown',
+                email: profileData.email || 'No email',
+                wallet_address: profileData.wallet_address || doc.wallet_address || null
+              }
             };
           }
         }
         
         return {
           ...doc,
-          profiles: { 
+          user_info: { 
             name: "Unknown", 
             email: "No email", 
             wallet_address: doc.wallet_address || null 
@@ -71,12 +76,12 @@ const VerifyKYC = () => {
         };
       }));
       
-      console.log("Fetched and enhanced KYC submissions:", enhancedDocuments);
+      console.log("Fetched and enhanced KYC submissions:", enhancedSubmissions);
       
-      setDocuments(enhancedDocuments);
-      setPendingDocuments(enhancedDocuments.filter(doc => doc.verification_status === "pending"));
-      setVerifiedDocuments(enhancedDocuments.filter(doc => doc.verification_status === "verified"));
-      setRejectedDocuments(enhancedDocuments.filter(doc => doc.verification_status === "rejected"));
+      setDocuments(enhancedSubmissions);
+      setPendingDocuments(enhancedSubmissions.filter(doc => doc.verification_status === "pending"));
+      setVerifiedDocuments(enhancedSubmissions.filter(doc => doc.verification_status === "verified"));
+      setRejectedDocuments(enhancedSubmissions.filter(doc => doc.verification_status === "rejected"));
     } catch (error) {
       console.error("Error fetching documents:", error);
       toast.error("Failed to fetch KYC submissions");
@@ -215,8 +220,8 @@ const VerifyKYC = () => {
             <TableRow key={doc.id}>
               <TableCell>
                 <div>
-                  <div className="font-medium">{doc.profiles?.name || "Unknown"}</div>
-                  <div className="text-sm text-muted-foreground">{doc.profiles?.email}</div>
+                  <div className="font-medium">{doc.user_info?.name || "Unknown"}</div>
+                  <div className="text-sm text-muted-foreground">{doc.user_info?.email}</div>
                 </div>
               </TableCell>
               <TableCell>{doc.document_type}</TableCell>
@@ -324,18 +329,18 @@ const VerifyKYC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-medium mb-1">User</p>
-                  <p className="text-sm">{selectedDocument.profiles?.name}</p>
+                  <p className="text-sm">{selectedDocument.user_info?.name}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium mb-1">Email</p>
-                  <p className="text-sm">{selectedDocument.profiles?.email}</p>
+                  <p className="text-sm">{selectedDocument.user_info?.email}</p>
                 </div>
               </div>
 
               <div>
                 <p className="text-sm font-medium mb-1">Wallet Address</p>
                 <p className="text-sm font-mono text-xs break-all">
-                  {selectedDocument.profiles?.wallet_address || selectedDocument.wallet_address || "Not provided"}
+                  {selectedDocument.user_info?.wallet_address || selectedDocument.wallet_address || "Not provided"}
                 </p>
               </div>
 
