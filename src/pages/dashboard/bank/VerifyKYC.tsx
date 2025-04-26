@@ -41,9 +41,8 @@ const VerifyKYCPage = () => {
       
       console.log("Fetching KYC submissions...");
       
-      // Use either kyc_documents or kyc_document_submissions table
-      // First try kyc_document_submissions
-      let { data: submissionsData, error: submissionsError } = await supabase
+      // Try kyc_document_submissions table first
+      const { data: submissionsData, error: submissionsError } = await supabase
         .from('kyc_document_submissions')
         .select(`
           id,
@@ -57,34 +56,37 @@ const VerifyKYCPage = () => {
         `)
         .eq('verification_status', 'pending');
       
-      if (submissionsError || !submissionsData || submissionsData.length === 0) {
-        console.log("No data in kyc_document_submissions or error, trying kyc_documents");
-        
-        // Fall back to kyc_documents if no submissions found
-        const { data: docsData, error: docsError } = await supabase
-          .from('kyc_documents')
-          .select(`
-            id,
-            user_id,
-            document_type,
-            document_hash,
-            verification_status as status,
-            created_at,
-            profiles:user_id (email, name)
-          `)
-          .eq('verification_status', 'pending');
-          
-        if (docsError) {
-          console.error("Error fetching from both tables:", docsError);
-          throw docsError;
-        }
-        
-        submissionsData = docsData || [];
+      if (submissionsError) {
+        console.log("Error fetching from kyc_document_submissions:", submissionsError);
       }
       
-      console.log("Fetched submissions:", submissionsData);
+      // Also try kyc_documents table
+      const { data: docsData, error: docsError } = await supabase
+        .from('kyc_documents')
+        .select(`
+          id,
+          user_id,
+          document_type,
+          document_hash,
+          verification_status as status,
+          created_at,
+          profiles:user_id (email, name)
+        `)
+        .eq('verification_status', 'pending');
+          
+      if (docsError) {
+        console.log("Error fetching from kyc_documents:", docsError);
+      }
       
-      const formattedSubmissions = submissionsData.map((sub: any) => ({
+      // Combine results from both tables
+      const allSubmissions = [
+        ...(submissionsData || []), 
+        ...(docsData || [])
+      ];
+      
+      console.log("Fetched submissions:", allSubmissions);
+      
+      const formattedSubmissions = allSubmissions.map((sub: any) => ({
         id: sub.id,
         user_id: sub.user_id,
         document_type: sub.document_type,

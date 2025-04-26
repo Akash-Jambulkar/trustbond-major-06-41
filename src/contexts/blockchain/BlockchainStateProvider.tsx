@@ -68,13 +68,11 @@ export const BlockchainStateProvider = ({ children }: { children: ReactNode }) =
   });
 
   const submitKYCWrapper = async (documentHash: string, feeInWei?: string): Promise<boolean> => {
-    const result = await submitKYC(documentHash, 'default', feeInWei);
-    return result.success;
+    return await submitKYC(documentHash, 'default', feeInWei);
   };
 
   const verifyKYCWrapper = async (kycId: string, verificationStatus: 'verified' | 'rejected'): Promise<boolean> => {
-    const isApproved = verificationStatus === 'verified';
-    return await verifyKYC(kycId, isApproved);
+    return await verifyKYC(kycId, verificationStatus);
   };
 
   const approveLoanWrapper = async (loanId: string): Promise<boolean> => {

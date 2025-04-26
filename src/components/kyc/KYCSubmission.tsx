@@ -89,13 +89,30 @@ export function KYCSubmission() {
           
           // Attempt blockchain submission with fee
           const result = await submitKYC(documentHash, feeInWei);
-          blockchainSubmitted = Boolean(result && result.success);
+          blockchainSubmitted = result;
           
-          if (result && result.transactionHash) {
-            transactionHash = result.transactionHash;
-            console.log("Blockchain submission successful. Transaction hash:", transactionHash);
+          // If blockchain submission was successful, get the transaction hash
+          // The transaction hash should come from the blockchain context tracking mechanism
+          // since our submitKYC now returns a boolean
+          if (result) {
+            // Get the latest transaction for this user with type 'kyc'
+            const { data: txData } = await supabase
+              .from('transactions')
+              .select('transaction_hash')
+              .eq('type', 'kyc')
+              .eq('from_address', account.toLowerCase())
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .single();
+              
+            if (txData && txData.transaction_hash) {
+              transactionHash = txData.transaction_hash;
+              console.log("Blockchain submission successful. Transaction hash:", transactionHash);
+            } else {
+              console.log("Transaction found in blockchain but hash not recorded");
+            }
           } else {
-            console.log("Blockchain submission returned no transaction hash");
+            console.log("Blockchain submission failed");
           }
           
           // Create a transaction record regardless of submission result

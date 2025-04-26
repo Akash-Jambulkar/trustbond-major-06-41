@@ -24,7 +24,7 @@ export const useKYCOperations = ({
   refreshTransactions,
   clearBlockchainCache
 }: UseKYCOperationsProps) => {
-  const submitKYC = async (documentHash: string, feeInWei?: string): Promise<{success: boolean, transactionHash?: string}> => {
+  const submitKYC = async (documentHash: string, feeInWei?: string): Promise<boolean> => {
     if (!web3 || !account || !kycContract) {
       throw new Error("Wallet not connected or contract not initialized");
     }
@@ -57,7 +57,7 @@ export const useKYCOperations = ({
       
       if (Number(balance) < Number(fee)) {
         toast.error("Insufficient balance to pay KYC submission fee");
-        return { success: false };
+        return false;
       }
 
       // Estimate gas with the fee value
@@ -129,16 +129,11 @@ export const useKYCOperations = ({
       clearBlockchainCache();
       await refreshTransactions();
       
-      return {
-        success: true,
-        transactionHash: tx.transactionHash
-      };
+      return true;
     } catch (error) {
       console.error("Error submitting KYC:", error);
       toast.error("Failed to submit KYC: " + (error as Error).message);
-      return {
-        success: false
-      };
+      return false;
     }
   };
 
@@ -152,34 +147,41 @@ export const useKYCOperations = ({
       
       // Get submission details - check both tables
       let submission: any = null;
+      let userAddress: string | null = null;
       
       // Try kyc_document_submissions first
-      const { data: submissionData } = await supabase
+      const { data: submissionData, error: submissionError } = await supabase
         .from('kyc_document_submissions')
         .select('wallet_address, document_hash, user_id')
         .eq('id', kycId)
         .maybeSingle();
         
+      if (submissionError) {
+        console.error("Error fetching from kyc_document_submissions:", submissionError);
+      }
+      
       if (submissionData && submissionData.wallet_address) {
         submission = submissionData;
+        userAddress = submissionData.wallet_address;
       } else {
         // Try kyc_documents if no result
-        const { data: docData } = await supabase
+        const { data: docData, error: docError } = await supabase
           .from('kyc_documents')
-          .select('blockchain_address, document_hash, user_id')
+          .select('wallet_address, document_hash, user_id')
           .eq('id', kycId)
           .maybeSingle();
           
+        if (docError) {
+          console.error("Error fetching from kyc_documents:", docError);
+        }
+          
         if (docData) {
-          submission = {
-            wallet_address: docData.blockchain_address,
-            document_hash: docData.document_hash,
-            user_id: docData.user_id
-          };
+          submission = docData;
+          userAddress = docData.wallet_address;
         }
       }
       
-      if (!submission?.wallet_address) {
+      if (!userAddress) {
         console.log("No wallet address found for KYC submission");
         
         // We can still update the database status even without blockchain confirmation
@@ -201,7 +203,6 @@ export const useKYCOperations = ({
         return true;
       }
       
-      const userAddress = submission.wallet_address;
       console.log("Found user wallet address:", userAddress);
       const status = verificationStatus === 'verified';
       
