@@ -49,6 +49,7 @@ export const WalletStatus = () => {
   useEffect(() => {
     if (isConnected) {
       setShowError(false);
+      setConnecting(false);
     }
   }, [isConnected]);
 

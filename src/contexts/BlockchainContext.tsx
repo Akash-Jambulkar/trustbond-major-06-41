@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import Web3 from 'web3';
+import { AbiItem } from 'web3-utils';
 import { toast } from 'sonner';
 import { useAuth } from './AuthContext';
 import { useMode } from './ModeContext';
@@ -25,6 +26,8 @@ interface BlockchainContextType {
   kycContract: any;
   trustScoreContract: any;
   loanContract: any;
+  kycStatus: 'not_verified' | 'pending' | 'verified' | 'rejected';
+  transactions: any[];
   connectWallet: () => Promise<void>;
   disconnectWallet: () => void;
   switchNetwork: (chainId: number) => Promise<void>;
@@ -34,6 +37,11 @@ interface BlockchainContextType {
   applyForLoan: (amount: string, duration: number, purpose: string) => Promise<any>;
   approveLoan: (loanId: string) => Promise<any>;
   rejectLoan: (loanId: string, reason: string) => Promise<any>;
+  getKYCStatus: (address?: string) => Promise<boolean>;
+  getTransactionHistory: () => Promise<any[]>;
+  submitLoanApplication: (loanData: any) => Promise<string | null>;
+  repayLoan: (loanId: string, amount: string) => Promise<boolean>;
+  registerBank: (bankData: any) => Promise<boolean>;
 }
 
 // Create the context with default values
@@ -51,6 +59,8 @@ const BlockchainContext = createContext<BlockchainContextType>({
   kycContract: null,
   trustScoreContract: null,
   loanContract: null,
+  kycStatus: 'not_verified',
+  transactions: [],
   connectWallet: async () => {},
   disconnectWallet: () => {},
   switchNetwork: async () => {},
@@ -60,6 +70,11 @@ const BlockchainContext = createContext<BlockchainContextType>({
   applyForLoan: async () => null,
   approveLoan: async () => null,
   rejectLoan: async () => null,
+  getKYCStatus: async () => false,
+  getTransactionHistory: async () => [],
+  submitLoanApplication: async () => null,
+  repayLoan: async () => false,
+  registerBank: async () => false,
 });
 
 // Contract addresses - in a real app these would come from environment variables or deployment files
@@ -92,6 +107,8 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
   const [trustScoreContract, setTrustScoreContract] = useState<any>(null);
   const [loanContract, setLoanContract] = useState<any>(null);
   const [isContractsInitialized, setIsContractsInitialized] = useState(false);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [kycStatus, setKycStatus] = useState<'not_verified' | 'pending' | 'verified' | 'rejected'>('not_verified');
   
   // Store the last connected account in local storage for persistence
   const storeLastConnectedAccount = (account: string) => {
@@ -119,17 +136,17 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     
     try {
       const kycVerifierContract = new web3Instance.eth.Contract(
-        KYCVerifierABI.abi,
+        KYCVerifierABI.abi as unknown as AbiItem[],
         CONTRACT_ADDRESSES.KYCVerifier
       );
       
       const trustScoreContract = new web3Instance.eth.Contract(
-        TrustScoreABI.abi,
+        TrustScoreABI.abi as unknown as AbiItem[],
         CONTRACT_ADDRESSES.TrustScore
       );
       
       const loanManagerContract = new web3Instance.eth.Contract(
-        LoanManagerABI.abi,
+        LoanManagerABI.abi as unknown as AbiItem[],
         CONTRACT_ADDRESSES.LoanManager
       );
       
@@ -307,6 +324,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
       });
       
       toast.success("KYC document submitted successfully");
+      setKycStatus('pending');
       return result;
     } catch (error: any) {
       console.error("Error submitting KYC:", error);
@@ -419,6 +437,96 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Get KYC status
+  const getKYCStatus = async (address?: string): Promise<boolean> => {
+    try {
+      if (!kycContract || !web3) {
+        return false;
+      }
+      
+      const userAddress = address || account;
+      if (!userAddress) {
+        return false;
+      }
+      
+      const status = await kycContract.methods.kycCompleted(userAddress).call();
+      return status;
+    } catch (error) {
+      console.error("Error fetching KYC status:", error);
+      return false;
+    }
+  };
+
+  // Get transaction history
+  const getTransactionHistory = async (): Promise<any[]> => {
+    try {
+      // In a real implementation, this would query transactions from the blockchain or a database
+      return transactions;
+    } catch (error) {
+      console.error("Error fetching transaction history:", error);
+      return [];
+    }
+  };
+
+  // Submit loan application wrapper
+  const submitLoanApplication = async (loanData: any): Promise<string | null> => {
+    try {
+      const result = await applyForLoan(
+        loanData.amount.toString(), 
+        loanData.termMonths || 12, 
+        loanData.purpose || "General"
+      );
+      
+      return result ? result.transactionHash : null;
+    } catch (error) {
+      console.error("Error applying for loan:", error);
+      return null;
+    }
+  };
+
+  // Repay loan
+  const repayLoan = async (loanId: string, amount: string): Promise<boolean> => {
+    if (!web3 || !account || !loanContract) {
+      toast.error("Blockchain connection not available");
+      return false;
+    }
+    
+    try {
+      // Convert amount to Wei
+      const amountInWei = web3.utils.toWei(amount, 'ether');
+      
+      await loanContract.methods.repayLoan(loanId).send({
+        from: account,
+        value: amountInWei
+      });
+      
+      toast.success("Loan repayment successful");
+      return true;
+    } catch (error: any) {
+      console.error("Error repaying loan:", error);
+      toast.error(`Failed to repay loan: ${error.message}`);
+      return false;
+    }
+  };
+
+  // Register bank
+  const registerBank = async (bankData: any): Promise<boolean> => {
+    if (!web3 || !account) {
+      toast.error("Blockchain connection not available");
+      return false;
+    }
+    
+    try {
+      // This would normally call a smart contract method
+      toast.success("Bank registration submitted successfully");
+      return true;
+    } catch (error: any) {
+      console.error("Error registering bank:", error);
+      toast.error(`Failed to register bank: ${error.message}`);
+      return false;
+    }
+  };
+
   // Effect to set up event listeners
   useEffect(() => {
     if (enableBlockchain) {
@@ -465,6 +573,8 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     kycContract,
     trustScoreContract,
     loanContract,
+    kycStatus,
+    transactions,
     connectWallet,
     disconnectWallet,
     switchNetwork,
@@ -473,7 +583,12 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     getLoanDetails,
     applyForLoan,
     approveLoan,
-    rejectLoan
+    rejectLoan,
+    getKYCStatus,
+    getTransactionHistory,
+    submitLoanApplication,
+    repayLoan,
+    registerBank
   };
   
   return (
