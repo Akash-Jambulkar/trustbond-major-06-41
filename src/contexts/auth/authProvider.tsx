@@ -3,10 +3,11 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { AuthContextType, User, UserRole } from "./types";
-import { fetchUserProfile, createUserWithProfile, mapUserWithProfile, mockWalletUser } from "./authUtils";
-import { setupUserMFA, verifyUserMFA, disableUserMFA } from "./mfaUtils";
+import { AuthContextType, User } from "./types";
+import { fetchUserProfile, mapUserWithProfile } from "./authUtils";
 import { RoleSyncProvider } from "@/components/RoleSyncProvider";
+import { useAuthMethods } from "./hooks/useAuthMethods";
+import { useMFAAuth } from "./hooks/useMFAAuth";
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -14,8 +15,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isMFARequired, setIsMFARequired] = useState<boolean>(false);
   const navigate = useNavigate();
+
+  const {
+    isMFARequired,
+    setIsMFARequired,
+    setupMFA,
+    verifyMFA,
+    disableMFA
+  } = useMFAAuth(user, setUser);
+
+  const {
+    login,
+    register,
+    loginWithWallet,
+    logout,
+  } = useAuthMethods(setUser, setIsAuthenticated, setIsMFARequired);
 
   useEffect(() => {
     const loadSession = async () => {
@@ -41,165 +56,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     loadSession();
   }, []);
-
-  const login = async (email: string, password: string) => {
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password,
-      });
-
-      if (error) {
-        console.error("Login error:", error);
-        toast.error("Login failed: " + error.message);
-        return false;
-      }
-
-      const profile = await fetchUserProfile(data.user.id);
-      if (!profile) return false;
-
-      // Try to get role from role assignments first for more accurate role info
-      let userRole: UserRole = 'user'; // Default role
-      
-      try {
-        const { data: roleData } = await supabase
-          .from('user_role_assignments')
-          .select('role')
-          .eq('user_id', data.user.id)
-          .single();
-          
-        if (roleData?.role) {
-          userRole = roleData.role as UserRole;
-        } else if (profile.role) {
-          userRole = profile.role as UserRole;
-        }
-      } catch (err) {
-        console.warn("Error fetching role, using profile role instead:", err);
-        userRole = profile.role as UserRole || 'user';
-      }
-      
-      const userWithProfile = mapUserWithProfile(data.user, {
-        ...profile,
-        role: userRole
-      });
-      
-      setUser(userWithProfile);
-      setIsAuthenticated(true);
-
-      if (userWithProfile.mfa_enabled) {
-        setIsMFARequired(true);
-        toast.info("Multi-factor authentication required");
-        navigate("/mfa-verify");
-        return true;
-      }
-      
-      // Role is now set before this point, so no need for the user to refresh
-      console.log("User successfully logged in with role:", userRole);
-      
-      return true;
-    } catch (error) {
-      console.error("Login submission error:", error);
-      toast.error("Login failed: " + (error instanceof Error ? error.message : "Unknown error"));
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const register = async (email: string, password: string, name: string, role: UserRole = 'user') => {
-    setIsLoading(true);
-    try {
-      const success = await createUserWithProfile(email, password, name, role);
-      
-      if (success) {
-        const { error: roleError } = await supabase
-          .from('user_role_assignments')
-          .insert([
-            { 
-              user_id: (await supabase.auth.getUser()).data.user?.id,
-              role: role
-            }
-          ]);
-
-        if (roleError) {
-          console.error("Role assignment error:", roleError);
-          toast.error("Failed to assign user role");
-          return false;
-        }
-      }
-
-      return success;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const logout = async () => {
-    setIsLoading(true);
-    try {
-      const { error } = await supabase.auth.signOut();
-
-      if (error) {
-        console.error("Logout error:", error);
-        toast.error("Logout failed");
-        return;
-      }
-
-      setUser(null);
-      setIsAuthenticated(false);
-      navigate("/login");
-      toast.success("Logged out successfully");
-    } catch (error) {
-      console.error("Logout submission error:", error);
-      toast.error("Logout failed: " + (error instanceof Error ? error.message : "Unknown error"));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const loginWithWallet = async (address: string) => {
-    toast.success(`Logged in with wallet address: ${address}`);
-    const mockUser = mockWalletUser(address);
-    setUser(mockUser);
-    setIsAuthenticated(true);
-    return true;
-  };
-
-  const setupMFA = async (phoneNumber: string, method: "sms" | "email") => {
-    const success = await setupUserMFA(phoneNumber, method);
-    if (success && user) {
-      const updatedUser = { ...user, mfa_enabled: true };
-      setUser(updatedUser);
-    }
-    return success;
-  };
-
-  const verifyMFA = async (code: string) => {
-    const success = await verifyUserMFA(code);
-    if (success) {
-      setIsMFARequired(false);
-      if (user) {
-        navigate(`/dashboard/${user.role}`);
-      } else {
-        navigate("/login");
-      }
-    }
-    return success;
-  };
-
-  const disableMFA = async (userId: string) => {
-    if (!user) {
-      toast.error("No user logged in");
-      return false;
-    }
-    
-    const success = await disableUserMFA(user.id);
-    if (success) {
-      setUser(prevUser => prevUser ? { ...prevUser, mfa_enabled: false } : null);
-    }
-    return success;
-  };
 
   return (
     <AuthContext.Provider
