@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useMode } from './ModeContext';
 import { toast } from 'sonner';
@@ -32,7 +33,14 @@ interface BlockchainContextType {
   getUserLoans: () => Promise<any[]>;
   updateTrustScore: (address: string, score: number) => Promise<boolean>;
   getTrustScore: (address: string) => Promise<number>;
+  switchNetwork: (chainId: number) => Promise<boolean>;
   kycStatus: 'not_verified' | 'pending' | 'verified' | 'rejected';
+  kycContract: any;
+  trustScoreContract: any;
+  loanContract: any;
+  transactions: any[];
+  clearBlockchainCache?: () => void;
+  isOptimized?: boolean;
 }
 
 // Create blockchain context
@@ -66,11 +74,14 @@ export const BlockchainProvider = ({ children }: BlockchainProviderProps) => {
   const [isBlockchainLoading, setIsBlockchainLoading] = useState<boolean>(false);
   const [isContractsInitialized, setIsContractsInitialized] = useState<boolean>(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [isOptimized, setIsOptimized] = useState<boolean>(true);
 
   // Contract instances
   const [kycVerifierContract, setKycVerifierContract] = useState<any>(null);
   const [trustScoreContract, setTrustScoreContract] = useState<any>(null);
   const [loanContract, setLoanManagerContract] = useState<any>(null);
+  const [kycStatus, setKycStatus] = useState<'not_verified' | 'pending' | 'verified' | 'rejected'>('not_verified');
 
   // Connect to wallet function
   const connectWallet = async () => {
@@ -410,10 +421,10 @@ export const BlockchainProvider = ({ children }: BlockchainProviderProps) => {
   };
 
   // Switch Ethereum network
-  const switchNetwork = async (chainId: number) => {
+  const switchNetwork = async (chainId: number): Promise<boolean> => {
     if (!web3 || !window.ethereum) {
       toast.error("Blockchain connection not initialized");
-      return;
+      return false;
     }
     
     try {
@@ -428,6 +439,7 @@ export const BlockchainProvider = ({ children }: BlockchainProviderProps) => {
       setNetworkId(netId);
       
       toast.success(`Switched to ${NETWORKS[chainId] || 'Unknown Network'}`);
+      return true;
     } catch (error: any) {
       console.error("Error switching network:", error);
       
@@ -437,7 +449,19 @@ export const BlockchainProvider = ({ children }: BlockchainProviderProps) => {
       } else {
         toast.error("Failed to switch network");
       }
+      return false;
     }
+  };
+
+  // Clear blockchain cache
+  const clearBlockchainCache = () => {
+    // Reset state values
+    disconnectWallet();
+    setTransactions([]);
+    setKycStatus('not_verified');
+    localStorage.removeItem('blockchain_account');
+    localStorage.removeItem('blockchain_tx_history');
+    toast.success("Blockchain cache cleared");
   };
 
   // Auto-connect to MetaMask if previously connected and blockchain is enabled
@@ -513,7 +537,7 @@ export const BlockchainProvider = ({ children }: BlockchainProviderProps) => {
   const isGanache = networkId === 1337;
 
   // Context value
-  const value = {
+  const value: BlockchainContextType = {
     web3,
     account,
     isConnected,
@@ -527,7 +551,8 @@ export const BlockchainProvider = ({ children }: BlockchainProviderProps) => {
     kycContract: kycVerifierContract,
     trustScoreContract,
     loanContract,
-    kycStatus: 'pending', // Default value, would be updated from database in a real app
+    kycStatus,
+    transactions,
     connectWallet,
     disconnectWallet,
     submitKYC,
@@ -542,7 +567,9 @@ export const BlockchainProvider = ({ children }: BlockchainProviderProps) => {
     submitLoanApplication,
     getUserLoans,
     updateTrustScore,
-    getTrustScore
+    getTrustScore,
+    clearBlockchainCache,
+    isOptimized
   };
 
   return (

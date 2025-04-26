@@ -20,13 +20,12 @@ export const useLoanOperations = ({
   trackAndWatchTransaction,
   refreshTransactions
 }: UseLoanOperationsProps) => {
-  const requestLoan = async (loanData: any): Promise<string | null> => {
+  const requestLoan = async (amount: string, purpose: string, termMonths: number): Promise<string | null> => {
     if (!web3 || !account || !loanContract) {
       throw new Error("Wallet not connected or contract not initialized");
     }
 
     try {
-      const { amount, termMonths } = loanData;
       const amountInWei = typeof amount === 'string' 
         ? web3.utils.toWei(amount, 'ether')
         : web3.utils.toWei(amount.toString(), 'ether');
@@ -41,7 +40,7 @@ export const useLoanOperations = ({
         tx.transactionHash,
         'loan',
         `Loan Request Submitted (ID: ${loanId})`,
-        { loanId, amount, termMonths }
+        { loanId, amount, termMonths, purpose }
       );
       
       toast.success(`Loan request submitted with ID: ${loanId}`);
@@ -55,14 +54,14 @@ export const useLoanOperations = ({
     }
   };
 
-  const approveLoan = async (loanId: string): Promise<boolean> => {
+  const approveLoan = async (loanId: string, interestRate: number): Promise<boolean> => {
     if (!web3 || !account || !loanContract) {
       throw new Error("Wallet not connected or contract not initialized");
     }
 
     try {
       const numericLoanId = parseInt(loanId);
-      const tx = await loanContract.methods.approveLoan(numericLoanId).send({ from: account });
+      const tx = await loanContract.methods.approveLoan(numericLoanId, interestRate).send({ from: account });
       
       trackAndWatchTransaction(
         tx.transactionHash,
@@ -81,7 +80,7 @@ export const useLoanOperations = ({
     }
   };
 
-  const rejectLoan = async (loanId: string): Promise<boolean> => {
+  const rejectLoan = async (loanId: string, reason: string): Promise<boolean> => {
     if (!web3 || !account || !loanContract) {
       throw new Error("Wallet not connected or contract not initialized");
     }
@@ -93,7 +92,7 @@ export const useLoanOperations = ({
       trackAndWatchTransaction(
         tx.transactionHash,
         'loan',
-        `Loan #${loanId} Rejected`
+        `Loan #${loanId} Rejected: ${reason}`
       );
       
       toast.success(`Loan #${loanId} rejected`);
@@ -141,16 +140,19 @@ export const useLoanOperations = ({
     }
   };
 
-  const getUserLoans = async (userAddress: string): Promise<number[]> => {
+  const getUserLoans = async (userAddress: string): Promise<any[]> => {
     if (!web3 || !loanContract) {
       throw new Error("Wallet not connected or contract not initialized");
     }
 
     try {
-      return await loanContract.methods.getUserLoans(userAddress).call();
+      const address = userAddress || account;
+      if (!address) return [];
+      
+      return await loanContract.methods.getUserLoans(address).call();
     } catch (error) {
       console.error("Error getting user loans:", error);
-      throw error;
+      return [];
     }
   };
 

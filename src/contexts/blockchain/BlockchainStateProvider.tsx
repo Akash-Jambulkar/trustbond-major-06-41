@@ -104,6 +104,10 @@ export const BlockchainStateProvider = ({ children }: { children: ReactNode }) =
     );
   };
 
+  const getUserLoansWrapper = async (): Promise<any[]> => {
+    return await getUserLoans(account || '');
+  };
+
   const contextValue: BlockchainContextType = {
     web3,
     account,
@@ -134,7 +138,7 @@ export const BlockchainStateProvider = ({ children }: { children: ReactNode }) =
     submitLoanApplication,
     updateTrustScore,
     getTrustScore,
-    getUserLoans,
+    getUserLoans: getUserLoansWrapper,
     clearBlockchainCache,
     isOptimized
   };

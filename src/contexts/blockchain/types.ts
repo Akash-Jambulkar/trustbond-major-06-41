@@ -45,4 +45,6 @@ export interface BlockchainContextType {
   getUserLoans: () => Promise<any[]>;
   updateTrustScore?: (address: string, score: number) => Promise<boolean>;
   getTrustScore?: (address: string) => Promise<number>;
+  clearBlockchainCache?: () => void;
+  isOptimized?: boolean;
 }

@@ -14,7 +14,7 @@ export interface BlockchainContextType {
   loanContract: any;
   kycStatus: 'not_verified' | 'pending' | 'verified' | 'rejected';
   transactions: any[];
-  isContractsInitialized?: boolean;
+  isContractsInitialized: boolean;
   isOptimized?: boolean;
 
   // Functions
@@ -32,6 +32,6 @@ export interface BlockchainContextType {
   registerBank: (bankData: any) => Promise<boolean>;
   updateTrustScore?: (address: string, score: number) => Promise<boolean>;
   getTrustScore?: (address: string) => Promise<number>;
-  getUserLoans?: () => Promise<any[]>;
+  getUserLoans: () => Promise<any[]>;
   clearBlockchainCache?: () => void;
 }

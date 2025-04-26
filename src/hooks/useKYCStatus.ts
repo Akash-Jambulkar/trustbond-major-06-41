@@ -7,7 +7,7 @@ import { KycDocumentSubmissionType } from "@/types/supabase-extensions";
 import { useAuth } from "@/contexts/AuthContext";
 
 export const useKYCStatus = () => {
-  const { account, isConnected, getKYCStatus, kycContract } = useBlockchain();
+  const { account, isConnected, getKYCStatus } = useBlockchain();
   const { user } = useAuth();
   const [kycStatus, setKycStatus] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -73,7 +73,7 @@ export const useKYCStatus = () => {
     };
 
     fetchKYCStatus();
-  }, [isConnected, account, getKYCStatus, kycContract, user]);
+  }, [isConnected, account, getKYCStatus, user]);
 
   return { 
     kycStatus, 
