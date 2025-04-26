@@ -1,371 +1,455 @@
 
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Shield, CheckCircle, XCircle, Loader2, RefreshCw } from "lucide-react";
-import { toast } from "sonner";
-import { useBlockchain } from "@/contexts/BlockchainContext";
-import { supabase } from "@/lib/supabase";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { useAuth } from "@/contexts/AuthContext";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
+import { 
+  Table, 
+  TableBody, 
+  TableCaption, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { 
+  Shield, 
+  CheckCircle, 
+  XCircle, 
+  AlertCircle, 
+  UserCheck, 
+  Clock, 
+  FileText,
+  RefreshCw,
+  User
+} from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { useBlockchain } from "@/contexts/BlockchainContext";
+import { supabase } from "@/lib/supabaseClient";
+import { formatDistanceToNow } from "date-fns";
 
 interface KYCSubmission {
   id: string;
   user_id: string;
-  document_type: string;
   document_hash: string;
-  status: 'pending' | 'verified' | 'rejected';
-  created_at: string;
-  blockchain_address?: string;
-  wallet_address?: string;
-  user_email?: string;
-  user_name?: string;
+  document_type: string;
+  verification_status: 'pending' | 'verified' | 'rejected';
+  submitted_at: string;
+  verified_at: string | null;
+  rejection_reason: string | null;
+  blockchain_tx_hash: string | null;
+  verification_tx_hash: string | null;
+  verifier_address: string | null;
+  wallet_address: string | null;
+  user_details?: {
+    id: string;
+    email: string;
+    full_name?: string;
+  };
 }
 
-const VerifyKYCPage = () => {
+export default function VerifyKYC() {
   const [submissions, setSubmissions] = useState<KYCSubmission[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [verifying, setVerifying] = useState(false);
-  const [selectedSubmission, setSelectedSubmission] = useState<KYCSubmission | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [rejectionReason, setRejectionReason] = useState("");
-  
-  const { isConnected, account, verifyKYC } = useBlockchain();
-  const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<string>("pending");
+  const { toast } = useToast();
+  const { verifyKYC, isConnected, account } = useBlockchain();
 
-  const fetchSubmissions = async () => {
-    try {
-      setLoading(true);
-      
-      console.log("Fetching KYC submissions...");
-      
-      const { data: submissionsData, error: submissionsError } = await supabase
-        .from('kyc_document_submissions')
-        .select(`
-          id,
-          user_id,
-          document_type,
-          document_hash,
-          verification_status as status,
-          submitted_at as created_at,
-          wallet_address,
-          profiles:user_id (email, name)
-        `)
-        .eq('verification_status', 'pending');
-      
-      if (submissionsError) {
-        console.log("Error fetching from kyc_document_submissions:", submissionsError);
-      }
-      
-      const { data: docsData, error: docsError } = await supabase
-        .from('kyc_documents')
-        .select(`
-          id,
-          user_id,
-          document_type,
-          document_hash,
-          verification_status as status,
-          created_at,
-          profiles:user_id (email, name)
-        `)
-        .eq('verification_status', 'pending');
-          
-      if (docsError) {
-        console.log("Error fetching from kyc_documents:", docsError);
-      }
-      
-      const allSubmissions = [
-        ...(submissionsData || []), 
-        ...(docsData || [])
-      ];
-      
-      console.log("Fetched submissions:", allSubmissions);
-      
-      const formattedSubmissions = allSubmissions.map((sub: any) => ({
-        id: sub.id,
-        user_id: sub.user_id,
-        document_type: sub.document_type,
-        document_hash: sub.document_hash,
-        status: sub.status,
-        created_at: sub.created_at,
-        blockchain_address: sub.blockchain_address || "",
-        wallet_address: sub.wallet_address || "",
-        user_email: sub.profiles?.email,
-        user_name: sub.profiles?.name
-      }));
-      
-      setSubmissions(formattedSubmissions);
-      console.log("Formatted submissions:", formattedSubmissions);
-    } catch (error) {
-      console.error("Error fetching KYC submissions:", error);
-      toast.error("Failed to load KYC submissions");
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  useEffect(() => {
-    if (user?.role === 'bank') {
-      fetchSubmissions();
-    }
-  }, [user]);
-  
-  const handleUpdateVerification = async (submission: KYCSubmission, approved: boolean) => {
-    if (!isConnected) {
-      toast.error("Please connect your wallet first");
-      return;
-    }
+  // Fetch KYC submissions
+  const fetchKYCSubmissions = async () => {
+    setIsLoading(true);
+    console.log("Fetching KYC submissions...");
     
     try {
-      setVerifying(true);
-      
-      if (!submission.id) {
-        toast.error("No KYC ID found for submission");
-        setVerifying(false);
-        return;
-      }
-      
-      const verificationStatus = approved ? 'verified' as const : 'rejected' as const;
-      console.log(`Verifying KYC ${submission.id} as ${verificationStatus}`);
-      
-      let success = false;
-      if (submission.wallet_address) {
-        try {
-          // Fix: Pass only two parameters to verifyKYC (remove the third parameter)
-          success = await verifyKYC(submission.id, verificationStatus);
-          console.log("Blockchain verification result:", success);
-        } catch (error) {
-          console.error("Blockchain verification failed:", error);
-        }
-      }
-      
-      const { error: subError } = await supabase
+      // Fetch KYC submissions first
+      const { data: submissionsData, error: submissionsError } = await supabase
         .from('kyc_document_submissions')
-        .update({ 
-          verification_status: verificationStatus,
-          verifier_address: account,
-          verified_at: new Date().toISOString(),
-          rejection_reason: !approved ? rejectionReason : null
-        })
-        .eq('id', submission.id);
-        
-      if (subError) {
-        console.log("Could not update kyc_document_submissions, trying kyc_documents");
-        const { error: docError } = await supabase
-          .from('kyc_documents')
-          .update({ 
-            verification_status: verificationStatus,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', submission.id);
-          
-        if (docError) {
-          console.error("Error updating both tables:", docError);
-          throw docError;
-        }
+        .select('*');
+
+      if (submissionsError) {
+        console.error("Error fetching submissions:", submissionsError);
+        throw submissionsError;
       }
-      
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ 
-          kyc_status: verificationStatus,
-          updated_at: new Date().toISOString()
+
+      // Then fetch user details for each submission
+      const submissionsWithUserDetails = await Promise.all(
+        (submissionsData || []).map(async (submission) => {
+          const { data: userData, error: userError } = await supabase
+            .from('profiles')
+            .select('id, email, full_name')
+            .eq('id', submission.user_id)
+            .single();
+
+          if (userError) {
+            console.warn("Error fetching user details for submission:", userError);
+            // Return submission without user details if there's an error
+            return { ...submission, user_details: undefined };
+          }
+
+          return { ...submission, user_details: userData };
         })
-        .eq('id', submission.user_id);
-        
-      if (profileError) {
-        console.error("Error updating profile:", profileError);
-      }
-      
-      setSubmissions(prev => 
-        prev.filter(sub => sub.id !== submission.id)
       );
-      
-      toast.success(`KYC ${approved ? 'approved' : 'rejected'} successfully`);
-      setIsDialogOpen(false);
-      setRejectionReason("");
-      
+
+      console.log("Formatted submissions:", submissionsWithUserDetails);
+      setSubmissions(submissionsWithUserDetails);
     } catch (error) {
-      console.error("Error updating verification status:", error);
-      toast.error(`Failed to ${approved ? 'approve' : 'reject'} KYC`);
+      console.error("Error fetching KYC submissions:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load KYC submissions. Please try again.",
+      });
     } finally {
-      setVerifying(false);
+      setIsLoading(false);
     }
   };
-  
-  const openDetailDialog = (submission: KYCSubmission) => {
-    setSelectedSubmission(submission);
-    setIsDialogOpen(true);
-    setRejectionReason("");
+
+  useEffect(() => {
+    fetchKYCSubmissions();
+  }, []);
+
+  // Filter submissions based on active tab
+  const filteredSubmissions = submissions.filter(submission => {
+    switch (activeTab) {
+      case "pending":
+        return submission.verification_status === "pending";
+      case "verified":
+        return submission.verification_status === "verified";
+      case "rejected":
+        return submission.verification_status === "rejected";
+      default:
+        return true;
+    }
+  });
+
+  // Handle verification of a KYC submission
+  const handleVerify = async (submission: KYCSubmission) => {
+    if (!isConnected) {
+      toast({
+        variant: "destructive",
+        title: "Not connected",
+        description: "Please connect your wallet to verify KYC submissions.",
+      });
+      return;
+    }
+
+    try {
+      // First update the verification status in the database
+      const { error: updateError } = await supabase
+        .from('kyc_document_submissions')
+        .update({
+          verification_status: 'verified',
+          verified_at: new Date().toISOString(),
+          verifier_address: account
+        })
+        .eq('id', submission.id);
+
+      if (updateError) throw updateError;
+
+      // If blockchain verification is available, use it
+      if (verifyKYC && isConnected) {
+        const result = await verifyKYC(submission.document_hash);
+        
+        // Record the blockchain transaction
+        if (result && result.transactionHash) {
+          const { error: txError } = await supabase
+            .from('transactions')
+            .insert({
+              transaction_hash: result.transactionHash,
+              transaction_type: 'kyc_verification',
+              user_id: submission.user_id,
+              related_entity_id: submission.id,
+              status: 'completed',
+              from_address: account,
+              blockchain_timestamp: new Date().toISOString()
+            });
+
+          if (txError) {
+            console.error("Error recording transaction:", txError);
+            // Continue even if transaction recording fails
+          }
+
+          // Update the verification transaction hash
+          const { error: updateHashError } = await supabase
+            .from('kyc_document_submissions')
+            .update({ verification_tx_hash: result.transactionHash })
+            .eq('id', submission.id);
+
+          if (updateHashError) {
+            console.error("Error updating verification hash:", updateHashError);
+          }
+        }
+      }
+
+      toast({
+        title: "Verification successful",
+        description: "The KYC document has been verified.",
+      });
+
+      // Refresh the submissions list
+      fetchKYCSubmissions();
+
+    } catch (error) {
+      console.error("Error verifying KYC:", error);
+      toast({
+        variant: "destructive",
+        title: "Verification failed",
+        description: "There was an error verifying the KYC document.",
+      });
+    }
   };
-  
-  if (user?.role !== 'bank' && user?.role !== 'admin') {
-    return (
-      <div className="p-6">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center py-8 text-muted-foreground">
-              You do not have permission to access this page.
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-  
+
+  // Handle rejection of a KYC submission
+  const handleReject = async (submission: KYCSubmission, reason: string = "Document does not meet requirements") => {
+    try {
+      const { error } = await supabase
+        .from('kyc_document_submissions')
+        .update({
+          verification_status: 'rejected',
+          rejection_reason: reason,
+          verified_at: new Date().toISOString(),
+          verifier_address: account
+        })
+        .eq('id', submission.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Rejection successful",
+        description: "The KYC document has been rejected.",
+      });
+
+      // Refresh the submissions list
+      fetchKYCSubmissions();
+
+    } catch (error) {
+      console.error("Error rejecting KYC:", error);
+      toast({
+        variant: "destructive",
+        title: "Rejection failed",
+        description: "There was an error rejecting the KYC document.",
+      });
+    }
+  };
+
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Verify KYC Submissions</h1>
-          <p className="text-muted-foreground">
-            Review and verify KYC documents submitted by users.
-          </p>
-        </div>
-        <Button variant="outline" onClick={fetchSubmissions} disabled={loading}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-2xl font-bold">KYC Verification</h1>
+        <p className="text-muted-foreground">
+          Verify and approve KYC document submissions from users
+        </p>
       </div>
-      
+
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-trustbond-primary" />
-            Pending KYC Verifications
-          </CardTitle>
-          <CardDescription>
-            Verify or reject KYC submissions. This will update the user's verification status on the blockchain.
-          </CardDescription>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-trustbond-primary" />
+                Document Verification
+              </CardTitle>
+              <CardDescription>
+                Review and verify user identity documents
+              </CardDescription>
+            </div>
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-1" 
+              onClick={() => fetchKYCSubmissions()}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                  <span>Loading...</span>
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-4 w-4" />
+                  <span>Refresh</span>
+                </>
+              )}
+            </Button>
+          </div>
         </CardHeader>
+
         <CardContent>
-          {loading ? (
-            <div className="flex justify-center items-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : submissions.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No pending KYC submissions to verify.
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Document Type</TableHead>
-                  <TableHead>Submission Date</TableHead>
-                  <TableHead>Wallet Address</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {submissions.map((submission) => (
-                  <TableRow key={submission.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{submission.user_name || 'Unknown'}</div>
-                        <div className="text-sm text-muted-foreground">{submission.user_email || 'No email'}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>{submission.document_type}</TableCell>
-                    <TableCell>{new Date(submission.created_at).toLocaleDateString()}</TableCell>
-                    <TableCell className="font-mono text-xs">
-                      {submission.wallet_address || submission.blockchain_address || 'No wallet'}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{submission.status}</Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="outline" size="sm" onClick={() => openDetailDialog(submission)}>
-                        Review
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
+          <Tabs 
+            defaultValue="pending" 
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
+            <TabsList className="grid grid-cols-3 mb-4">
+              <TabsTrigger value="pending" className="flex items-center gap-1">
+                <Clock className="h-4 w-4" />
+                <span>Pending</span>
+                {submissions.filter(s => s.verification_status === "pending").length > 0 && (
+                  <Badge variant="destructive" className="ml-1">
+                    {submissions.filter(s => s.verification_status === "pending").length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="verified" className="flex items-center gap-1">
+                <CheckCircle className="h-4 w-4" />
+                <span>Verified</span>
+              </TabsTrigger>
+              <TabsTrigger value="rejected" className="flex items-center gap-1">
+                <XCircle className="h-4 w-4" />
+                <span>Rejected</span>
+              </TabsTrigger>
+            </TabsList>
+
+            {Object.values(["pending", "verified", "rejected"]).map((status) => (
+              <TabsContent value={status} key={status} className="mt-0">
+                {isLoading ? (
+                  <div className="flex justify-center items-center h-32">
+                    <RefreshCw className="h-8 w-8 animate-spin text-trustbond-primary" />
+                  </div>
+                ) : filteredSubmissions.length === 0 ? (
+                  <Alert className="bg-muted">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>No {status} submissions</AlertTitle>
+                    <AlertDescription>
+                      {status === "pending" 
+                        ? "No pending KYC submissions to verify." 
+                        : status === "verified"
+                          ? "No verified KYC submissions yet."
+                          : "No rejected KYC submissions."
+                      }
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>User</TableHead>
+                        <TableHead>Document Type</TableHead>
+                        <TableHead>Submitted</TableHead>
+                        <TableHead>Hash</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredSubmissions.map((submission) => (
+                        <TableRow key={submission.id}>
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-2">
+                              <User className="h-4 w-4" />
+                              {submission.user_details ? (
+                                <div>
+                                  <div>{submission.user_details.full_name || 'Unknown User'}</div>
+                                  <div className="text-xs text-muted-foreground">{submission.user_details.email}</div>
+                                </div>
+                              ) : (
+                                <div>
+                                  <div>User ID: {submission.user_id.slice(0, 8)}...</div>
+                                  <div className="text-xs text-muted-foreground">User details unavailable</div>
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="capitalize">
+                              <FileText className="h-3 w-3 mr-1" />
+                              {submission.document_type}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {formatDistanceToNow(new Date(submission.submitted_at), { addSuffix: true })}
+                          </TableCell>
+                          <TableCell>
+                            <span className="font-mono text-xs">
+                              {submission.document_hash.substring(0, 6)}...
+                              {submission.document_hash.substring(submission.document_hash.length - 4)}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            {submission.verification_status === "pending" && (
+                              <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                                <Clock className="h-3 w-3 mr-1" />
+                                Pending
+                              </Badge>
+                            )}
+                            {submission.verification_status === "verified" && (
+                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Verified
+                              </Badge>
+                            )}
+                            {submission.verification_status === "rejected" && (
+                              <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                                <XCircle className="h-3 w-3 mr-1" />
+                                Rejected
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {submission.verification_status === "pending" && (
+                              <div className="flex justify-end gap-2">
+                                <Button 
+                                  size="sm" 
+                                  className="bg-green-600 hover:bg-green-700"
+                                  onClick={() => handleVerify(submission)}
+                                >
+                                  <CheckCircle className="h-4 w-4 mr-1" />
+                                  Verify
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="destructive"
+                                  onClick={() => handleReject(submission)}
+                                >
+                                  <XCircle className="h-4 w-4 mr-1" />
+                                  Reject
+                                </Button>
+                              </div>
+                            )}
+                            {submission.verification_status === "verified" && (
+                              <div className="flex items-center justify-end gap-2 text-xs">
+                                <UserCheck className="h-4 w-4 text-green-500" />
+                                <span>
+                                  {submission.verifier_address ? (
+                                    <>By: {submission.verifier_address.substring(0, 6)}...</>
+                                  ) : (
+                                    <>Verified</>
+                                  )}
+                                </span>
+                              </div>
+                            )}
+                            {submission.verification_status === "rejected" && (
+                              <div className="flex items-center justify-end gap-2 text-xs">
+                                <XCircle className="h-4 w-4 text-red-500" />
+                                <span>
+                                  {submission.rejection_reason || "Rejected"}
+                                </span>
+                              </div>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </TabsContent>
+            ))}
+          </Tabs>
         </CardContent>
+
+        <CardFooter className="bg-muted/50 flex flex-col items-start text-xs text-muted-foreground">
+          <div className="flex gap-2 items-center mb-1">
+            <Shield className="h-4 w-4 text-trustbond-primary" />
+            <span>
+              All verification actions are recorded on the blockchain for transparency and audit purposes.
+            </span>
+          </div>
+        </CardFooter>
       </Card>
-      
-      {selectedSubmission && (
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Verify KYC Submission</DialogTitle>
-              <DialogDescription>
-                Review the user's KYC information and approve or reject.
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="space-y-4 py-4">
-              <div className="grid grid-cols-3 gap-4">
-                <div className="text-muted-foreground">User:</div>
-                <div className="col-span-2 font-medium">{selectedSubmission.user_name || 'Unknown'}</div>
-                
-                <div className="text-muted-foreground">Email:</div>
-                <div className="col-span-2">{selectedSubmission.user_email || 'No email'}</div>
-                
-                <div className="text-muted-foreground">Document:</div>
-                <div className="col-span-2">{selectedSubmission.document_type}</div>
-                
-                <div className="text-muted-foreground">Wallet:</div>
-                <div className="col-span-2 font-mono text-sm">
-                  {selectedSubmission.wallet_address || selectedSubmission.blockchain_address || 'No wallet address'}
-                </div>
-                
-                <div className="text-muted-foreground">Hash:</div>
-                <div className="col-span-2 font-mono text-xs truncate">
-                  {selectedSubmission.document_hash}
-                </div>
-                
-                <div className="text-muted-foreground">Date:</div>
-                <div className="col-span-2">
-                  {new Date(selectedSubmission.created_at).toLocaleDateString()}
-                </div>
-              </div>
-              
-              <div className="pt-4">
-                <label htmlFor="rejectionReason" className="block text-sm font-medium text-gray-700 mb-1">
-                  Rejection Reason (optional)
-                </label>
-                <textarea 
-                  id="rejectionReason"
-                  className="w-full p-2 border rounded-md" 
-                  rows={2}
-                  value={rejectionReason}
-                  onChange={(e) => setRejectionReason(e.target.value)}
-                  placeholder="Provide a reason if rejecting the KYC submission"
-                />
-              </div>
-            </div>
-            
-            <DialogFooter className="flex space-x-2 sm:justify-end">
-              <Button
-                variant="destructive"
-                onClick={() => handleUpdateVerification(selectedSubmission, false)}
-                disabled={verifying || !isConnected}
-              >
-                {verifying ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <XCircle className="h-4 w-4 mr-2" />}
-                Reject
-              </Button>
-              <Button
-                variant="default"
-                onClick={() => handleUpdateVerification(selectedSubmission, true)}
-                disabled={verifying || !isConnected}
-              >
-                {verifying ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle className="h-4 w-4 mr-2" />}
-                Approve
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
     </div>
   );
-};
-
-export default VerifyKYCPage;
+}

@@ -1,70 +1,68 @@
 
-// Document types
-export const DOCUMENT_TYPES = {
-  AADHAAR: 'aadhaar',
-  PAN: 'pan',
-  VOTER_ID: 'voter_id',
-  DRIVING_LICENSE: 'driving_license'
-} as const;
+import { keccak256 } from 'js-sha3';
 
-export type DocumentType = typeof DOCUMENT_TYPES[keyof typeof DOCUMENT_TYPES];
+export enum DOCUMENT_TYPES {
+  AADHAAR = "aadhaar",
+  PAN = "pan",
+  VOTER_ID = "voter_id",
+  DRIVING_LICENSE = "driving_license"
+}
 
-// Validation patterns for different document types
-const VALIDATION_PATTERNS = {
-  [DOCUMENT_TYPES.AADHAAR]: /^\d{12}$/,
-  [DOCUMENT_TYPES.PAN]: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/,
-  [DOCUMENT_TYPES.VOTER_ID]: /^[A-Z]{3}[0-9]{7}$/,
-  [DOCUMENT_TYPES.DRIVING_LICENSE]: /^[A-Z0-9]{8,16}$/
-};
+export type DocumentType = DOCUMENT_TYPES;
 
-// Validate document number format
-export const validateDocument = (
-  documentType: DocumentType,
-  documentNumber: string
-): boolean => {
-  const pattern = VALIDATION_PATTERNS[documentType];
-  return pattern.test(documentNumber);
-};
+// Validate document number format based on type
+export function validateDocument(documentType: DocumentType, documentNumber: string): boolean {
+  switch (documentType) {
+    case DOCUMENT_TYPES.AADHAAR:
+      // 12 digit number
+      return /^\d{12}$/.test(documentNumber);
+    
+    case DOCUMENT_TYPES.PAN:
+      // 5 letters followed by 4 numbers and 1 letter (ABCDE1234F)
+      return /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(documentNumber);
+    
+    case DOCUMENT_TYPES.VOTER_ID:
+      // Typically 10 characters, mix of letters and numbers
+      return /^[A-Z]{3}[0-9]{7}$/.test(documentNumber);
+    
+    case DOCUMENT_TYPES.DRIVING_LICENSE:
+      // Format varies by state, general format is alphanumeric, 8-16 chars
+      return /^[A-Z0-9]{8,16}$/.test(documentNumber);
+    
+    default:
+      return false;
+  }
+}
 
-// Create a hash from a document string (utility function)
-export const hashDocument = async (documentString: string): Promise<string> => {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(documentString);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  return `0x${hashHex}`;
-};
+// Create a hash of the document data
+export async function createDocumentHash(documentType: DocumentType, documentNumber: string): Promise<string> {
+  try {
+    // Combine document type and number with a delimiter
+    const documentData = `${documentType}:${documentNumber}`;
+    
+    // Use keccak256 for ethereum compatibility
+    const hash = '0x' + keccak256(documentData);
+    
+    return hash;
+  } catch (error) {
+    console.error("Error creating document hash:", error);
+    throw new Error("Failed to create document hash");
+  }
+}
 
-// Create a secure document hash
-export const createDocumentHash = async (
-  documentType: DocumentType,
-  documentNumber: string
-): Promise<string> => {
-  // Combine document type and number for a comprehensive hash
-  const combinedString = `${documentType}:${documentNumber}`;
-  const encoder = new TextEncoder();
-  const data = encoder.encode(combinedString);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  return `0x${hashHex}`;
-};
+// Simulate document verification (for development/testing)
+export function simulateDocumentVerification(documentHash: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    // Simulate verification delay
+    setTimeout(() => {
+      // In a real implementation, this would involve API calls to verification services
+      // For simulation, we'll return true most of the time, with occasional failures
+      resolve(Math.random() > 0.05); // 95% success rate
+    }, 1500);
+  });
+}
 
-// Check if a document hash is already used
-export const verifyHashInDatabase = async (hash: string): Promise<boolean> => {
-  // This would check the hash against the database
-  // For demo, assume valid
-  return true;
-};
-
-// Check if a document is unique in the system
-export const verifyDocumentUniqueness = async (
-  documentType: string, 
-  documentNumber: string,
-  supabaseClient?: any
-): Promise<{ isUnique: boolean; existingStatus?: string }> => {
-  // This would check if the document hash is unique in the system
-  // For demo, assume unique
-  return { isUnique: true };
-};
+// Check if two document hashes match
+export function compareDocumentHashes(hash1: string, hash2: string): boolean {
+  return hash1.toLowerCase() === hash2.toLowerCase();
+}
