@@ -92,7 +92,8 @@ export function SimpleKYCForm() {
       // If connected to blockchain, submit there as well
       if (isConnected && submitKYC) {
         try {
-          await submitKYC(documentHash);
+          // Passing both required arguments - documentHash and an empty string for the second parameter
+          await submitKYC(documentHash, "");
         } catch (error) {
           console.error("Blockchain submission failed:", error);
           toast.error("Blockchain submission failed, but database submission was successful");
