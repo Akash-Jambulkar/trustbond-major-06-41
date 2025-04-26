@@ -13,6 +13,7 @@ import { CheckCircle, XCircle, FileText, Shield, AlertTriangle, Eye, Loader2 } f
 import { format } from "date-fns";
 import { getAllKycSubmissions, getKycSubmissionsByStatus } from "@/utils/supabase-helper";
 import { useKYCRealTimeUpdates } from "@/hooks/useKYCRealTimeUpdates";
+import { KycDocumentSubmissionType } from "@/types/supabase-extensions";
 
 const VerifyKYC = () => {
   const { user } = useAuth();
@@ -59,7 +60,11 @@ const VerifyKYC = () => {
             } else {
               enhancedDocuments.push({
                 ...doc,
-                profiles: { name: "Unknown", email: "No email", wallet_address: doc.wallet_address }
+                profiles: { 
+                  name: "Unknown", 
+                  email: "No email", 
+                  wallet_address: (doc as any).wallet_address || null 
+                }
               });
             }
           } else {

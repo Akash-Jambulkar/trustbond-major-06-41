@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabaseClient';
 import { loansTable, profilesTable } from './supabase-helper';
 
@@ -55,6 +54,7 @@ export async function fetchLoansWithBorrowerInfo(): Promise<Loan[]> {
           if (!profileError && profile) {
             return {
               ...loan,
+              status: loan.status as 'pending' | 'approved' | 'rejected' | 'active' | 'completed' | 'defaulted',
               borrower: {
                 name: profile.name,
                 email: profile.email,
@@ -68,6 +68,7 @@ export async function fetchLoansWithBorrowerInfo(): Promise<Loan[]> {
         // Return the loan without borrower info if we couldn't fetch it
         return {
           ...loan,
+          status: loan.status as 'pending' | 'approved' | 'rejected' | 'active' | 'completed' | 'defaulted',
           borrower: {
             name: 'Unknown Borrower',
             email: 'No email'
@@ -98,7 +99,10 @@ export async function fetchUserLoans(userId: string): Promise<Loan[]> {
       throw error;
     }
 
-    return loans || [];
+    return (loans || []).map(loan => ({
+      ...loan,
+      status: loan.status as 'pending' | 'approved' | 'rejected' | 'active' | 'completed' | 'defaulted'
+    })) as Loan[];
   } catch (error) {
     console.error('Exception in fetchUserLoans:', error);
     throw error;

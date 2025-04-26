@@ -1,4 +1,3 @@
-
 // Types for Supabase database tables
 
 export type KycDocumentSubmissionType = {

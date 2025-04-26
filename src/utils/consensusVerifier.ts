@@ -71,12 +71,15 @@ export async function getDocumentsNeedingConsensus(): Promise<KycDocumentSubmiss
       document_type: doc.document_type,
       document_hash: doc.document_hash,
       submitted_at: doc.created_at,
-      verification_status: doc.verification_status,
+      verification_status: doc.verification_status as 'pending' | 'verified' | 'rejected',
       document_number: 'N/A' // Add required field with default value
-    })) as KycDocumentSubmissionType[];
+    } as KycDocumentSubmissionType));
     
-    // Combine both data sets
-    const allDocuments = [...(kycSubmissions || []), ...normalizedDocuments];
+    // Combine both data sets and ensure they match the KycDocumentSubmissionType
+    const allDocuments: KycDocumentSubmissionType[] = [
+      ...(kycSubmissions || []) as KycDocumentSubmissionType[],
+      ...normalizedDocuments
+    ];
     
     console.log(`Found ${allDocuments.length} documents needing consensus verification`);
     return allDocuments;
