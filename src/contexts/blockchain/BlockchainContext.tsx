@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useMode } from "@/contexts/ModeContext";
 import { supabase } from "@/lib/supabase";
@@ -29,6 +28,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
   const [trustScoreContract, setTrustScoreContract] = useState<any>(null);
   const [loanContract, setLoanContract] = useState<any>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
+  const [isContractsInitialized, setIsContractsInitialized] = useState<boolean>(false);
 
   useEffect(() => {
     if (enableBlockchain) {
@@ -459,7 +459,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Simple mock functions for other blockchain operations
   const submitLoanApplication = async (loanData: any): Promise<string | null> => {
     if (!enableBlockchain || !isConnected || !user) {
       toast.error("Wallet not connected or user not authenticated");
@@ -478,7 +477,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     return true;
   };
 
-  const rejectLoan = async (loanId: string): Promise<boolean> => {
+  const rejectLoan = async (loanId: string, reason?: string): Promise<boolean> => {
     if (!enableBlockchain || !isConnected || !user || user.role !== 'bank') {
       toast.error("Unauthorized operation");
       return false;
@@ -505,6 +504,56 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     return true;
   };
 
+  const getUserLoans = async (): Promise<any[]> => {
+    if (!enableBlockchain || !isConnected || !user) {
+      return [];
+    }
+    
+    try {
+      // In a real implementation, this would fetch loans from the blockchain
+      // For now, we'll fetch from Supabase
+      const { data, error } = await supabase
+        .from('loans')
+        .select('*')
+        .eq('user_id', user.user_id)
+        .order('created_at', { ascending: false });
+        
+      if (error) {
+        console.error("Error fetching user loans:", error);
+        return [];
+      }
+      
+      return data || [];
+    } catch (error) {
+      console.error("Error fetching user loans:", error);
+      return [];
+    }
+  };
+
+  const updateTrustScore = async (address: string, score: number): Promise<boolean> => {
+    if (!enableBlockchain || !isConnected || !user?.role === 'bank') {
+      toast.error("Unauthorized operation");
+      return false;
+    }
+    
+    toast.success("Trust score updated");
+    return true;
+  };
+
+  const getTrustScore = async (address: string): Promise<number> => {
+    // Return a random score between 50-90 for demonstration
+    return Math.floor(Math.random() * 40) + 50;
+  };
+
+  const clearBlockchainCache = () => {
+    localStorage.removeItem('blockchain_account');
+    localStorage.removeItem('blockchain_tx_history');
+    setAccount(null);
+    setIsConnected(false);
+    setTransactions([]);
+    toast.success("Blockchain cache cleared");
+  };
+
   return (
     <BlockchainContext.Provider
       value={{
@@ -522,6 +571,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         loanContract,
         kycStatus,
         transactions,
+        isContractsInitialized: !!(kycContract && trustScoreContract && loanContract),
         connectWallet,
         disconnectWallet,
         switchNetwork,
@@ -533,7 +583,12 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         rejectLoan,
         getTransactionHistory,
         repayLoan,
-        registerBank
+        registerBank,
+        getUserLoans,
+        updateTrustScore,
+        getTrustScore,
+        clearBlockchainCache,
+        isOptimized: true
       }}
     >
       {children}

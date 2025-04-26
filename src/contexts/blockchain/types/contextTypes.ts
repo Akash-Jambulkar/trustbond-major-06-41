@@ -30,8 +30,8 @@ export interface BlockchainContextType {
   getTransactionHistory: () => Promise<any[]>;
   repayLoan: (loanId: string, amountInWei: string) => Promise<boolean>;
   registerBank: (bankData: any) => Promise<boolean>;
-  updateTrustScore?: (address: string, score: number) => Promise<boolean>;
-  getTrustScore?: (address: string) => Promise<number>;
+  updateTrustScore: (address: string, score: number) => Promise<boolean>;
+  getTrustScore: (address: string) => Promise<number>;
   getUserLoans: () => Promise<any[]>;
-  clearBlockchainCache?: () => void;
+  clearBlockchainCache: () => void;
 }

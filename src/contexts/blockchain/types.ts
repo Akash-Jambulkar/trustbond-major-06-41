@@ -30,6 +30,9 @@ export interface BlockchainContextType {
   loanContract: Contract | null;
   isContractsInitialized: boolean;
   kycStatus: 'not_verified' | 'pending' | 'verified' | 'rejected';
+  isOptimized?: boolean;
+  
+  // Functions
   connectWallet: () => Promise<any>;
   disconnectWallet: () => void;
   submitKYC: (documentHash: string, feeInWei?: string) => Promise<boolean>;
@@ -43,8 +46,7 @@ export interface BlockchainContextType {
   rejectLoan: (loanId: string, reason?: string) => Promise<boolean>;
   submitLoanApplication: (loanData: any) => Promise<string | null>;
   getUserLoans: () => Promise<any[]>;
-  updateTrustScore?: (address: string, score: number) => Promise<boolean>;
-  getTrustScore?: (address: string) => Promise<number>;
-  clearBlockchainCache?: () => void;
-  isOptimized?: boolean;
+  updateTrustScore: (address: string, score: number) => Promise<boolean>;
+  getTrustScore: (address: string) => Promise<number>;
+  clearBlockchainCache: () => void;
 }

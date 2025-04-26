@@ -20,12 +20,13 @@ export const useLoanOperations = ({
   trackAndWatchTransaction,
   refreshTransactions
 }: UseLoanOperationsProps) => {
-  const requestLoan = async (amount: string, purpose: string, termMonths: number): Promise<string | null> => {
+  const requestLoan = async (amount: string | number, purpose: string, termMonths: number): Promise<string | null> => {
     if (!web3 || !account || !loanContract) {
       throw new Error("Wallet not connected or contract not initialized");
     }
 
     try {
+      // Fix the toString type error by properly checking the type
       const amountInWei = typeof amount === 'string' 
         ? web3.utils.toWei(amount, 'ether')
         : web3.utils.toWei(amount.toString(), 'ether');
