@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, ReactNode, useState } from "react";
 import { useMode } from "@/contexts/ModeContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -73,7 +74,9 @@ export const BlockchainStateProvider = ({ children }: { children: ReactNode }) =
   };
 
   const verifyKYCWrapper = async (kycId: string, verificationStatus: 'verified' | 'rejected'): Promise<boolean> => {
-    return await verifyKYC(kycId, verificationStatus);
+    // Convert the verification status string to a boolean for the blockchain
+    const isApproved = verificationStatus === 'verified';
+    return await verifyKYC(kycId, isApproved);
   };
 
   const approveLoanWrapper = async (loanId: string): Promise<boolean> => {
