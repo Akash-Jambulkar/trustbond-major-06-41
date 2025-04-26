@@ -15,12 +15,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { createDocumentHash } from "@/utils/documentHash";
+import { createDocumentHash, DOCUMENT_TYPES } from "@/utils/documentHash";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Shield, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { KYC_SUBMISSION_FEE } from "@/utils/contracts/contractConfig";
+import { supabase } from "@/lib/supabaseClient";
 
 const kycFormSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters"),
@@ -67,13 +68,14 @@ export function KYCVerificationForm() {
     try {
       // Create a single hash from all KYC data
       const kycData = JSON.stringify(data);
-      const documentHash = await createDocumentHash('identity', kycData);
+      // Use the correct document type from the enum
+      const documentHash = await createDocumentHash(DOCUMENT_TYPES.PAN, kycData);
 
       // Convert verification fee to Wei
       const feeInWei = web3?.utils.toWei(KYC_SUBMISSION_FEE, 'ether');
 
-      // Submit to blockchain
-      const result = await submitKYC(documentHash, feeInWei);
+      // Submit to blockchain (ensure the fee is passed as a string)
+      const result = await submitKYC(documentHash, feeInWei ? feeInWei.toString() : '0');
 
       if (result) {
         // Store KYC data in database
