@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 import Web3 from "web3";
 import { Contract } from "web3-eth-contract";
@@ -166,11 +165,13 @@ export const useKYCOperations = ({
         if (docData) {
           submission = docData;
           
-          // Fix: Handle potentially missing wallet_address and blockchain_address
-          if (docData.wallet_address) {
-            userAddress = docData.wallet_address;
-          } else if ('blockchain_address' in docData && docData.blockchain_address) {  
-            userAddress = docData.blockchain_address;
+          const walletAddr = docData.wallet_address as string | undefined;
+          const blockchainAddr = docData.blockchain_address as string | undefined;
+          
+          if (walletAddr) {
+            userAddress = walletAddr;
+          } else if (blockchainAddr) {
+            userAddress = blockchainAddr;
           } else {
             const { data: profileData } = await supabase
               .from('profiles')

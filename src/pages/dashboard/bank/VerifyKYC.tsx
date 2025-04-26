@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -132,6 +133,7 @@ const VerifyKYCPage = () => {
       let success = false;
       if (submission.wallet_address) {
         try {
+          // Fix: Pass only two parameters to verifyKYC (remove the third parameter)
           success = await verifyKYC(submission.id, verificationStatus);
           console.log("Blockchain verification result:", success);
         } catch (error) {

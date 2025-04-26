@@ -86,7 +86,8 @@ export function KYCSubmission() {
           const feeInWei = web3.utils.toWei(KYC_SUBMISSION_FEE, 'ether');
           console.log(`Using fee: ${KYC_SUBMISSION_FEE} ETH (${feeInWei} Wei)`);
           
-          // Fix: submitKYC now returns a boolean, not an object
+          // Fix: Access the submitKYC function correctly
+          // The function now returns a boolean but we need to track the transaction separately
           blockchainSubmitted = await submitKYC(documentHash, feeInWei);
           
           if (blockchainSubmitted) {

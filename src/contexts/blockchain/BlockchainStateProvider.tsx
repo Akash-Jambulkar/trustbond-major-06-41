@@ -68,12 +68,13 @@ export const BlockchainStateProvider = ({ children }: { children: ReactNode }) =
     refreshTransactions: getTransactionHistory
   });
 
-  // Fix: Update submitKYCWrapper to return boolean directly
+  // Fix: Update submitKYCWrapper to unpack the result and return only boolean
   const submitKYCWrapper = async (documentHash: string, feeInWei?: string): Promise<boolean> => {
-    return await submitKYC(documentHash, 'default', feeInWei);
+    const result = await submitKYC(documentHash, 'default', feeInWei);
+    return result.success;
   };
 
-  // Fix: Update verifyKYCWrapper to handle parameter types correctly
+  // Fix: Update verifyKYCWrapper to properly handle parameter types
   const verifyKYCWrapper = async (kycId: string, verificationStatus: 'verified' | 'rejected'): Promise<boolean> => {
     return await verifyKYC(kycId, verificationStatus);
   };
