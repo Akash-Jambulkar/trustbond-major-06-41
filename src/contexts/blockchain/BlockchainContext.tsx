@@ -531,7 +531,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateTrustScore = async (address: string, score: number): Promise<boolean> => {
-    if (!enableBlockchain || !isConnected || !user?.role === 'bank') {
+    if (!enableBlockchain || !isConnected || !user || user.role !== 'bank') {
       toast.error("Unauthorized operation");
       return false;
     }
