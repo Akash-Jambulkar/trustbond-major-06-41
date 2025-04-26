@@ -129,7 +129,8 @@ const BankVerificationPage = () => {
 
   const handleRejectLoan = async (loanId: number) => {
     try {
-      const success = await rejectLoan(loanId.toString());
+      const reason = "Application does not meet our criteria";
+      const success = await rejectLoan(loanId.toString(), reason);
       if (success) {
         loadLoans();
       }

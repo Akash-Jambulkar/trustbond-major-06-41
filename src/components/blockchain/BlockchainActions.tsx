@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { useMode } from "@/contexts/ModeContext";
@@ -17,7 +18,8 @@ export const BlockchainActions = () => {
     isConnected, 
     submitKYC, 
     networkName, 
-    isCorrectNetwork 
+    isCorrectNetwork,
+    web3
   } = useBlockchain();
   
   const { enableBlockchain } = useMode();
@@ -46,13 +48,15 @@ export const BlockchainActions = () => {
   };
 
   const handleSubmitToBlockchain = async () => {
-    if (!hashedDocument || !isConnected) {
+    if (!hashedDocument || !isConnected || !web3) {
       return;
     }
 
     setIsSubmitting(true);
     try {
-      await submitKYC(hashedDocument);
+      // Convert a small fee amount to Wei for the transaction
+      const feeInWei = web3.utils.toWei('0.001', 'ether');
+      await submitKYC(hashedDocument, feeInWei);
       setDocumentId("");
       setHashedDocument("");
     } catch (error) {

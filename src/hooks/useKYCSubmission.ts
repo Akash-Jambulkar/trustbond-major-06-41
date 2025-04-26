@@ -49,6 +49,9 @@ export function useKYCSubmission(userId?: string) {
           }
 
           if (docData) {
+            // Cast verification_status to the correct type
+            const status = docData.verification_status as 'pending' | 'verified' | 'rejected';
+            
             // Normalize the document data to match KycDocumentSubmissionType
             const normalizedDoc: KycDocumentSubmissionType = {
               id: docData.id,
@@ -56,7 +59,7 @@ export function useKYCSubmission(userId?: string) {
               document_type: docData.document_type,
               document_hash: docData.document_hash,
               submitted_at: docData.created_at,
-              verification_status: docData.verification_status as 'pending' | 'verified' | 'rejected',
+              verification_status: status,
               document_number: 'N/A'
             };
             setSubmission(normalizedDoc);
@@ -64,7 +67,12 @@ export function useKYCSubmission(userId?: string) {
             setSubmission(null);
           }
         } else {
-          setSubmission(data);
+          // Cast verification_status to the correct type for the main data
+          const submission = {
+            ...data,
+            verification_status: data.verification_status as 'pending' | 'verified' | 'rejected'
+          };
+          setSubmission(submission);
         }
       } catch (err) {
         console.error('Exception in fetchSubmission:', err);

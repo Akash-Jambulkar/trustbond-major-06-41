@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { ArrowUpCircle, FileText, Shield } from "lucide-react";
 
 export function KYCDocumentUpload() {
-  const { submitKYC, isConnected } = useBlockchain();
+  const { submitKYC, isConnected, web3 } = useBlockchain();
   const [documentType, setDocumentType] = useState<DocumentType>(DOCUMENT_TYPES.PAN);
   const [documentNumber, setDocumentNumber] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -62,7 +62,7 @@ export function KYCDocumentUpload() {
   };
   
   const handleSubmit = async () => {
-    if (!isConnected) {
+    if (!isConnected || !web3) {
       toast.error("Please connect your wallet first");
       return;
     }
@@ -87,8 +87,11 @@ export function KYCDocumentUpload() {
       // Generate the document hash using document type and number
       const documentHash = await createDocumentHash(documentType, documentNumber);
       
-      // Submit to blockchain
-      const success = await submitKYC(documentHash);
+      // Create verification fee in Wei
+      const verificationFee = web3.utils.toWei('0.001', 'ether');
+      
+      // Submit to blockchain with fee
+      const success = await submitKYC(documentHash, verificationFee);
       
       if (success) {
         toast.success("Document submitted successfully for verification!");
