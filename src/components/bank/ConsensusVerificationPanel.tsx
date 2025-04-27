@@ -1,19 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { CheckCircle, XCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
-
-interface Verification {
-  id: string;
-  user_id: string;
-  bank_id: string;
-  loan_id: string;
-  status: 'pending' | 'approved' | 'rejected';
-  created_at: string;
-}
+import { LoanVerification, loanVerificationsTable } from '@/utils/supabase-tables';
 
 interface ConsensusVerificationPanelProps {
   loanId: string;
@@ -21,7 +13,7 @@ interface ConsensusVerificationPanelProps {
 }
 
 export const ConsensusVerificationPanel: React.FC<ConsensusVerificationPanelProps> = ({ loanId, onConsensusReached }) => {
-  const [verifications, setVerifications] = useState<Verification[]>([]);
+  const [verifications, setVerifications] = useState<LoanVerification[]>([]);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -30,8 +22,8 @@ export const ConsensusVerificationPanel: React.FC<ConsensusVerificationPanelProp
 
   const fetchVerifications = async () => {
     try {
-      const { data, error } = await supabase
-        .from('loan_verifications')
+      // Use the loanVerificationsTable helper function
+      const { data, error } = await loanVerificationsTable()
         .select('*')
         .eq('loan_id', loanId);
 
@@ -39,7 +31,8 @@ export const ConsensusVerificationPanel: React.FC<ConsensusVerificationPanelProp
         console.error("Error fetching verifications:", error);
         toast.error("Failed to load verifications");
       } else {
-        setVerifications(data || []);
+        // Type-safe assignment
+        setVerifications(data as LoanVerification[] || []);
       }
     } catch (error) {
       console.error("Error fetching verifications:", error);
@@ -56,17 +49,15 @@ export const ConsensusVerificationPanel: React.FC<ConsensusVerificationPanelProp
     try {
       const userId = user.id;
 
-      const { data, error } = await supabase
-        .from('loan_verifications')
-        .insert([
-          {
-            loan_id: loanId,
-            user_id: userId,
-            bank_id: user.id,
-            status: status
-          }
-        ])
-        .select()
+      // Use the loanVerificationsTable helper function for insert
+      const { data, error } = await loanVerificationsTable()
+        .insert({
+          loan_id: loanId,
+          user_id: userId,
+          bank_id: user.id,
+          status
+        })
+        .select();
 
       if (error) {
         console.error("Error submitting verification:", error);

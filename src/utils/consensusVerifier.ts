@@ -1,7 +1,8 @@
 
 import { supabase } from '@/lib/supabaseClient';
-import { KycDocumentSubmissionType, KycVerificationVoteType } from '@/types/supabase-extensions';
-import { kycDocumentsTable, kycSubmissionsTable } from './supabase-helper';
+import { KycDocumentSubmissionType } from '@/types/supabase-extensions';
+import { kycDocumentsTable } from './supabase-helper';
+import { kycVerificationVotesTable, KycVerificationVote } from './supabase-tables';
 
 // Add the missing enum for consensus status
 export enum ConsensusStatusEnum {
@@ -43,7 +44,8 @@ export async function getDocumentsNeedingConsensus(): Promise<KycDocumentSubmiss
     console.log('Fetching documents needing consensus verification');
     
     // First try to get from kyc_document_submissions
-    const { data: kycSubmissions, error: kycError } = await kycSubmissionsTable()
+    const { data: kycSubmissions, error: kycError } = await supabase
+      .from('kyc_document_submissions')
       .select('*')
       .eq('verification_status', 'pending')
       .order('submitted_at', { ascending: true });
@@ -89,20 +91,19 @@ export async function getDocumentsNeedingConsensus(): Promise<KycDocumentSubmiss
   }
 }
 
-export async function getVerificationVotes(documentId: string): Promise<KycVerificationVoteType[]> {
+export async function getVerificationVotes(documentId: string): Promise<KycVerificationVote[]> {
   try {
-    // First try the kyc_verification_votes table
-    const { data: votesData, error: votesError } = await supabase
-      .from('kyc_verification_votes')
+    // Use the kycVerificationVotesTable helper function
+    const { data, error } = await kycVerificationVotesTable()
       .select('*')
       .eq('document_id', documentId);
       
-    if (votesError) {
-      console.error('Error fetching verification votes:', votesError);
-      throw votesError;
+    if (error) {
+      console.error('Error fetching verification votes:', error);
+      throw error;
     }
     
-    return votesData || [];
+    return data as KycVerificationVote[] || [];
   } catch (error) {
     console.error('Error fetching verification votes:', error);
     throw error;

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -48,8 +47,20 @@ export default function KYCPage() {
           title: "Error retrieving KYC status",
           description: "Please try refreshing the page."
         });
+      } else if (data) {
+        const typedData: KYCStatus = {
+          verification_status: data.verification_status as "pending" | "verified" | "rejected",
+          document_type: data.document_type,
+          document_hash: data.document_hash,
+          submitted_at: data.submitted_at,
+          verified_at: data.verified_at,
+          rejection_reason: data.rejection_reason,
+          blockchain_tx_hash: data.blockchain_tx_hash,
+          verification_tx_hash: data.verification_tx_hash
+        };
+        setKycStatus(typedData);
       } else {
-        setKycStatus(data);
+        setKycStatus(null);
       }
     } catch (error) {
       console.error('Error fetching KYC status:', error);
