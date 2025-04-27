@@ -21,7 +21,7 @@ export function useKYCSubmission(userId?: string) {
       // Try to fetch from kyc_document_submissions first
       const { data: kycData, error: kycError } = await supabase
         .from('kyc_document_submissions')
-        .select('*')
+        .select('*, profiles:user_id(name, email, wallet_address)')
         .eq('user_id', userId)
         .order('submitted_at', { ascending: false })
         .limit(1)
@@ -43,7 +43,7 @@ export function useKYCSubmission(userId?: string) {
         // Try kyc_documents as fallback
         const { data: docData, error: docError } = await supabase
           .from('kyc_documents')
-          .select('*')
+          .select('*, profiles:user_id(name, email, wallet_address)')
           .eq('user_id', userId)
           .order('created_at', { ascending: false })
           .limit(1)
@@ -117,10 +117,71 @@ export function useKYCSubmission(userId?: string) {
     };
   }, [userId, fetchSubmission]);
 
+  // Add new function to update or store KYC status when changed
+  const updateKYCSubmission = async (data: any) => {
+    if (!userId) {
+      toast.error('User ID is required to update KYC submission');
+      return false;
+    }
+    
+    try {
+      setIsLoading(true);
+      
+      // Check if a submission exists first
+      if (submission?.id) {
+        // Update existing submission
+        const { error: updateError } = await supabase
+          .from('kyc_document_submissions')
+          .update({
+            ...data,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', submission.id);
+          
+        if (updateError) {
+          console.error('Error updating KYC submission:', updateError);
+          toast.error('Failed to update KYC submission');
+          return false;
+        }
+        
+        toast.success('KYC submission updated');
+      } else {
+        // Create new submission
+        const { error: insertError } = await supabase
+          .from('kyc_document_submissions')
+          .insert({
+            user_id: userId,
+            ...data,
+            submitted_at: new Date().toISOString(),
+            verification_status: 'pending'
+          });
+          
+        if (insertError) {
+          console.error('Error creating KYC submission:', insertError);
+          toast.error('Failed to create KYC submission');
+          return false;
+        }
+        
+        toast.success('KYC submission created');
+      }
+      
+      // Refresh data
+      fetchSubmission();
+      return true;
+    } catch (error) {
+      console.error('Error in updateKYCSubmission:', error);
+      toast.error('Failed to update KYC submission');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return { 
     submission, 
     isLoading, 
     error,
-    refetch: fetchSubmission
+    refetch: fetchSubmission,
+    updateKYCSubmission
   };
 }

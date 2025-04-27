@@ -1,6 +1,6 @@
 
 import { useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBlockchain } from '@/contexts/BlockchainContext';
 

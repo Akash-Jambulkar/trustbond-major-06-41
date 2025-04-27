@@ -21,7 +21,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Shield, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { KYC_SUBMISSION_FEE } from "@/utils/contracts/contractConfig";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase, recordWalletConnection } from "@/lib/supabaseClient";
 
 const kycFormSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters"),
@@ -66,6 +66,12 @@ export function KYCVerificationForm() {
 
     setIsSubmitting(true);
     try {
+      // Record wallet connection first to ensure it's stored properly
+      if (account) {
+        console.log("Recording wallet connection for user:", user.id, "wallet:", account);
+        await recordWalletConnection(user.id, account);
+      }
+
       // Create a single hash from all KYC data
       const kycData = JSON.stringify(data);
       // Use the correct document type from the enum
