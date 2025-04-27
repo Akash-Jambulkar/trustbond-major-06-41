@@ -25,12 +25,18 @@ export interface KycVerificationVote {
   updated_at?: string | null;
 }
 
+// Define table name constants to avoid string literals
+export const TABLES = {
+  LOAN_VERIFICATIONS: 'loan_verifications',
+  KYC_VERIFICATION_VOTES: 'kyc_verification_votes'
+} as const;
+
 // Helper function to access the loan_verifications table
 export const loanVerificationsTable = () => {
-  return safeFrom<LoanVerification>('loan_verifications');
+  return safeFrom<LoanVerification>(TABLES.LOAN_VERIFICATIONS);
 };
 
 // Helper function to access the kyc_verification_votes table
 export const kycVerificationVotesTable = () => {
-  return safeFrom<KycVerificationVote>('kyc_verification_votes');
+  return safeFrom<KycVerificationVote>(TABLES.KYC_VERIFICATION_VOTES);
 };

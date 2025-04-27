@@ -1,8 +1,8 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { KycDocumentSubmissionType } from '@/types/supabase-extensions';
-import { kycDocumentsTable } from './supabase-helper';
-import { kycVerificationVotesTable, KycVerificationVote } from './supabase-tables';
+import { kycVerificationVotesTable, KycVerificationVote } from '@/utils/supabase-tables';
+import { safeFrom } from '@/utils/supabase-utils';
 
 // Add the missing enum for consensus status
 export enum ConsensusStatusEnum {
@@ -44,8 +44,7 @@ export async function getDocumentsNeedingConsensus(): Promise<KycDocumentSubmiss
     console.log('Fetching documents needing consensus verification');
     
     // First try to get from kyc_document_submissions
-    const { data: kycSubmissions, error: kycError } = await supabase
-      .from('kyc_document_submissions')
+    const { data: kycSubmissions, error: kycError } = await safeFrom<KycDocumentSubmissionType>('kyc_document_submissions')
       .select('*')
       .eq('verification_status', 'pending')
       .order('submitted_at', { ascending: true });
@@ -56,7 +55,7 @@ export async function getDocumentsNeedingConsensus(): Promise<KycDocumentSubmiss
     }
     
     // Also try the kyc_documents table
-    const { data: kycDocuments, error: docsError } = await kycDocumentsTable()
+    const { data: kycDocuments, error: docsError } = await safeFrom<any>('kyc_documents')
       .select('*')
       .eq('verification_status', 'pending')
       .order('created_at', { ascending: true });
@@ -93,6 +92,7 @@ export async function getDocumentsNeedingConsensus(): Promise<KycDocumentSubmiss
 
 export async function getVerificationVotes(documentId: string): Promise<KycVerificationVote[]> {
   try {
+    console.log('Fetching verification votes for document:', documentId);
     // Use the kycVerificationVotesTable helper function
     const { data, error } = await kycVerificationVotesTable()
       .select('*')
@@ -103,6 +103,7 @@ export async function getVerificationVotes(documentId: string): Promise<KycVerif
       throw error;
     }
     
+    console.log(`Found ${data?.length || 0} verification votes`);
     return data as KycVerificationVote[] || [];
   } catch (error) {
     console.error('Error fetching verification votes:', error);
@@ -112,6 +113,7 @@ export async function getVerificationVotes(documentId: string): Promise<KycVerif
 
 export async function checkConsensusStatus(documentId: string): Promise<ConsensusResult> {
   try {
+    console.log('Checking consensus status for document:', documentId);
     const votes = await getVerificationVotes(documentId);
     const totalVotes = votes.length;
     const approvals = votes.filter(vote => vote.approved).length;
@@ -146,6 +148,14 @@ export async function checkConsensusStatus(documentId: string): Promise<Consensu
       timestamp: vote.created_at,
       notes: vote.notes
     }));
+    
+    console.log('Consensus status result:', {
+      status,
+      votesReceived: totalVotes,
+      votesRequired,
+      progress,
+      consensusReached
+    });
     
     return {
       approved,

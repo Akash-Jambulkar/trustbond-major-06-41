@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from 'sonner';
 import { LoanVerification, loanVerificationsTable } from '@/utils/supabase-tables';
@@ -14,6 +14,7 @@ interface ConsensusVerificationPanelProps {
 
 export const ConsensusVerificationPanel: React.FC<ConsensusVerificationPanelProps> = ({ loanId, onConsensusReached }) => {
   const [verifications, setVerifications] = useState<LoanVerification[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -22,6 +23,7 @@ export const ConsensusVerificationPanel: React.FC<ConsensusVerificationPanelProp
 
   const fetchVerifications = async () => {
     try {
+      console.log("Fetching verifications for loan:", loanId);
       // Use the loanVerificationsTable helper function
       const { data, error } = await loanVerificationsTable()
         .select('*')
@@ -31,6 +33,7 @@ export const ConsensusVerificationPanel: React.FC<ConsensusVerificationPanelProp
         console.error("Error fetching verifications:", error);
         toast.error("Failed to load verifications");
       } else {
+        console.log("Verifications fetched successfully:", data);
         // Set verifications with type safety
         setVerifications(data || []);
       }
@@ -46,10 +49,13 @@ export const ConsensusVerificationPanel: React.FC<ConsensusVerificationPanelProp
       return;
     }
 
+    setIsSubmitting(true);
+
     try {
+      console.log(`Submitting ${status} verification for loan:`, loanId);
       const userId = user.id;
 
-      // Create new verification object to ensure type safety
+      // Create new verification object with proper typing
       const newVerification: Omit<LoanVerification, 'id' | 'created_at'> = {
         loan_id: loanId,
         user_id: userId,
@@ -57,10 +63,11 @@ export const ConsensusVerificationPanel: React.FC<ConsensusVerificationPanelProp
         status
       };
 
+      console.log("Verification data being submitted:", newVerification);
+
       // Use the loanVerificationsTable helper function for insert
       const { data, error } = await loanVerificationsTable()
-        .insert(newVerification)
-        .select();
+        .insert(newVerification);
 
       if (error) {
         console.error("Error submitting verification:", error);
@@ -68,11 +75,15 @@ export const ConsensusVerificationPanel: React.FC<ConsensusVerificationPanelProp
         return;
       }
 
+      console.log("Verification submitted successfully:", data);
+      
+      // Refresh verifications
       fetchVerifications();
       
-      // Check if consensus is reached
-      const approvedCount = verifications.filter(v => v.status === 'approved').length;
-      const rejectedCount = verifications.filter(v => v.status === 'rejected').length;
+      // Check if consensus is reached after adding new verification
+      const updatedVerifications = [...verifications, data?.[0] as LoanVerification];
+      const approvedCount = updatedVerifications.filter(v => v.status === 'approved').length;
+      const rejectedCount = updatedVerifications.filter(v => v.status === 'rejected').length;
       
       if (approvedCount >= 2) {
         onConsensusReached('approved');
@@ -84,6 +95,8 @@ export const ConsensusVerificationPanel: React.FC<ConsensusVerificationPanelProp
     } catch (error) {
       console.error("Error submitting verification:", error);
       toast.error("An unexpected error occurred");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -119,27 +132,44 @@ export const ConsensusVerificationPanel: React.FC<ConsensusVerificationPanelProp
         <div className="grid grid-cols-2 gap-4">
           <button
             onClick={() => handleVerification('approved')}
-            className={`flex items-center justify-center h-10 px-4 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${getVerificationStatus() === 'approved'
-              ? 'bg-green-500 text-white hover:bg-green-600'
-              : 'bg-green-100 text-green-700 hover:bg-green-200'
-              }`}
-            disabled={getVerificationStatus() !== 'pending'}
+            disabled={isSubmitting || verificationStatus !== 'pending'}
+            className={`flex items-center justify-center h-10 px-4 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
+              verificationStatus === 'approved'
+                ? 'bg-green-500 text-white hover:bg-green-600'
+                : 'bg-green-100 text-green-700 hover:bg-green-200'
+            }`}
           >
-            <CheckCircle className="w-4 h-4 mr-2" />
+            {isSubmitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle className="h-4 w-4 mr-2" />}
             Approve
           </button>
           <button
             onClick={() => handleVerification('rejected')}
-            className={`flex items-center justify-center h-10 px-4 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${getVerificationStatus() === 'rejected'
-              ? 'bg-red-500 text-white hover:bg-red-600'
-              : 'bg-red-100 text-red-700 hover:bg-red-200'
-              }`}
-            disabled={getVerificationStatus() !== 'pending'}
+            disabled={isSubmitting || verificationStatus !== 'pending'}
+            className={`flex items-center justify-center h-10 px-4 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
+              verificationStatus === 'rejected'
+                ? 'bg-red-500 text-white hover:bg-red-600'
+                : 'bg-red-100 text-red-700 hover:bg-red-200'
+            }`}
           >
-            <XCircle className="w-4 h-4 mr-2" />
+            {isSubmitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <XCircle className="h-4 w-4 mr-2" />}
             Reject
           </button>
         </div>
+
+        {/* Display current verifications */}
+        {verifications.length > 0 && (
+          <div className="mt-4 space-y-2">
+            <h4 className="text-sm font-medium">Current Verifications</h4>
+            {verifications.map((verification, index) => (
+              <div key={verification.id || index} className="flex items-center justify-between text-sm">
+                <span>Bank ID: {verification.bank_id.substring(0, 8)}...</span>
+                <span className={verification.status === 'approved' ? 'text-green-600' : 'text-red-600'}>
+                  {verification.status.charAt(0).toUpperCase() + verification.status.slice(1)}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
