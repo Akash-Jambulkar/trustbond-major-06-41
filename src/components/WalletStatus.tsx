@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useBlockchain } from "@/contexts/BlockchainContext";
 import { useMode } from "@/contexts/ModeContext";
@@ -20,6 +19,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { MetaMaskErrorHelp } from "./MetaMaskErrorHelp";
+import { useAuth } from "@/contexts/AuthContext";
+import { updateWalletAddress } from "@/utils/supabase-utils";
 
 export const WalletStatus = () => {
   const { 
@@ -36,21 +37,13 @@ export const WalletStatus = () => {
   } = useBlockchain();
   
   const { enableBlockchain } = useMode();
+  const { user, setUser } = useAuth();
   const [showError, setShowError] = useState<boolean>(false);
   const [connecting, setConnecting] = useState<boolean>(false);
   const [connectionAttempts, setConnectionAttempts] = useState(0);
   const [showErrorHelp, setShowErrorHelp] = useState(false);
   const [errorType, setErrorType] = useState("general");
 
-  // Networks to display in the dropdown
-  const networks = [
-    { name: "Ganache (Local)", id: 1337 },
-    { name: "Ethereum Mainnet", id: 1 },
-    { name: "Goerli Testnet", id: 5 },
-    { name: "Sepolia Testnet", id: 11155111 }
-  ];
-
-  // Reset error display when connection status changes
   useEffect(() => {
     if (isConnected) {
       setShowError(false);
@@ -59,7 +52,6 @@ export const WalletStatus = () => {
     }
   }, [isConnected]);
 
-  // Determine error type from the error message
   useEffect(() => {
     if (!connectionError) return;
     
@@ -77,6 +69,31 @@ export const WalletStatus = () => {
       setErrorType("general");
     }
   }, [connectionError]);
+
+  useEffect(() => {
+    const syncWalletToProfile = async () => {
+      if (isConnected && account && user && (!user.walletAddress || user.walletAddress !== account)) {
+        try {
+          console.log("Syncing wallet address to profile:", account);
+          const { success } = await updateWalletAddress(user.id, account);
+          
+          if (success) {
+            console.log("Wallet address updated in profile");
+            setUser({
+              ...user,
+              walletAddress: account
+            });
+          } else {
+            console.error("Failed to update wallet address in profile");
+          }
+        } catch (err) {
+          console.error("Error updating wallet address:", err);
+        }
+      }
+    };
+    
+    syncWalletToProfile();
+  }, [isConnected, account, user, setUser]);
 
   if (!enableBlockchain) {
     return (
@@ -104,11 +121,18 @@ export const WalletStatus = () => {
       setShowError(false);
       setConnectionAttempts(prev => prev + 1);
       
-      // Add a slight delay before attempting connection
-      // This can help with MetaMask initialization issues
       await new Promise(resolve => setTimeout(resolve, 500));
       
       await connectWallet();
+
+      if (user && account) {
+        await updateWalletAddress(user.id, account);
+        
+        setUser({
+          ...user,
+          walletAddress: account
+        });
+      }
     } catch (error) {
       console.error("Connection error:", error);
       setShowError(true);
@@ -154,13 +178,13 @@ export const WalletStatus = () => {
             </div>
             <DropdownMenuSeparator />
             <DropdownMenuLabel>Switch Network</DropdownMenuLabel>
-            {networks.map((network) => (
+            {["Ganache (Local)", "Ethereum Mainnet", "Goerli Testnet", "Sepolia Testnet"].map((network, idx) => (
               <DropdownMenuItem 
-                key={network.id}
-                onClick={() => switchNetwork(network.id)}
+                key={network}
+                onClick={() => switchNetwork([1337, 1, 5, 11155111][idx])}
                 className="cursor-pointer"
               >
-                {network.name}
+                {network}
               </DropdownMenuItem>
             ))}
             <DropdownMenuSeparator />
