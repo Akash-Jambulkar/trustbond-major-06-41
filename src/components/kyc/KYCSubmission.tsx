@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { 
   Card, 
   CardContent, 
@@ -30,6 +30,7 @@ import { KYC_SUBMISSION_FEE } from "@/utils/contracts/contractConfig";
 import { saveKycSubmission } from "@/utils/supabase/kycSubmissions";
 import { supabase } from "@/integrations/supabase/client";
 import { trackTransaction } from "@/utils/transactionTracker";
+import { updateWalletAddress } from "@/utils/supabase-utils";
 
 type FormValues = {
   documentType: DocumentType;
@@ -68,6 +69,16 @@ export function KYCSubmission() {
     }
 
     setIsSubmitting(true);
+
+    // Add this at the start of handleSubmit
+    if (user && account) {
+      const { success, error } = await updateWalletAddress(user.id, account);
+      if (!success) {
+        console.error("Failed to update wallet address:", error);
+        // Continue with submission anyway
+      }
+    }
+
     try {
       const documentHash = await createDocumentHash(values.documentType, values.documentNumber);
       

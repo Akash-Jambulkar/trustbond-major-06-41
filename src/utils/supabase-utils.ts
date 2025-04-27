@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -85,5 +84,54 @@ export async function executeMutation<T>(
   } catch (err) {
     console.error("Unexpected error during database mutation:", err);
     return { success: false, data: null, error: err as Error };
+  }
+}
+
+/**
+ * Update user's wallet address in their profile
+ * @param userId The user's ID
+ * @param walletAddress The wallet address to store
+ * @returns Success status and any error
+ */
+export async function updateWalletAddress(
+  userId: string,
+  walletAddress: string
+): Promise<{ success: boolean; error: any | null }> {
+  try {
+    // Update the profile with the new wallet address
+    const { error } = await supabase
+      .from('profiles')
+      .update({ 
+        wallet_address: walletAddress,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId);
+    
+    if (error) {
+      console.error("Error updating wallet address:", error);
+      return { success: false, error };
+    }
+    
+    // Log the wallet connection as a transaction
+    const { error: txError } = await supabase
+      .from('transactions')
+      .insert({
+        transaction_hash: `wallet-connect-${Date.now()}`,
+        type: 'wallet_connection',
+        from_address: walletAddress,
+        status: 'confirmed',
+        user_id: userId,
+        created_at: new Date().toISOString()
+      });
+      
+    if (txError) {
+      console.error("Error logging wallet connection:", txError);
+      // Don't fail the operation if just the transaction logging fails
+    }
+    
+    return { success: true, error: null };
+  } catch (err) {
+    console.error("Error in updateWalletAddress:", err);
+    return { success: false, error: err };
   }
 }

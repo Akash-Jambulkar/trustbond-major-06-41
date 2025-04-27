@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -86,10 +85,18 @@ export const ConsensusVerificationPanel: React.FC<ConsensusVerificationPanelProp
 
       console.log("Verification data being submitted:", newVerification);
 
-      // Use the executeMutation helper for better error handling
+      // Use the stored wallet address from user profile if available
+      const walletAddress = user.walletAddress || user.id;
+
       const { success, error } = await executeMutation<LoanVerification>(() => 
         loanVerificationsTable()
-          .insert(newVerification)
+          .insert({
+            loan_id: loanId,
+            user_id: userId,
+            bank_id: user.id,
+            status,
+            verifier_address: walletAddress // Use stored wallet address
+          })
       );
 
       if (!success) {
@@ -105,8 +112,8 @@ export const ConsensusVerificationPanel: React.FC<ConsensusVerificationPanelProp
       
       toast.success(`Loan ${status} successfully`);
     } catch (error) {
-      console.error("Error submitting verification:", error);
-      toast.error("An unexpected error occurred");
+      console.error("Error verifying KYC:", error);
+      toast.error("An error occurred while verifying");
     } finally {
       setIsSubmitting(false);
     }
