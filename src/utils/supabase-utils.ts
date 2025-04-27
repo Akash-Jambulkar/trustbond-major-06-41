@@ -44,10 +44,10 @@ export const safeArray = <T>(data: T[] | null): T[] => {
  * @returns The result of the query with typesafe data
  */
 export async function executeQuery<T>(
-  queryFn: () => Promise<{ data: T[] | null; error: any }> | { data: T[] | null; error: any }
+  queryFn: () => any
 ): Promise<{ data: T[]; error: any | null }> {
   try {
-    // Handle both Promise and non-Promise return types from Supabase
+    // Execute the query function and await its result
     const result = await queryFn();
     const { data, error } = result;
     
@@ -69,10 +69,10 @@ export async function executeQuery<T>(
  * @returns The result of the mutation with typesafe data
  */
 export async function executeMutation<T>(
-  mutationFn: () => Promise<{ data: T[] | null; error: any }> | { data: T[] | null; error: any }
+  mutationFn: () => any
 ): Promise<{ success: boolean; data: T[] | null; error: any | null }> {
   try {
-    // Handle both Promise and non-Promise return types from Supabase
+    // Execute the mutation function and await its result
     const result = await mutationFn();
     const { data, error } = result;
     
