@@ -40,14 +40,16 @@ export const safeArray = <T>(data: T[] | null): T[] => {
 
 /**
  * Execute a database query with proper error handling and type safety
- * @param queryFn A function that performs a Supabase query
+ * @param queryFn A function that returns a Supabase query
  * @returns The result of the query with typesafe data
  */
 export async function executeQuery<T>(
-  queryFn: () => Promise<{ data: T[] | null; error: any }>
+  queryFn: () => Promise<{ data: T[] | null; error: any }> | { data: T[] | null; error: any }
 ): Promise<{ data: T[]; error: any | null }> {
   try {
-    const { data, error } = await queryFn();
+    // Handle both Promise and non-Promise return types from Supabase
+    const result = await queryFn();
+    const { data, error } = result;
     
     if (error) {
       console.error("Database query error:", error);
@@ -63,14 +65,16 @@ export async function executeQuery<T>(
 
 /**
  * Safely execute a database mutation (insert, update, delete)
- * @param mutationFn A function that performs a Supabase mutation
+ * @param mutationFn A function that returns a Supabase mutation
  * @returns The result of the mutation with typesafe data
  */
 export async function executeMutation<T>(
-  mutationFn: () => Promise<{ data: T[] | null; error: any }>
+  mutationFn: () => Promise<{ data: T[] | null; error: any }> | { data: T[] | null; error: any }
 ): Promise<{ success: boolean; data: T[] | null; error: any | null }> {
   try {
-    const { data, error } = await mutationFn();
+    // Handle both Promise and non-Promise return types from Supabase
+    const result = await mutationFn();
+    const { data, error } = result;
     
     if (error) {
       console.error("Database mutation error:", error);

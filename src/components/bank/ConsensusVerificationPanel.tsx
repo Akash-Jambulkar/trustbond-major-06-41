@@ -40,9 +40,27 @@ export const ConsensusVerificationPanel: React.FC<ConsensusVerificationPanelProp
       console.log("Verifications fetched successfully:", data);
       setVerifications(data);
       
+      // Check for consensus after fetching fresh data
+      checkForConsensus(data);
+      
     } catch (error) {
       console.error("Error fetching verifications:", error);
       toast.error("An unexpected error occurred");
+    }
+  };
+
+  const checkForConsensus = (verificationData: LoanVerification[]) => {
+    // Only check consensus if we have at least 2 verifications
+    if (verificationData.length >= 2) {
+      const approvedCount = verificationData.filter(v => v.status === 'approved').length;
+      const rejectedCount = verificationData.filter(v => v.status === 'rejected').length;
+      
+      // Check if consensus threshold is met (2 or more of either status)
+      if (approvedCount >= 2) {
+        onConsensusReached('approved');
+      } else if (rejectedCount >= 2) {
+        onConsensusReached('rejected');
+      }
     }
   };
 
@@ -84,18 +102,6 @@ export const ConsensusVerificationPanel: React.FC<ConsensusVerificationPanelProp
       
       // Refresh verifications to get the latest state
       await fetchVerifications();
-      
-      // After fetching fresh data, check if consensus is reached
-      // We can safely access the length property as our executeQuery helper ensures verifications is an array
-      const approvedCount = verifications.filter(v => v.status === 'approved').length;
-      const rejectedCount = verifications.filter(v => v.status === 'rejected').length;
-      
-      // Check if consensus threshold is met
-      if (approvedCount >= 2) {
-        onConsensusReached('approved');
-      } else if (rejectedCount >= 2) {
-        onConsensusReached('rejected');
-      }
       
       toast.success(`Loan ${status} successfully`);
     } catch (error) {
