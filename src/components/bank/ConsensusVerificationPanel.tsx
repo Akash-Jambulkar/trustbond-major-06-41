@@ -119,22 +119,22 @@ export const ConsensusVerificationPanel: React.FC<ConsensusVerificationPanelProp
         <div className="grid grid-cols-2 gap-4">
           <button
             onClick={() => handleVerification('approved')}
-            className={`flex items-center justify-center h-10 px-4 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${verificationStatus === 'approved'
+            className={`flex items-center justify-center h-10 px-4 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${getVerificationStatus() === 'approved'
               ? 'bg-green-500 text-white hover:bg-green-600'
               : 'bg-green-100 text-green-700 hover:bg-green-200'
               }`}
-            disabled={verificationStatus !== 'pending'}
+            disabled={getVerificationStatus() !== 'pending'}
           >
             <CheckCircle className="w-4 h-4 mr-2" />
             Approve
           </button>
           <button
             onClick={() => handleVerification('rejected')}
-            className={`flex items-center justify-center h-10 px-4 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${verificationStatus === 'rejected'
+            className={`flex items-center justify-center h-10 px-4 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${getVerificationStatus() === 'rejected'
               ? 'bg-red-500 text-white hover:bg-red-600'
               : 'bg-red-100 text-red-700 hover:bg-red-200'
               }`}
-            disabled={verificationStatus !== 'pending'}
+            disabled={getVerificationStatus() !== 'pending'}
           >
             <XCircle className="w-4 h-4 mr-2" />
             Reject
