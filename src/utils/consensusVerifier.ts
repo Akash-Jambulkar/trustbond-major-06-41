@@ -1,5 +1,5 @@
 
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/integrations/supabase/client';
 import { KycDocumentSubmissionType } from '@/types/supabase-extensions';
 import { kycDocumentsTable } from './supabase-helper';
 import { kycVerificationVotesTable, KycVerificationVote } from './supabase-tables';

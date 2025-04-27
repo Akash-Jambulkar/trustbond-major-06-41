@@ -31,8 +31,8 @@ export const ConsensusVerificationPanel: React.FC<ConsensusVerificationPanelProp
         console.error("Error fetching verifications:", error);
         toast.error("Failed to load verifications");
       } else {
-        // Type-safe assignment
-        setVerifications(data as LoanVerification[] || []);
+        // Set verifications with type safety
+        setVerifications(data || []);
       }
     } catch (error) {
       console.error("Error fetching verifications:", error);
@@ -49,14 +49,17 @@ export const ConsensusVerificationPanel: React.FC<ConsensusVerificationPanelProp
     try {
       const userId = user.id;
 
+      // Create new verification object to ensure type safety
+      const newVerification: Omit<LoanVerification, 'id' | 'created_at'> = {
+        loan_id: loanId,
+        user_id: userId,
+        bank_id: user.id,
+        status
+      };
+
       // Use the loanVerificationsTable helper function for insert
       const { data, error } = await loanVerificationsTable()
-        .insert({
-          loan_id: loanId,
-          user_id: userId,
-          bank_id: user.id,
-          status
-        })
+        .insert(newVerification)
         .select();
 
       if (error) {
