@@ -2,7 +2,11 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-// Type-safe helper for accessing tables with proper TypeScript support
+/**
+ * Type-safe helper for accessing tables with proper TypeScript support
+ * @param table The name of the table to query
+ * @returns A typed Supabase query builder
+ */
 export function safeFrom<T = any>(table: string) {
   // The double casting is necessary to preserve generic type information
   // while bypassing TypeScript's strict table name checking
@@ -15,8 +19,67 @@ export function safeFrom<T = any>(table: string) {
   };
 }
 
-// Format date to display
+/**
+ * Format date to display
+ * @param dateString The date string to format
+ * @returns Formatted date string or 'N/A' if null/undefined
+ */
 export const formatDate = (dateString?: string | null) => {
   if (!dateString) return 'N/A';
   return new Date(dateString).toLocaleString();
 };
+
+/**
+ * Safely get array data from a Supabase query response
+ * @param data The data from a Supabase query response
+ * @returns The data as an array (empty if null)
+ */
+export const safeArray = <T>(data: T[] | null): T[] => {
+  return data || [];
+};
+
+/**
+ * Execute a database query with proper error handling and type safety
+ * @param queryFn A function that performs a Supabase query
+ * @returns The result of the query with typesafe data
+ */
+export async function executeQuery<T>(
+  queryFn: () => Promise<{ data: T[] | null; error: any }>
+): Promise<{ data: T[]; error: any | null }> {
+  try {
+    const { data, error } = await queryFn();
+    
+    if (error) {
+      console.error("Database query error:", error);
+      return { data: [], error };
+    }
+    
+    return { data: data || [], error: null };
+  } catch (err) {
+    console.error("Unexpected error during database query:", err);
+    return { data: [], error: err as Error };
+  }
+}
+
+/**
+ * Safely execute a database mutation (insert, update, delete)
+ * @param mutationFn A function that performs a Supabase mutation
+ * @returns The result of the mutation with typesafe data
+ */
+export async function executeMutation<T>(
+  mutationFn: () => Promise<{ data: T[] | null; error: any }>
+): Promise<{ success: boolean; data: T[] | null; error: any | null }> {
+  try {
+    const { data, error } = await mutationFn();
+    
+    if (error) {
+      console.error("Database mutation error:", error);
+      return { success: false, data: null, error };
+    }
+    
+    return { success: true, data, error: null };
+  } catch (err) {
+    console.error("Unexpected error during database mutation:", err);
+    return { success: false, data: null, error: err as Error };
+  }
+}

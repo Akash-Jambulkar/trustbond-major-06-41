@@ -6,6 +6,7 @@ import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from 'sonner';
 import { LoanVerification, loanVerificationsTable } from '@/utils/supabase-tables';
+import { executeQuery, executeMutation, safeArray } from '@/utils/supabase-utils';
 
 interface ConsensusVerificationPanelProps {
   loanId: string;
@@ -24,19 +25,21 @@ export const ConsensusVerificationPanel: React.FC<ConsensusVerificationPanelProp
   const fetchVerifications = async () => {
     try {
       console.log("Fetching verifications for loan:", loanId);
-      // Use the loanVerificationsTable helper function
-      const { data, error } = await loanVerificationsTable()
-        .select('*')
-        .eq('loan_id', loanId);
+      
+      const { data, error } = await executeQuery<LoanVerification>(() => 
+        loanVerificationsTable()
+          .select('*')
+          .eq('loan_id', loanId)
+      );
 
       if (error) {
-        console.error("Error fetching verifications:", error);
         toast.error("Failed to load verifications");
-      } else {
-        console.log("Verifications fetched successfully:", data);
-        // Set verifications with type safety
-        setVerifications(data || []);
+        return;
       }
+      
+      console.log("Verifications fetched successfully:", data);
+      setVerifications(data);
+      
     } catch (error) {
       console.error("Error fetching verifications:", error);
       toast.error("An unexpected error occurred");
@@ -65,27 +68,27 @@ export const ConsensusVerificationPanel: React.FC<ConsensusVerificationPanelProp
 
       console.log("Verification data being submitted:", newVerification);
 
-      // Use the loanVerificationsTable helper function for insert
-      const { data, error } = await loanVerificationsTable()
-        .insert(newVerification);
+      // Use the executeMutation helper for better error handling
+      const { success, error } = await executeMutation<LoanVerification>(() => 
+        loanVerificationsTable()
+          .insert(newVerification)
+      );
 
-      if (error) {
+      if (!success) {
         console.error("Error submitting verification:", error);
         toast.error("Failed to submit verification");
         return;
       }
 
-      console.log("Verification submitted successfully:", data);
+      console.log("Verification submitted successfully");
       
       // Refresh verifications to get the latest state
       await fetchVerifications();
       
       // After fetching fresh data, check if consensus is reached
-      // This avoids the "Property 'length' does not exist on type 'never'" error
-      // by using the updated verifications state directly
-      const currentVerifications = [...verifications];
-      const approvedCount = currentVerifications.filter(v => v.status === 'approved').length;
-      const rejectedCount = currentVerifications.filter(v => v.status === 'rejected').length;
+      // We can safely access the length property as our executeQuery helper ensures verifications is an array
+      const approvedCount = verifications.filter(v => v.status === 'approved').length;
+      const rejectedCount = verifications.filter(v => v.status === 'rejected').length;
       
       // Check if consensus threshold is met
       if (approvedCount >= 2) {
