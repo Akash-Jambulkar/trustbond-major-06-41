@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -76,22 +77,17 @@ export const ConsensusVerificationPanel: React.FC<ConsensusVerificationPanelProp
 
       console.log("Verification submitted successfully:", data);
       
-      // Refresh verifications
-      fetchVerifications();
+      // Refresh verifications to get the latest state
+      await fetchVerifications();
       
-      // Check if consensus is reached after adding new verification
-      // Fix the typing issue by explicitly checking if data exists and has a length property
-      const updatedVerifications = [...verifications];
+      // After fetching fresh data, check if consensus is reached
+      // This avoids the "Property 'length' does not exist on type 'never'" error
+      // by using the updated verifications state directly
+      const currentVerifications = [...verifications];
+      const approvedCount = currentVerifications.filter(v => v.status === 'approved').length;
+      const rejectedCount = currentVerifications.filter(v => v.status === 'rejected').length;
       
-      // Use type assertion to clarify that data is an array if it exists
-      // This fixes the "Property 'length' does not exist on type 'never'" error
-      if (data && Array.isArray(data) && data.length > 0) {
-        updatedVerifications.push(data[0] as LoanVerification);
-      }
-      
-      const approvedCount = updatedVerifications.filter(v => v.status === 'approved').length;
-      const rejectedCount = updatedVerifications.filter(v => v.status === 'rejected').length;
-      
+      // Check if consensus threshold is met
       if (approvedCount >= 2) {
         onConsensusReached('approved');
       } else if (rejectedCount >= 2) {
