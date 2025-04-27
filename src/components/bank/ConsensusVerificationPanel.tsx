@@ -81,7 +81,13 @@ export const ConsensusVerificationPanel: React.FC<ConsensusVerificationPanelProp
       fetchVerifications();
       
       // Check if consensus is reached after adding new verification
-      const updatedVerifications = [...verifications, data?.[0] as LoanVerification];
+      // Fix for null data - use proper null checking
+      const updatedVerifications = [...verifications];
+      if (data && data.length > 0) {
+        // Only add the new verification if data is not null and has items
+        updatedVerifications.push(data[0] as LoanVerification);
+      }
+      
       const approvedCount = updatedVerifications.filter(v => v.status === 'approved').length;
       const rejectedCount = updatedVerifications.filter(v => v.status === 'rejected').length;
       
