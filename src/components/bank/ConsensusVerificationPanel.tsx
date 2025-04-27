@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -81,10 +80,12 @@ export const ConsensusVerificationPanel: React.FC<ConsensusVerificationPanelProp
       fetchVerifications();
       
       // Check if consensus is reached after adding new verification
-      // Fix for null data - use proper null checking
+      // Fix the typing issue by explicitly checking if data exists and has a length property
       const updatedVerifications = [...verifications];
-      if (data && data.length > 0) {
-        // Only add the new verification if data is not null and has items
+      
+      // Use type assertion to clarify that data is an array if it exists
+      // This fixes the "Property 'length' does not exist on type 'never'" error
+      if (data && Array.isArray(data) && data.length > 0) {
         updatedVerifications.push(data[0] as LoanVerification);
       }
       
